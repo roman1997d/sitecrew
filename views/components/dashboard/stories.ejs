@@ -1,0 +1,32 @@
+<section class="stories-bar" aria-label="Quick updates" data-i18n-attr="aria-label:story.quickUpdates">
+  <a href="/worker/profile" class="story-item story-your-item" aria-label="Add your story">
+    <div class="story-ring your-story-ring">
+      <span><i class="bi bi-plus-lg"></i></span>
+    </div>
+    <p>Your Story</p>
+  </a>
+  <% if (!stories.length) { %>
+    <p class="stories-empty" data-i18n="story.empty">Follow companies to see their stories here.</p>
+  <% } %>
+  <% stories.forEach(function(group) { %>
+    <button
+      type="button"
+      class="story-item <%= group.active ? 'active' : '' %>"
+      data-story-trigger
+      data-story-group-id="<%= group.id %>"
+      data-story-ids="<%= group.stories.map(function(story) { return story.id; }).join(',') %>"
+      data-story-items="<%= encodeURIComponent(JSON.stringify(group.stories)) %>"
+    >
+      <div class="story-ring <%= group.type %>">
+        <% if (group.logo) { %>
+          <img src="http://localhost:4000<%= group.logo %>" alt="<%= group.label %> logo">
+        <% } else if (group.content) { %>
+          <span><%= group.content %></span>
+        <% } else { %>
+          <i class="bi bi-building"></i>
+        <% } %>
+      </div>
+      <p><%= group.label %></p>
+    </button>
+  <% }); %>
+</section>

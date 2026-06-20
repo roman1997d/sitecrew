@@ -1,0 +1,14 @@
+<aside class="social-right-panel">
+  <div class="social-widget">
+    <h3 data-i18n="jobs.quickJobs">Quick jobs</h3>
+    <% if (!quickJobs.length) { %>
+      <p class="panel-empty" data-i18n="jobs.noMatches">No open jobs match your profile yet.</p>
+    <% } %>
+    <% quickJobs.forEach(function(job) { %>
+      <div class="quick-job">
+        <strong><%= job.title %></strong>
+        <small><%= job.detail %></small>
+      </div>
+    <% }); %>
+  </div>
+</aside>

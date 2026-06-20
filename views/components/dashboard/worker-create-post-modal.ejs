@@ -1,0 +1,44 @@
+<div class="worker-profile-modal-overlay worker-company-action-modal" id="workerCompanyPostModal" aria-hidden="true">
+  <div class="worker-profile-modal" role="dialog" aria-modal="true" aria-labelledby="workerCompanyPostTitle">
+    <div class="worker-profile-modal-header">
+      <div>
+        <span data-i18n="buttons.createPost">Create Post</span>
+        <h2 id="workerCompanyPostTitle" data-i18n="profile.addPost">Add post</h2>
+        <p data-i18n="posts.modalDescription">Share your work update with photos, video, or a short caption.</p>
+      </div>
+      <button type="button" data-close-worker-company-modal aria-label="Close" data-i18n-attr="aria-label:common.close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="worker-profile-alert" id="workerCompanyPostAlert" hidden></div>
+    <form class="worker-profile-form worker-company-action-form" id="workerCompanyPostForm">
+      <label>
+        <span data-i18n="posts.postAs">Post as</span>
+        <select name="companyId" data-company-permission-select data-permission-type="posts" data-allow-self="true">
+          <option value="" data-i18n="posts.myProfile">My own profile</option>
+        </select>
+      </label>
+      <div class="worker-form-grid">
+        <label>
+          <span data-i18n="posts.title">Title</span>
+          <input type="text" name="title" minlength="2" placeholder="Site progress update" data-i18n-attr="placeholder:posts.titlePlaceholder">
+        </label>
+        <label>
+          <span data-i18n="posts.location">Location</span>
+          <input type="text" name="location" placeholder="Manchester" data-i18n-attr="placeholder:posts.locationPlaceholder">
+        </label>
+      </div>
+      <label>
+        <span data-i18n="posts.media">Media</span>
+        <input type="file" name="media" accept="image/*,video/*" multiple>
+        <small data-i18n="posts.mediaHelp">Upload one video or up to 5 pictures.</small>
+      </label>
+      <label>
+        <span data-i18n="posts.caption">Caption</span>
+        <textarea name="caption" rows="3" required placeholder="Describe what you completed on site..." data-i18n-attr="placeholder:posts.captionPlaceholder"></textarea>
+      </label>
+      <div class="worker-profile-modal-actions">
+        <button type="button" class="worker-secondary-btn" data-close-worker-company-modal data-i18n="profile.cancel">Cancel</button>
+        <button type="submit" class="worker-submit-btn" data-i18n="profile.addPost">Add Post</button>
+      </div>
+    </form>
+  </div>
+</div>

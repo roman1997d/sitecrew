@@ -1,0 +1,100 @@
+<section class="company-section" id="recommended-workers">
+  <div class="company-section-header">
+    <div>
+      <span>Recommended Workers</span>
+      <h2>Available workers near your jobs</h2>
+    </div>
+    <p>Use Quick Search for fast matches or Advanced Search for detailed filtering.</p>
+  </div>
+
+  <form class="company-worker-search" id="workerSearchForm" data-mode="quick">
+    <div class="worker-search-mode" role="tablist" aria-label="Worker search mode">
+      <button type="button" class="active" data-worker-search-mode="quick" role="tab" aria-selected="true">Quick Search</button>
+      <button type="button" data-worker-search-mode="advanced" role="tab" aria-selected="false">Advanced Search</button>
+    </div>
+    <input type="hidden" name="mode" value="quick">
+
+    <label>
+      <span>Trade</span>
+      <input type="search" name="trade" placeholder="Type 3 letters, e.g. Dry" list="workerTradeOptions" autocomplete="off">
+      <datalist id="workerTradeOptions"></datalist>
+    </label>
+    <label>
+      <span>Location</span>
+      <input type="search" name="location" placeholder="Manchester, M1">
+    </label>
+
+    <label data-advanced-worker-filter>
+      <span>Experience</span>
+      <input type="search" name="experience" placeholder="5 years">
+    </label>
+    <label data-advanced-worker-filter>
+      <span>Qualification</span>
+      <input type="search" name="qualification" placeholder="CSCS, NVQ, IPAF">
+    </label>
+    <label>
+      <span>Availability</span>
+      <select name="availability">
+        <option value="">Any availability</option>
+        <option value="Available Now">Available Now</option>
+        <option value="Available Soon">Available Soon</option>
+        <option value="Busy">Busy</option>
+      </select>
+    </label>
+    <label data-advanced-worker-filter>
+      <span>Minimum rating</span>
+      <select name="rating">
+        <option value="">Any rating</option>
+        <option value="5">5 stars</option>
+        <option value="4">4+ stars</option>
+        <option value="3">3+ stars</option>
+        <option value="2">2+ stars</option>
+        <option value="1">1+ stars</option>
+      </select>
+    </label>
+    <label>
+      <span>Sort by</span>
+      <select name="sort">
+        <option value="match">Best match</option>
+        <option value="trade">Trade</option>
+        <option value="location">Location</option>
+        <option value="experience">Experience</option>
+        <option value="availability">Availability</option>
+        <option value="rating">Rating</option>
+      </select>
+    </label>
+    <button type="submit"><i class="bi bi-search"></i> Find Workers</button>
+  </form>
+
+  <div class="company-worker-search-status" id="workerSearchStatus" hidden></div>
+
+  <div class="company-worker-grid" id="workerResults">
+    <% if (!workers.length) { %>
+      <article class="company-empty-card">
+        <strong>No recommendations yet</strong>
+        <p>Post an open job with trade and location to generate matches.</p>
+      </article>
+    <% } %>
+
+    <% workers.forEach(function(worker) { %>
+      <article class="company-worker-card">
+        <div class="company-card-row">
+          <div class="company-worker-avatar"><%= worker.name.charAt(0) %></div>
+          <span class="match-score"><%= worker.score %>% match</span>
+        </div>
+        <h3><%= worker.name %></h3>
+        <p><%= worker.trade %></p>
+        <small><i class="bi bi-geo-alt"></i> <%= worker.location %> · <%= worker.availability %></small>
+        <div class="company-worker-actions">
+          <button type="button" data-invite-worker-job data-worker-id="<%= worker.id %>" data-worker-name="<%= worker.name %>">Invite to job</button>
+          <button type="button" class="ghost" data-view-recommended-worker-profile data-worker-id="<%= worker.id %>">
+            <i class="bi bi-person-badge"></i> View Profile
+          </button>
+          <button type="button" class="ghost" data-send-worker-message data-worker-id="<%= worker.id %>" data-worker-name="<%= worker.name %>">
+            <i class="bi bi-chat-dots"></i> Send message
+          </button>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+</section>

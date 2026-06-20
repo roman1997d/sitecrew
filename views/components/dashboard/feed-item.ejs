@@ -1,0 +1,155 @@
+<% if (item.type === 'rateInsight') { %>
+  <article class="feed-card rate-insight-card" data-feed-type="rateInsight">
+    <div class="feed-card-header">
+      <div class="feed-avatar rate-insight-avatar"><%= item.initials %></div>
+      <div>
+        <strong><%= item.author %></strong>
+        <small><%= item.subtitle %></small>
+      </div>
+      <span class="feed-badge open">Daily</span>
+    </div>
+    <div class="rate-insight-content">
+      <h3><%= item.title %></h3>
+      <p><%= item.caption %></p>
+      <div class="rate-insight-list">
+        <% item.rates.forEach(function(rate) { %>
+          <div class="rate-insight-row">
+            <strong><%= rate.trade %></strong>
+            <span>
+              <% if (rate.hourly) { %><em><%= rate.hourly %></em><% } %>
+              <% if (rate.day) { %><em><%= rate.day %></em><% } %>
+              <% if (rate.sqm) { %><em><%= rate.sqm %></em><% } %>
+            </span>
+          </div>
+        <% }); %>
+      </div>
+      <div class="rate-insight-feedback" data-rate-insight-feedback data-insight-date="<%= item.insightDate %>">
+        <strong>This information is useful?</strong>
+        <div>
+          <button type="button" class="<%= item.feedback && item.feedback.userVote === 'up' ? 'active' : '' %>" data-rate-feedback-vote="up" aria-label="Thumbs up">
+            <i class="bi bi-hand-thumbs-up"></i>
+            <span data-rate-feedback-count="up"><%= item.feedback ? item.feedback.upCount : 0 %></span>
+          </button>
+          <button type="button" class="<%= item.feedback && item.feedback.userVote === 'down' ? 'active' : '' %>" data-rate-feedback-vote="down" aria-label="Thumbs down">
+            <i class="bi bi-hand-thumbs-down"></i>
+            <span data-rate-feedback-count="down"><%= item.feedback ? item.feedback.downCount : 0 %></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </article>
+<% } else if (item.type === 'job') { %>
+  <article class="feed-card job-feed-card" data-feed-type="job" data-job-id="<%= item.id %>">
+    <div class="feed-card-header">
+      <a href="/companies/<%= item.companyId %>" class="feed-avatar company-avatar-feed <%= item.logo ? 'has-logo' : (item.theme === 'north' ? 'north' : '') %>" aria-label="<%= item.company %> profile">
+        <% if (item.logo) { %>
+          <img src="http://localhost:4000<%= item.logo %>" alt="<%= item.company %> logo">
+        <% } else { %>
+          <%= item.initial %>
+        <% } %>
+      </a>
+      <div>
+        <strong><a href="/companies/<%= item.companyId %>" class="company-profile-link"><%= item.company %></a></strong>
+        <small><span data-i18n="feed.jobPost">Job post</span> · <%= item.location %> · <%= item.time %></small>
+        <% if (item.postedBy && item.postedBy.name) { %>
+          <small class="feed-posted-by">posted by <a href="<%= item.postedBy.url %>"><%= item.postedBy.name %></a></small>
+        <% } %>
+      </div>
+      <span class="feed-badge <%= item.badge === 'Open' ? 'open' : 'closed' %>" data-i18n="<%= item.badge === 'Open' ? 'jobs.open' : 'jobs.closed' %>"><%= item.badge %></span>
+    </div>
+    <div class="job-feed-content">
+      <h3><%= item.title %></h3>
+      <p><%= item.description %></p>
+      <div class="job-feed-meta">
+        <% item.meta.forEach(function(meta) { %>
+          <span><i class="bi bi-check2-circle"></i> <%= meta %></span>
+        <% }); %>
+      </div>
+      <button
+        class="feed-apply-btn <%= item.hasApplied ? 'applied' : '' %>"
+        type="button"
+        data-job-id="<%= item.id %>"
+        <%= item.hasApplied ? 'disabled' : '' %>
+      >
+        <span data-i18n="<%= item.hasApplied ? 'buttons.alreadyApplied' : 'buttons.applyDirectly' %>"><%= item.hasApplied ? 'You already applied' : 'Apply directly' %></span>
+      </button>
+    </div>
+  </article>
+<% } else if (item.type === 'hireMe') { %>
+  <article class="feed-card hire-me-card" data-feed-type="hireMe">
+    <div>
+      <span class="status-pill"><i></i> <%= item.status %></span>
+      <h3><%= item.title %></h3>
+      <p><%= item.description %></p>
+    </div>
+    <button type="button" data-i18n="buttons.inviteToJob">Invite to job</button>
+  </article>
+<% } else { %>
+  <article class="feed-card feed-post-card" data-feed-type="<%= item.type %>" data-post-id="<%= item.id %>">
+    <div class="feed-card-header">
+      <% if (item.type === 'companyPost' && item.companyId) { %>
+        <a href="/companies/<%= item.companyId %>" class="feed-avatar skyline" aria-label="<%= item.author %> profile"><%= item.initials %></a>
+      <% } else if (item.type === 'post' && item.authorId) { %>
+        <a href="/workers/<%= item.authorId %>/profile" class="feed-avatar <%= item.authorVerified ? 'is-verified' : '' %>" aria-label="<%= item.author %> profile"><%= item.initials %>
+          <% if (item.authorVerified) { %>
+            <span class="avatar-verified-badge" aria-label="Verified profile"><i class="bi bi-patch-check-fill"></i></span>
+          <% } %>
+        </a>
+      <% } else { %>
+        <div class="feed-avatar"><%= item.initials %></div>
+      <% } %>
+      <div>
+        <strong>
+          <% if (item.type === 'companyPost' && item.companyId) { %>
+            <a href="/companies/<%= item.companyId %>" class="company-profile-link"><%= item.author %></a>
+          <% } else if (item.type === 'post' && item.authorId) { %>
+            <a href="/workers/<%= item.authorId %>/profile" class="company-profile-link"><%= item.author %></a>
+          <% } else { %>
+            <%= item.author %>
+          <% } %>
+        </strong>
+        <small><%= item.subtitle %></small>
+        <% if (item.type === 'companyPost' && item.postedBy && item.postedBy.name) { %>
+          <small class="feed-posted-by">posted by <a href="<%= item.postedBy.url %>"><%= item.postedBy.name %></a></small>
+        <% } %>
+      </div>
+      <button class="feed-more" type="button"><i class="bi bi-three-dots"></i></button>
+    </div>
+    <div class="feed-media <%= item.mediaClass %> <%= item.mediaUrl ? 'has-real-media' : '' %>">
+      <% if (item.mediaUrl && item.mediaType === 'video') { %>
+        <video src="<%= item.mediaSrc %>" controls playsinline></video>
+      <% } else if (item.mediaUrl) { %>
+        <img src="<%= item.mediaSrc %>" alt="<%= item.title || item.author %>">
+      <% } else if (item.video) { %>
+        <span class="video-chip"><i class="bi bi-play-fill"></i> <span data-i18n="feed.siteVideo">Site video</span></span>
+      <% } %>
+    </div>
+    <div class="feed-actions">
+      <button class="like-btn <%= item.likedByMe ? 'active' : '' %>" type="button" data-feed-action="like" aria-pressed="<%= item.likedByMe ? 'true' : 'false' %>">
+        <i class="bi <%= item.likedByMe ? 'bi-heart-fill' : 'bi-heart' %>"></i>
+        <span data-feed-like-count><%= item.likeCount || 0 %></span>
+      </button>
+      <button class="comment-btn" type="button" data-feed-action="comment">
+        <i class="bi bi-chat"></i>
+        <span data-feed-comment-count><%= item.commentCount || 0 %></span>
+      </button>
+      <button class="share-btn" type="button" data-feed-action="share">
+        <i class="bi bi-send"></i> <span data-i18n="buttons.share">Share</span>
+      </button>
+      <button class="save-btn <%= item.savedByMe ? 'active' : '' %>" type="button" data-feed-action="save" aria-pressed="<%= item.savedByMe ? 'true' : 'false' %>">
+        <i class="bi <%= item.savedByMe ? 'bi-bookmark-fill' : 'bi-bookmark' %>"></i> <span data-i18n="buttons.save">Save</span>
+      </button>
+    </div>
+    <div class="feed-caption">
+      <% if (item.title) { %>
+        <h3 class="feed-post-title"><%= item.title %></h3>
+      <% } %>
+      <strong><%= item.author %></strong> <%= item.caption %>
+      <p><%= item.tags.join(' ') %></p>
+    </div>
+    <div class="feed-comments" data-feed-comments>
+      <div class="feed-comment-list" data-feed-comment-list></div>
+      <input type="text" data-feed-comment-input placeholder="Add a comment..." data-i18n-attr="placeholder:feed.addComment">
+    </div>
+  </article>
+<% } %>

@@ -1,0 +1,74 @@
+<section class="profile-hero">
+  <div class="profile-cover"></div>
+  <div class="profile-info">
+    <div class="profile-avatar-large <%= worker.profilePhoto ? 'has-photo' : '' %> <%= worker.verified ? 'is-verified' : '' %>" id="profileWorkerInitials">
+      <% if (worker.profilePhoto) { %>
+        <img src="http://localhost:4000<%= worker.profilePhoto %>" alt="<%= worker.name %> profile picture">
+      <% } else { %>
+        <%= worker.initials %>
+      <% } %>
+      <% if (worker.verified) { %>
+        <span class="avatar-verified-badge" aria-label="Verified profile"><i class="bi bi-patch-check-fill"></i></span>
+      <% } %>
+    </div>
+    <div class="profile-main">
+      <div class="profile-title-row">
+        <div>
+          <h1 id="profileWorkerName">
+            <%= worker.name %>
+            <% if (worker.verified) { %>
+              <i class="bi bi-patch-check-fill profile-name-verified" aria-label="Verified profile"></i>
+            <% } %>
+          </h1>
+          <p id="profileWorkerMeta"><%= worker.trade %> · <%= worker.location %> · <%= worker.experience %></p>
+          <% if (worker.workingAt) { %>
+            <p class="profile-worker-current-company"><i class="bi bi-briefcase-fill"></i> <%= worker.workingAt %></p>
+          <% } %>
+        </div>
+        <% if (!locals.profile || !profile.isPublicProfile) { %>
+          <div class="profile-header-actions">
+            <button type="button" class="profile-edit-btn" data-open-worker-profile-edit data-i18n="profile.editProfile">Edit Profile</button>
+            <% if (!worker.verified && !worker.verificationRequested) { %>
+              <button type="button" class="profile-verify-btn" id="applyProfileVerificationBtn" data-i18n="profile.applyVerification">Apply for profile verification</button>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="public-worker-actions" data-public-worker-id="<%= worker.id %>">
+            <button type="button" class="profile-follow-worker-btn <%= worker.isFollowing ? 'following' : '' %>" id="followPublicWorkerBtn">
+              <i class="bi <%= worker.isFollowing ? 'bi-check-circle-fill' : 'bi-person-plus' %>"></i>
+              <span><%= worker.isFollowing ? 'Following' : 'Follow' %></span>
+            </button>
+            <button type="button" class="profile-message-worker-btn" id="messagePublicWorkerBtn">
+              <i class="bi bi-chat-dots"></i>
+              <span>Message</span>
+            </button>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="profile-badges">
+        <span class="status-pill"><i></i> <span id="profileWorkerStatus"><%= worker.status %></span></span>
+        <span class="profile-cert <%= worker.verified ? 'verified' : '' %>"><i class="bi bi-patch-check-fill"></i> <span id="profileWorkerCertification"><% if (worker.verified) { %><span data-i18n="profile.profileVerified">Profile Verified</span><% } else { %><%= worker.certification %><% } %></span></span>
+        <% if (worker.verified) { %>
+          <span class="profile-qualifications-badge badge-color-<%= worker.qualificationBadgeColor || 'green' %>">
+            <i class="bi bi-award"></i>
+            <span data-i18n="profile.qualifications">Qualifications</span>:
+            <strong id="profileWorkerQualifications"><% if (worker.qualifications) { %><%= worker.qualifications %><% } else { %><span data-i18n="profile.noQualifications">Not specified</span><% } %></strong>
+          </span>
+        <% } %>
+        <button type="button" class="profile-rating" id="openWorkerReviewsModal">
+          <i class="bi bi-star-fill"></i>
+          <% if (worker.averageRating) { %>
+            <%= worker.averageRating %>
+          <% } else { %>
+            <span data-i18n="profile.noRating">No rating yet</span>
+          <% } %>
+          <% if (worker.reviewCount) { %>
+            <small>(<%= worker.reviewCount %> <span data-i18n="<%= worker.reviewCount === 1 ? 'profile.reviewSingular' : 'profile.reviewPlural' %>">review<%= worker.reviewCount === 1 ? '' : 's' %></span>)</small>
+          <% } %>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>

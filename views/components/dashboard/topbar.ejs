@@ -1,0 +1,90 @@
+<header class="social-topbar">
+  <a href="/" class="social-logo">Site<span>Crew</span></a>
+  <label class="social-search" aria-label="Search companies and workers">
+    <i class="bi bi-search"></i>
+    <input type="search" id="topbarCompanySearch" placeholder="Search companies and workers" autocomplete="off" data-i18n-attr="placeholder:search.placeholder">
+  </label>
+  <nav class="social-actions" aria-label="Dashboard actions">
+    <div class="worker-language-picker" id="workerLanguagePicker">
+      <button
+        type="button"
+        id="workerLanguageBtn"
+        class="worker-language-btn"
+        aria-label="Language"
+        aria-expanded="false"
+        aria-haspopup="listbox"
+        data-i18n-attr="aria-label:settings.language"
+      >
+        <span id="workerLanguageFlag" aria-hidden="true">🇬🇧</span>
+      </button>
+      <div class="worker-language-menu" id="workerLanguageMenu" role="listbox" hidden aria-label="Language" data-i18n-attr="aria-label:settings.language">
+        <button type="button" role="option" data-language="en" aria-label="English">🇬🇧</button>
+        <button type="button" role="option" data-language="ro" aria-label="Romanian">🇷🇴</button>
+        <button type="button" role="option" data-language="ru" aria-label="Russian">🇷🇺</button>
+        <button type="button" role="option" data-language="pl" aria-label="Polish">🇵🇱</button>
+        <button type="button" role="option" data-language="bg" aria-label="Bulgarian">🇧🇬</button>
+        <button type="button" role="option" data-language="uk" aria-label="Ukrainian">🇺🇦</button>
+      </div>
+    </div>
+    <button type="button" id="workerNotificationsBtn" aria-label="Notifications" aria-expanded="false" data-i18n-attr="aria-label:nav.notifications">
+      <i class="bi bi-heart"></i><span class="social-action-badge" <%= counts.notifications > 0 ? '' : 'hidden' %>><%= counts.notifications %></span>
+    </button>
+    <button type="button" id="workerMessagesBtn" aria-label="Messages" aria-expanded="false" data-i18n-attr="aria-label:nav.messages">
+      <i class="bi bi-chat-dots"></i><span class="social-action-badge" <%= counts.messages > 0 ? '' : 'hidden' %>><%= counts.messages %></span>
+    </button>
+    <a href="/worker/profile" class="social-avatar-btn <%= worker.profilePhoto ? 'has-photo' : '' %> <%= worker.verified ? 'is-verified' : '' %>" id="dashboardWorkerInitials" aria-label="Profile" data-i18n-attr="aria-label:nav.profile">
+      <% if (worker.profilePhoto) { %>
+        <img src="http://localhost:4000<%= worker.profilePhoto %>" alt="<%= worker.name %> profile picture">
+      <% } else { %>
+        <%= worker.initials %>
+      <% } %>
+      <% if (worker.verified) { %>
+        <span class="avatar-verified-badge" aria-label="Verified profile"><i class="bi bi-patch-check-fill"></i></span>
+      <% } %>
+    </a>
+    <button type="button" class="social-logout-btn" id="logoutBtn" aria-label="Log out" title="Log out" data-i18n-attr="aria-label:nav.logout;title:nav.logout">
+      <i class="bi bi-box-arrow-right"></i>
+    </button>
+  </nav>
+
+  <div class="worker-topbar-panel" id="workerNotificationsPanel" hidden>
+    <div class="worker-topbar-panel-head">
+      <strong data-i18n="nav.notifications">Notifications</strong>
+      <button type="button" data-close-worker-panel aria-label="Close notifications" data-i18n-attr="aria-label:notifications.close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="worker-panel-list" id="workerNotificationsList">
+      <p class="worker-panel-empty" data-i18n="notifications.loading">Loading notifications...</p>
+    </div>
+  </div>
+
+  <div class="worker-topbar-panel topbar-company-search-panel" id="topbarCompanySearchPanel" hidden>
+    <div class="worker-topbar-panel-head">
+      <strong>Search platform</strong>
+      <button type="button" id="closeTopbarCompanySearch" aria-label="Close search"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="worker-panel-list" id="topbarCompanySearchResults">
+      <p class="worker-panel-empty">Type a company or worker name to search.</p>
+    </div>
+  </div>
+
+  <div class="worker-topbar-panel messages-panel" id="workerMessagesPanel" hidden>
+    <div class="worker-topbar-panel-head">
+      <strong data-i18n="nav.messages">Messages</strong>
+      <button type="button" data-close-worker-panel aria-label="Close messages" data-i18n-attr="aria-label:messages.close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="worker-messages-layout">
+      <div class="worker-panel-list" id="workerConversationsList">
+        <p class="worker-panel-empty" data-i18n="messages.loadingConversations">Loading conversations...</p>
+      </div>
+      <div class="worker-message-thread">
+        <div class="worker-thread-list" id="workerThreadList">
+          <p class="worker-panel-empty" data-i18n="messages.selectConversation">Select a conversation.</p>
+        </div>
+        <form class="worker-message-form" id="workerMessageForm" hidden>
+          <input type="text" name="body" placeholder="Write a message..." autocomplete="off" required data-i18n-attr="placeholder:messages.writeMessage">
+          <button type="submit"><i class="bi bi-send"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>

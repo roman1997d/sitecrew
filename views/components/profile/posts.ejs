@@ -1,0 +1,50 @@
+<section class="profile-section">
+  <div class="profile-section-header">
+    <h2 data-i18n="profile.workPosts">Work posts</h2>
+    <p data-i18n="profile.workPostsDescription">Portfolio updates that show skills and completed work.</p>
+  </div>
+
+  <div class="profile-post-grid">
+    <% if (!posts.length) { %>
+      <article class="profile-post-card profile-empty-card">
+        <div class="profile-post-body">
+          <div class="profile-post-meta">
+            <strong data-i18n="profile.noPosts">No posts yet</strong>
+            <small data-i18n="profile.portfolioEmpty">Your portfolio is empty</small>
+          </div>
+          <p data-i18n="profile.noPostsDescription">Add work posts to show companies your skills and completed projects.</p>
+        </div>
+      </article>
+    <% } %>
+    <% posts.forEach(function(post) { %>
+      <article class="profile-post-card" data-profile-post-id="<%= post.id %>">
+        <div class="profile-post-media <%= post.mediaClass %> <%= post.mediaUrl ? 'has-real-media' : '' %>">
+          <% if (post.mediaUrl && post.mediaType === 'video') { %>
+            <video src="<%= post.mediaSrc %>" controls playsinline></video>
+          <% } else if (post.mediaUrl) { %>
+            <img src="<%= post.mediaSrc %>" alt="<%= post.title %>">
+          <% } %>
+        </div>
+        <div class="profile-post-body">
+          <div class="profile-post-meta">
+            <div>
+              <strong><%= post.title %></strong>
+              <small><%= post.location %> · <%= post.date %></small>
+            </div>
+            <% if (canDeletePosts) { %>
+              <button type="button" class="profile-post-delete-btn" data-delete-profile-post data-post-id="<%= post.id %>">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            <% } %>
+          </div>
+          <p><%= post.caption %></p>
+          <div class="profile-post-tags">
+            <% post.tags.forEach(function(tag) { %>
+              <span><%= tag %></span>
+            <% }); %>
+          </div>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+</section>

@@ -1,0 +1,47 @@
+<%
+  const statusLabel = String(worker.status || '').toLowerCase();
+  const statusClass = statusLabel.includes('soon') ? 'soon' : (statusLabel.includes('busy') ? 'busy' : 'available');
+%>
+<aside class="social-left-panel">
+  <div class="social-status-card">
+    <div class="worker-card-avatar <%= worker.profilePhoto ? 'has-photo' : '' %> <%= worker.verified ? 'is-verified' : '' %>" id="dashboardWorkerPhoto">
+      <% if (worker.profilePhoto) { %>
+        <img src="http://localhost:4000<%= worker.profilePhoto %>" alt="<%= worker.name %> profile picture">
+      <% } else { %>
+        <%= worker.initials %>
+      <% } %>
+      <% if (worker.verified) { %>
+        <span class="avatar-verified-badge" aria-label="Verified profile"><i class="bi bi-patch-check-fill"></i></span>
+      <% } %>
+    </div>
+    <span class="status-pill status-<%= statusClass %>"><i></i> <span id="dashboardWorkerStatus"><%= worker.status %></span></span>
+    <h2 id="dashboardWorkerName"><%= worker.name %></h2>
+    <p id="dashboardWorkerMeta"><%= worker.trade %> · <%= worker.experience %> · <%= worker.certification %></p>
+    <p class="worker-working-at" id="dashboardWorkerWorkingAt">
+      <i class="bi bi-briefcase-fill"></i>
+      <% if (worker.workingAt) { %>
+        <%= worker.workingAt %>
+      <% } else { %>
+        <span data-i18n="profile.selfEmployed">Self employed</span>
+      <% } %>
+    </p>
+    <a href="/worker/profile" class="worker-profile-link-btn"><i class="bi bi-person-circle"></i> MyProfile</a>
+    <button type="button" id="changeStatusBtn" data-i18n="profile.changeStatus">Change status</button>
+  </div>
+
+  <div class="pinned-companies">
+    <h3 data-i18n="companies.pinned">Pinned companies</h3>
+    <% if (!pinnedCompanies.length) { %>
+      <p class="panel-empty" data-i18n="companies.emptyFollowing">You are not following any companies yet.</p>
+    <% } %>
+    <% pinnedCompanies.forEach(function(company) { %>
+      <a href="/companies/<%= company.id %>" class="pinned-company pinned-company-link">
+        <span><%= company.initial %></span>
+        <div>
+          <strong><%= company.name %></strong>
+          <small><%= company.detail %></small>
+        </div>
+      </a>
+    <% }); %>
+  </div>
+</aside>

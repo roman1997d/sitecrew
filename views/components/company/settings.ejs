@@ -1,0 +1,80 @@
+<section class="company-section company-settings-section" id="settings">
+  <div class="company-section-header">
+    <div>
+      <span>Settings</span>
+      <h2>Company profile settings</h2>
+    </div>
+    <p>Update public company details shown across SiteCrew.</p>
+  </div>
+
+  <div class="company-form-alert" id="companySettingsAlert" hidden></div>
+
+  <form class="company-job-form company-settings-form" id="companySettingsForm">
+    <div class="company-settings-logo-row">
+      <div class="company-settings-logo-preview <%= company.logo ? 'has-logo' : '' %>" id="companySettingsLogoPreview">
+        <% if (company.logo) { %>
+          <img src="http://localhost:4000<%= company.logo %>" alt="<%= company.name %> logo">
+        <% } else { %>
+          <%= company.initials %>
+        <% } %>
+      </div>
+      <label>
+        <span>Company logo</span>
+        <input type="file" name="logo" accept="image/*">
+        <small class="company-form-help">Upload a PNG or JPG logo, max 5MB.</small>
+      </label>
+    </div>
+
+    <div class="company-form-grid">
+      <label>
+        <span>Company name</span>
+        <input type="text" name="companyName" value="<%= company.name %>" minlength="2" required>
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" value="<%= company.email %>" required>
+      </label>
+
+      <label>
+        <span>Head office</span>
+        <input type="text" name="headOffice" value="<%= company.headOffice %>" placeholder="Manchester HQ, M2">
+      </label>
+
+      <label>
+        <span>Business type</span>
+        <select name="businessType">
+          <option value="">Select business type</option>
+          <% ['Main Contractor', 'Subcontractor', 'Recruitment Agency', 'Developer', 'Facilities Management', 'Other'].forEach(function(type) { %>
+            <option value="<%= type %>" <%= company.businessType === type ? 'selected' : '' %>><%= type %></option>
+          <% }); %>
+        </select>
+      </label>
+
+      <label>
+        <span>Company trades</span>
+        <input type="text" name="trades" value="<%= company.trades.join(', ') %>" placeholder="Flooring, Drylining, Roofing">
+        <small class="company-form-help">Separate trades with commas.</small>
+      </label>
+
+      <label>
+        <span>City</span>
+        <input type="text" name="city" value="<%= company.city %>" placeholder="Manchester">
+      </label>
+
+      <label>
+        <span>Postcode</span>
+        <input type="text" name="postcode" value="<%= company.postcode %>" placeholder="M2">
+      </label>
+    </div>
+
+    <label class="company-form-full">
+      <span>Description</span>
+      <textarea name="description" rows="3" placeholder="Describe your company, sites, and work type."><%= company.description %></textarea>
+    </label>
+
+    <div class="company-modal-actions">
+      <button type="submit" class="company-submit-btn">Save settings</button>
+    </div>
+  </form>
+</section>

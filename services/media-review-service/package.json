@@ -1,0 +1,18 @@
+{
+  "name": "sitecrew-media-review-service",
+  "version": "1.0.0",
+  "description": "SiteCrew Content Media Review Service – image moderation queue",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "pg": "^8.16.3"
+  }
+}

@@ -1,0 +1,27 @@
+<main class="social-feed" id="feed">
+  <div class="find-job-banner">
+    <div>
+      <strong data-i18n="feed.readyTitle">Ready for your next site?</strong>
+      <span data-i18n="feed.readySubtitle">Browse jobs matched to your trade and availability.</span>
+    </div>
+    <button type="button" class="find-job-btn" id="openFindJobSearch"><i class="bi bi-search"></i> <span data-i18n="buttons.findJob">Find Job</span></button>
+  </div>
+
+  <%- include('stories', { stories: stories }) %>
+
+  <div class="feed-filter-controls" aria-label="Feed filters">
+    <button type="button" class="feed-filter-btn active" data-feed-filter="all" data-i18n="feed.showAll">Show all</button>
+    <button type="button" class="feed-filter-btn" data-feed-filter="job" data-i18n="feed.showOnlyJobs">Show only job posts</button>
+  </div>
+
+  <% if (!feedItems.length) { %>
+    <article class="feed-card feed-empty-state">
+      <h3 data-i18n="feed.emptyTitle">No dashboard activity yet</h3>
+      <p data-i18n="feed.emptyText">Follow companies, apply to jobs, or create posts to build your personalized feed.</p>
+    </article>
+  <% } %>
+
+  <% feedItems.forEach(function(item) { %>
+    <%- include('feed-item', { item: item }) %>
+  <% }); %>
+</main>

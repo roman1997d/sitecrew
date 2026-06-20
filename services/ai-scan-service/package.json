@@ -1,0 +1,18 @@
+{
+  "name": "sitecrew-ai-scan-service",
+  "version": "1.0.0",
+  "description": "SiteCrew AI Scan Service – content risk evaluation microservice",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "zod": "^4.0.17"
+  }
+}

@@ -1,0 +1,55 @@
+<section class="profile-section profile-saved-posts-section">
+  <div class="profile-section-header">
+    <h2 data-i18n="profile.savedPosts">My saved posts</h2>
+    <p data-i18n="profile.savedPostsDescription">Posts you bookmarked from your feed.</p>
+  </div>
+
+  <div class="profile-post-grid profile-saved-post-grid" data-saved-posts-grid>
+    <% if (!savedPosts.length) { %>
+      <article class="profile-post-card profile-empty-card" data-saved-posts-empty>
+        <div class="profile-post-body">
+          <div class="profile-post-meta">
+            <strong data-i18n="profile.noSavedPosts">No saved posts yet</strong>
+            <small data-i18n="profile.savedPostsEmpty">Your saved feed posts will appear here</small>
+          </div>
+          <p data-i18n="profile.noSavedPostsDescription">Use Save on dashboard posts to keep updates you want to revisit.</p>
+        </div>
+      </article>
+    <% } %>
+    <% savedPosts.forEach(function(post) { %>
+      <article class="profile-post-card profile-saved-post-card" data-saved-post-id="<%= post.id %>">
+        <div class="profile-post-media <%= post.mediaClass %> <%= post.mediaUrl ? 'has-real-media' : '' %>">
+          <% if (post.mediaUrl && post.mediaType === 'video') { %>
+            <video src="<%= post.mediaSrc %>" controls playsinline></video>
+          <% } else if (post.mediaUrl) { %>
+            <img src="<%= post.mediaSrc %>" alt="<%= post.title %>">
+          <% } %>
+        </div>
+        <div class="profile-post-body">
+          <div class="profile-post-meta">
+            <div>
+              <strong><%= post.title %></strong>
+              <small>
+                <a href="<%= post.authorUrl %>" class="profile-saved-post-author"><%= post.author %></a>
+                · <%= post.location %> · <%= post.date %>
+              </small>
+              <small class="profile-saved-post-saved-at"><span data-i18n="profile.savedOn">Saved</span> · <%= post.savedAt %></small>
+            </div>
+            <div class="profile-saved-post-actions">
+              <a href="/worker/dashboard?post=<%= post.id %>" class="profile-saved-post-view" data-i18n="profile.viewInFeed">View in feed</a>
+              <button type="button" class="profile-post-delete-btn profile-saved-post-unsave-btn" data-unsave-profile-post data-post-id="<%= post.id %>">
+                <i class="bi bi-bookmark-x"></i> <span data-i18n="profile.unsave">Unsave</span>
+              </button>
+            </div>
+          </div>
+          <p><%= post.caption %></p>
+          <div class="profile-post-tags">
+            <% post.tags.forEach(function(tag) { %>
+              <span><%= tag %></span>
+            <% }); %>
+          </div>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+</section>

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | SiteCrew</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/admin.css" rel="stylesheet">
+</head>
+<body class="admin-body">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-brand">
+        <i class="bi bi-shield-lock"></i>
+        <div>
+          <strong>SiteCrew</strong>
+          <span>Admin Panel</span>
+        </div>
+      </div>
+
+      <nav class="admin-nav" aria-label="Admin sections">
+        <button type="button" class="active" data-admin-section="metrics" title="Metrics Tracker"><i class="bi bi-speedometer2"></i> Metrics</button>
+        <button type="button" data-admin-section="users" title="Users"><i class="bi bi-people"></i> Users</button>
+        <button type="button" data-admin-section="companies" title="Company Accounts"><i class="bi bi-building"></i> Companies</button>
+        <button type="button" data-admin-section="billing" title="Billing and Plans"><i class="bi bi-credit-card"></i> Billing</button>
+        <button type="button" data-admin-section="posts" title="Posts Moderator"><i class="bi bi-card-text"></i> Posts</button>
+        <button type="button" data-admin-section="api-logs" title="API Logs"><i class="bi bi-terminal"></i> API Logs</button>
+        <button type="button" data-admin-section="audit" title="Audit Trails"><i class="bi bi-journal-text"></i> Audit</button>
+        <button type="button" data-admin-section="server" title="Server"><i class="bi bi-hdd-network"></i> Server</button>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <p id="adminUserEmail">Loading...</p>
+        <button type="button" id="adminLogoutBtn"><i class="bi bi-box-arrow-right"></i> Log out</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <p>Platform administration</p>
+          <h1 id="adminSectionTitle">Metrics Tracker</h1>
+        </div>
+        <button type="button" class="admin-refresh-btn" id="adminRefreshBtn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+      </header>
+
+      <section class="admin-section active" id="adminSection-metrics" data-section="metrics">
+        <p class="admin-section-lead">Track your application performance across users, companies, jobs, and API traffic.</p>
+        <div class="admin-metrics-grid" id="adminMetricsGrid">
+          <p class="admin-empty">Loading metrics...</p>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-users" data-section="users" hidden>
+        <p class="admin-section-lead">Click a user row to view and edit profile details.</p>
+
+        <div class="admin-users-panel">
+          <div class="admin-toolbar" id="adminUsersToolbar">
+            <label class="admin-search-field">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input type="search" id="adminUsersSearch" placeholder="Search by name, email or ID" autocomplete="off">
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Role</span>
+              <select id="adminUsersRoleFilter" aria-label="Filter by role">
+                <option value="">All roles</option>
+                <option value="worker">Worker</option>
+                <option value="company">Company</option>
+                <option value="admin">Admin</option>
+                <option value="superadmin">Superadmin</option>
+              </select>
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Status</span>
+              <select id="adminUsersStatusFilter" aria-label="Filter by status">
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="suspended">Suspended</option>
+                <option value="deleted">Deleted</option>
+              </select>
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Rating</span>
+              <select id="adminUsersRatingFilter" aria-label="Filter by rating">
+                <option value="">All ratings</option>
+                <option value="none">No rating</option>
+                <option value="5">5 stars</option>
+                <option value="4">4+ stars</option>
+                <option value="3">3+ stars</option>
+                <option value="2">2+ stars</option>
+                <option value="1">1+ stars</option>
+              </select>
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Sort by</span>
+              <select id="adminUsersSort" aria-label="Sort users">
+                <option value="created_desc">Newest first</option>
+                <option value="created_asc">Oldest first</option>
+                <option value="name_asc">Name A–Z</option>
+                <option value="name_desc">Name Z–A</option>
+                <option value="email_asc">Email A–Z</option>
+                <option value="email_desc">Email Z–A</option>
+                <option value="role_asc">Role A–Z</option>
+                <option value="status_asc">Status A–Z</option>
+              </select>
+            </label>
+
+            <button type="button" class="admin-secondary-btn" id="adminUsersClearBtn">Clear filters</button>
+          </div>
+
+          <p class="admin-results-meta" id="adminUsersResultsMeta">Loading users...</p>
+
+          <div class="admin-table-wrap" id="adminUsersTable">
+            <p class="admin-empty">Loading users...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-companies" data-section="companies" hidden>
+        <p class="admin-section-lead">Click a company row to view and edit account details.</p>
+        <div class="admin-users-panel">
+          <div class="admin-toolbar" id="adminCompaniesToolbar">
+            <label class="admin-search-field">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input type="search" id="adminCompaniesSearch" placeholder="Search by company, email, city or ID" autocomplete="off">
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Verification</span>
+              <select id="adminCompaniesVerificationFilter" aria-label="Filter by verification">
+                <option value="">All verification</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>User status</span>
+              <select id="adminCompaniesStatusFilter" aria-label="Filter by user status">
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="suspended">Suspended</option>
+                <option value="deleted">Deleted</option>
+              </select>
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Rating</span>
+              <select id="adminCompaniesRatingFilter" aria-label="Filter by rating">
+                <option value="">All ratings</option>
+                <option value="none">No rating</option>
+                <option value="5">5 stars</option>
+                <option value="4">4+ stars</option>
+                <option value="3">3+ stars</option>
+                <option value="2">2+ stars</option>
+                <option value="1">1+ stars</option>
+              </select>
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Sort by</span>
+              <select id="adminCompaniesSort" aria-label="Sort companies">
+                <option value="created_desc">Newest first</option>
+                <option value="created_asc">Oldest first</option>
+                <option value="name_asc">Company A–Z</option>
+                <option value="name_desc">Company Z–A</option>
+                <option value="email_asc">Email A–Z</option>
+                <option value="email_desc">Email Z–A</option>
+                <option value="verification_asc">Verification A–Z</option>
+                <option value="status_asc">User status A–Z</option>
+              </select>
+            </label>
+
+            <button type="button" class="admin-secondary-btn" id="adminCompaniesClearBtn">Clear filters</button>
+          </div>
+
+          <p class="admin-results-meta" id="adminCompaniesResultsMeta">Loading companies...</p>
+
+          <div class="admin-table-wrap" id="adminCompaniesTable">
+            <p class="admin-empty">Loading companies...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-billing" data-section="billing" hidden>
+        <p class="admin-section-lead">Track company subscriptions, expiry dates, reminders, and account pauses.</p>
+        <div class="admin-users-panel">
+          <div class="admin-toolbar" id="adminBillingToolbar">
+            <label class="admin-search-field">
+              <i class="bi bi-search" aria-hidden="true"></i>
+              <input type="search" id="adminBillingSearch" placeholder="Search by company, email or ID" autocomplete="off">
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Plan</span>
+              <select id="adminBillingPlanFilter" aria-label="Filter by plan">
+                <option value="">All plans</option>
+                <option value="free">Free</option>
+                <option value="pro">Pro</option>
+              </select>
+            </label>
+
+            <button type="button" class="admin-secondary-btn" id="adminBillingExpiringBtn" aria-pressed="false">
+              Expiring soon only
+            </button>
+
+            <button type="button" class="admin-secondary-btn" id="adminBillingClearBtn">Clear filters</button>
+          </div>
+
+          <p class="admin-results-meta" id="adminBillingResultsMeta">Loading billing accounts...</p>
+
+          <div class="admin-table-wrap" id="adminBillingTable">
+            <p class="admin-empty">Loading billing accounts...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-posts" data-section="posts" hidden>
+        <div class="admin-posts-moderator">
+          <p class="admin-posts-status" id="adminPostsModerationStatus">Checking moderation services...</p>
+
+          <div class="admin-posts-subnav" role="tablist" aria-label="Posts moderator panels">
+            <button type="button" class="active" data-posts-panel="list" role="tab" aria-selected="true">Posts list</button>
+            <button type="button" data-posts-panel="ai-scan" role="tab" aria-selected="false">AI Scan</button>
+            <button type="button" data-posts-panel="media-review" role="tab" aria-selected="false">Media Review</button>
+          </div>
+
+          <div class="admin-posts-panel active" id="adminPostsListPanel" data-posts-panel="list" role="tabpanel">
+            <div class="admin-table-wrap" id="adminPostsTable">
+              <p class="admin-empty">Loading posts...</p>
+            </div>
+          </div>
+
+          <div class="admin-posts-panel" id="adminPostsAiScanPanel" data-posts-panel="ai-scan" role="tabpanel" hidden>
+            <div class="admin-text-review">
+              <div class="admin-text-review-toolbar">
+                <button type="button" class="admin-secondary-btn" id="adminTextReviewRiskOnlyBtn" aria-pressed="false">
+                  Show only Risk Posts
+                </button>
+                <button type="button" class="admin-secondary-btn" id="adminTextReviewLearnModeBtn" aria-pressed="false">
+                  Learn mode: OFF
+                </button>
+                <button type="button" class="admin-secondary-btn" id="adminTextReviewRescanBtn">
+                  Rescan all posts
+                </button>
+                <button type="button" class="admin-secondary-btn" id="adminTextReviewLearnedListBtn">
+                  Show list learned blocked word(s)
+                </button>
+                <button type="button" class="admin-secondary-btn" id="adminTextReviewPresetRiskListBtn">
+                  Show list with risk words
+                </button>
+                <p class="admin-text-review-learn-hint" id="adminTextReviewLearnHint" hidden>
+                  Learn mode ON — on REJECT you can teach blocked words for future scans.
+                </p>
+                <p class="admin-text-review-learn-hint" id="adminTextReviewLearnedTermsMeta"></p>
+              </div>
+
+              <div class="admin-text-review-frame" id="adminTextReviewFrame">
+                <p class="admin-empty" id="adminTextReviewEmpty">Loading queue...</p>
+                <div id="adminTextReviewContent" hidden>
+                  <p class="admin-text-review-type" id="adminTextReviewType"></p>
+                  <h3 class="admin-text-review-title" id="adminTextReviewTitle" hidden></h3>
+                  <p class="admin-text-review-text" id="adminTextReviewText"></p>
+                  <p class="admin-text-review-risk-reason" id="adminTextReviewRiskReason" hidden></p>
+                  <div class="admin-text-review-meta" id="adminTextReviewMeta"></div>
+                </div>
+              </div>
+
+              <div class="admin-text-review-actions" id="adminTextReviewActions" hidden>
+                <button type="button" class="admin-success-btn" id="adminTextReviewApproveBtn">APPROVE</button>
+                <button type="button" class="admin-danger-btn" id="adminTextReviewRejectBtn">REJECT</button>
+              </div>
+
+              <p class="admin-text-review-counter" id="adminTextReviewCounter"></p>
+            </div>
+          </div>
+
+          <div class="admin-posts-panel" id="adminPostsMediaReviewPanel" data-posts-panel="media-review" role="tabpanel" hidden>
+            <div class="admin-media-review">
+              <div class="admin-media-review-frame" id="adminMediaReviewFrame">
+                <p class="admin-empty" id="adminMediaReviewEmpty">Loading queue...</p>
+                <img id="adminMediaReviewImage" alt="" hidden>
+              </div>
+
+              <div class="admin-media-review-actions" id="adminMediaReviewActions" hidden>
+                <button type="button" class="admin-success-btn" id="adminMediaReviewApproveBtn">APPROVE</button>
+                <button type="button" class="admin-danger-btn" id="adminMediaReviewRejectBtn">REJECT</button>
+              </div>
+
+              <p class="admin-media-review-counter" id="adminMediaReviewCounter"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-api-logs" data-section="api-logs" hidden>
+        <div class="admin-users-panel">
+          <div class="admin-toolbar" id="adminApiLogsToolbar">
+            <button type="button" class="admin-secondary-btn" id="adminApiLogsProblemsBtn" aria-pressed="false">
+              Show only problems
+            </button>
+
+            <label class="admin-toolbar-field admin-logs-delete-field">
+              <span>Delete logs older than</span>
+              <div class="admin-inline-field">
+                <input type="number" id="adminApiLogsOlderHours" min="1" max="8760" value="24" aria-label="Hours">
+                <span>hours</span>
+                <button type="button" class="admin-secondary-btn" id="adminApiLogsDeleteOlderBtn">Delete old logs</button>
+              </div>
+            </label>
+
+            <button type="button" class="admin-danger-btn" id="adminApiLogsCleanAllBtn">Clean all logs</button>
+          </div>
+
+          <p class="admin-results-meta" id="adminApiLogsResultsMeta">Loading API logs...</p>
+
+          <div class="admin-table-wrap" id="adminApiLogsTable">
+            <p class="admin-empty">Loading API logs...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-audit" data-section="audit" hidden>
+        <div class="admin-users-panel">
+          <div class="admin-toolbar" id="adminAuditToolbar">
+            <label class="admin-toolbar-field admin-audit-autodelete-field">
+              <span>AutoDelete</span>
+              <div class="admin-inline-field">
+                <label class="admin-checkbox-field">
+                  <input type="checkbox" id="adminAuditAutoDeleteEnabled">
+                  <span>Enabled</span>
+                </label>
+                <select id="adminAuditRetentionDays" aria-label="Retention in days">
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="90" selected>90 days</option>
+                  <option value="180">180 days</option>
+                  <option value="365">365 days</option>
+                </select>
+                <button type="button" class="admin-secondary-btn" id="adminAuditAutoDeleteSaveBtn">Save AutoDelete</button>
+              </div>
+            </label>
+
+            <button type="button" class="admin-danger-btn" id="adminAuditCleanAllBtn">Clean data</button>
+          </div>
+
+          <p class="admin-results-meta" id="adminAuditResultsMeta">Loading audit trails...</p>
+
+          <div class="admin-table-wrap" id="adminAuditTable">
+            <p class="admin-empty">Loading audit trails...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-server" data-section="server" hidden>
+        <p class="admin-section-lead">Monitor backend runtime health, memory usage, database connectivity, and picture storage integrity.</p>
+
+        <div class="admin-server-panel">
+          <div class="admin-metrics-grid" id="adminServerMetricsGrid">
+            <p class="admin-empty">Loading server status...</p>
+          </div>
+
+          <div class="admin-server-details" id="adminServerDetails">
+            <p class="admin-empty">Loading server details...</p>
+          </div>
+
+          <div class="admin-toolbar admin-server-toolbar">
+            <button type="button" class="admin-secondary-btn" id="adminServerCheckPanicBtn">
+              Check server panic
+            </button>
+            <button type="button" class="admin-secondary-btn" id="adminServerCheckDatabasePanicBtn">
+              Check database panic
+            </button>
+            <button type="button" class="admin-secondary-btn" id="adminServerScanAbandonedBtn">
+              Scan for abandoned picture files
+            </button>
+            <button type="button" class="admin-danger-btn" id="adminServerDeleteAbandonedBtn" hidden disabled>
+              Delete abandoned picture files
+            </button>
+          </div>
+
+          <p class="admin-status-action-summary" id="adminServerActionSummary" hidden></p>
+          <div class="admin-table-wrap" id="adminServerAbandonedTable">
+            <p class="admin-empty">Run a scan to list abandoned picture files.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="admin-modal" id="adminUserModal" hidden>
+    <div class="admin-modal-backdrop" data-admin-modal-close></div>
+    <div class="admin-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="adminUserModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">User details</p>
+          <h2 id="adminUserModalTitle">Edit user</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-admin-modal-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <form id="adminUserForm" class="admin-user-form">
+        <input type="hidden" id="adminUserId" name="userId">
+
+        <section class="admin-user-readonly">
+          <h3>Account info</h3>
+          <dl class="admin-detail-list" id="adminUserAccountInfo"></dl>
+        </section>
+
+        <section class="admin-user-readonly">
+          <h3>Initial profile data</h3>
+          <p class="admin-user-readonly-lead">Registration and profile details as stored in the platform.</p>
+          <dl class="admin-detail-list" id="adminUserInitialData"></dl>
+        </section>
+
+        <h3 class="admin-user-section-title">Edit profile</h3>
+
+        <div class="admin-user-avatar-block">
+          <div class="admin-user-avatar" id="adminUserAvatarPreview">
+            <span id="adminUserAvatarInitials">?</span>
+          </div>
+          <div class="admin-user-avatar-actions">
+            <label class="admin-upload-btn" for="adminUserPhotoInput">
+              <i class="bi bi-camera"></i> Change avatar
+            </label>
+            <input type="file" id="adminUserPhotoInput" accept="image/*" hidden>
+            <p class="admin-user-avatar-hint" id="adminUserPhotoHint">JPG or PNG, max 5 MB</p>
+          </div>
+        </div>
+
+        <div class="admin-form-grid" id="adminUserWorkerFields">
+          <label class="admin-field">
+            <span>First name</span>
+            <input type="text" id="adminUserFirstName" name="firstName" autocomplete="given-name">
+          </label>
+          <label class="admin-field">
+            <span>Last name</span>
+            <input type="text" id="adminUserLastName" name="lastName" autocomplete="family-name">
+          </label>
+        </div>
+
+        <label class="admin-field" id="adminUserCompanyField" hidden>
+          <span>Company name</span>
+          <input type="text" id="adminUserCompanyName" name="companyName" autocomplete="organization">
+        </label>
+
+        <label class="admin-field">
+          <span>Email</span>
+          <input type="email" id="adminUserEmailInput" name="email" required autocomplete="email">
+        </label>
+
+        <label class="admin-field" id="adminUserQualificationsField" hidden>
+          <span>Qualifications</span>
+          <input type="text" id="adminUserQualificationsInput" name="qualifications" placeholder="CSCS, First Aid, IPAF" autocomplete="off">
+          <small class="admin-field-hint">Separate qualifications with commas.</small>
+        </label>
+
+        <label class="admin-field" id="adminUserBadgeColorField" hidden>
+          <span>Badge colour</span>
+          <select id="adminUserBadgeColorInput" name="badgeColor">
+            <option value="green">green</option>
+            <option value="blue">blue</option>
+            <option value="gold">gold</option>
+            <option value="black">black</option>
+            <option value="white">white</option>
+            <option value="red">red</option>
+            <option value="grey">grey</option>
+          </select>
+        </label>
+
+        <label class="admin-field" id="adminUserVerificationField" hidden>
+          <span>Verification status</span>
+          <select id="adminUserVerificationInput" name="verificationStatus">
+            <option value="pending">pending</option>
+            <option value="approved">approved</option>
+            <option value="rejected">rejected</option>
+          </select>
+        </label>
+
+        <div class="admin-user-meta">
+          <span class="admin-pill" id="adminUserRolePill">role</span>
+          <span class="admin-pill" id="adminUserStatusPill">status</span>
+          <span class="admin-pill" id="adminUserVerificationPill" hidden>verification</span>
+        </div>
+
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-secondary-btn" data-admin-modal-close>Cancel</button>
+          <button type="submit" class="admin-primary-btn" id="adminUserSaveBtn">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-modal" id="adminCompanyModal" hidden>
+    <div class="admin-modal-backdrop" data-admin-company-modal-close></div>
+    <div class="admin-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="adminCompanyModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">Company details</p>
+          <h2 id="adminCompanyModalTitle">Edit company</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-admin-company-modal-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <form id="adminCompanyForm" class="admin-user-form">
+        <input type="hidden" id="adminCompanyUserId" name="userId">
+
+        <section class="admin-user-readonly">
+          <h3>Account info</h3>
+          <dl class="admin-detail-list" id="adminCompanyAccountInfo"></dl>
+        </section>
+
+        <section class="admin-user-readonly">
+          <h3>Initial profile data</h3>
+          <p class="admin-user-readonly-lead">Registration and profile details as stored in the platform.</p>
+          <dl class="admin-detail-list" id="adminCompanyInitialData"></dl>
+        </section>
+
+        <section class="admin-user-readonly">
+          <div class="admin-section-heading-row">
+            <div>
+              <h3>Account history</h3>
+              <p class="admin-user-readonly-lead">Status changes recorded by administrators.</p>
+            </div>
+            <button type="button" class="admin-secondary-btn" id="adminCompanyAddEventBtn">Add event</button>
+          </div>
+          <div class="admin-history-list" id="adminCompanyHistoryList">
+            <p class="admin-detail-empty">No account history yet.</p>
+          </div>
+        </section>
+
+        <h3 class="admin-user-section-title">Edit company</h3>
+
+        <div class="admin-user-avatar-block">
+          <div class="admin-user-avatar" id="adminCompanyLogoPreview">
+            <span id="adminCompanyLogoInitials">?</span>
+          </div>
+          <div class="admin-user-avatar-actions">
+            <label class="admin-upload-btn" for="adminCompanyLogoInput">
+              <i class="bi bi-camera"></i> Change logo
+            </label>
+            <input type="file" id="adminCompanyLogoInput" accept="image/*" hidden>
+            <p class="admin-user-avatar-hint">JPG or PNG, max 5 MB</p>
+          </div>
+        </div>
+
+        <div class="admin-form-grid">
+          <label class="admin-field">
+            <span>Company name</span>
+            <input type="text" id="adminCompanyNameInput" name="companyName" required autocomplete="organization">
+          </label>
+          <label class="admin-field">
+            <span>Email</span>
+            <input type="email" id="adminCompanyEmailInput" name="email" required autocomplete="email">
+          </label>
+          <label class="admin-field">
+            <span>Phone</span>
+            <input type="text" id="adminCompanyPhoneInput" name="phone" autocomplete="tel">
+          </label>
+          <label class="admin-field">
+            <span>City</span>
+            <input type="text" id="adminCompanyCityInput" name="city" autocomplete="address-level2">
+          </label>
+          <label class="admin-field">
+            <span>Postcode</span>
+            <input type="text" id="adminCompanyPostcodeInput" name="postcode" autocomplete="postal-code">
+          </label>
+          <label class="admin-field">
+            <span>Website</span>
+            <input type="url" id="adminCompanyWebsiteInput" name="website" placeholder="https://">
+          </label>
+          <label class="admin-field">
+            <span>Head office</span>
+            <input type="text" id="adminCompanyHeadOfficeInput" name="headOffice">
+          </label>
+          <label class="admin-field">
+            <span>Business type</span>
+            <input type="text" id="adminCompanyBusinessTypeInput" name="businessType">
+          </label>
+          <label class="admin-field">
+            <span>Verification</span>
+            <select id="adminCompanyVerificationInput" name="verificationStatus">
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label class="admin-field">
+            <span>Plan</span>
+            <input type="text" id="adminCompanyPlanInput" name="plan" readonly>
+          </label>
+        </div>
+
+        <label class="admin-field">
+          <span>Trades</span>
+          <input type="text" id="adminCompanyTradesInput" name="trades" placeholder="Comma-separated trades">
+        </label>
+
+        <label class="admin-field">
+          <span>Description</span>
+          <textarea id="adminCompanyDescriptionInput" name="description" rows="4"></textarea>
+        </label>
+
+        <div class="admin-user-meta">
+          <span class="admin-pill" id="adminCompanyStatusPill">status</span>
+          <span class="admin-pill" id="adminCompanyVerificationPill">verification</span>
+        </div>
+
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-secondary-btn" data-admin-company-modal-close>Cancel</button>
+          <button type="submit" class="admin-primary-btn" id="adminCompanySaveBtn">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminCompanyStatusModal" hidden>
+    <div class="admin-modal-backdrop" data-company-status-modal-close></div>
+    <div class="admin-modal-dialog admin-status-reason-dialog" role="dialog" aria-modal="true" aria-labelledby="adminCompanyStatusModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">Company account action</p>
+          <h2 id="adminCompanyStatusModalTitle">Confirm status change</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-company-status-modal-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <form id="adminCompanyStatusForm" class="admin-user-form">
+        <label class="admin-field">
+          <span>Date</span>
+          <input type="text" id="adminCompanyStatusDate" readonly>
+        </label>
+
+        <p class="admin-status-action-summary" id="adminCompanyStatusSummary"></p>
+
+        <label class="admin-field">
+          <span>Reason</span>
+          <textarea id="adminCompanyStatusReason" rows="4" required placeholder="Explain why you are taking this action"></textarea>
+        </label>
+
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-secondary-btn" data-company-status-modal-close>Cancel</button>
+          <button type="submit" class="admin-primary-btn" id="adminCompanyStatusConfirmBtn">Confirm action</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminTextReviewLearnModal" hidden>
+    <div class="admin-modal-backdrop" data-text-review-learn-close></div>
+    <div class="admin-modal-dialog admin-status-reason-dialog" role="dialog" aria-modal="true" aria-labelledby="adminTextReviewLearnModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">Learn mode</p>
+          <h2 id="adminTextReviewLearnModalTitle">Teach blocked words</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-text-review-learn-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <form id="adminTextReviewLearnForm" class="admin-user-form">
+        <p class="admin-status-action-summary">
+          Which words or phrases make this post unsafe? Separate them with commas. Learned words are saved with high risk
+          and applied immediately to pending posts and all future scans.
+        </p>
+
+        <label class="admin-field">
+          <span>Category</span>
+          <select id="adminTextReviewLearnCategory">
+            <option value="not_allowed_content">Blocked content (high risk)</option>
+            <option value="swear_words">Swear words</option>
+            <option value="spam">Spam</option>
+            <option value="scam">Scam</option>
+            <option value="abuse">Abuse / harassment</option>
+          </select>
+        </label>
+
+        <label class="admin-field">
+          <span>Blocked words</span>
+          <textarea id="adminTextReviewLearnTerms" rows="4" placeholder="contact me, 73663, per hour"></textarea>
+        </label>
+
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-secondary-btn" data-text-review-learn-close>Cancel</button>
+          <button type="submit" class="admin-danger-btn" id="adminTextReviewLearnConfirmBtn">Reject and learn</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminTextReviewLearnedListModal" hidden>
+    <div class="admin-modal-backdrop" data-text-review-learned-list-close></div>
+    <div class="admin-modal-dialog admin-status-reason-dialog admin-learned-terms-dialog" role="dialog" aria-modal="true" aria-labelledby="adminTextReviewLearnedListModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">AI Scan</p>
+          <h2 id="adminTextReviewLearnedListModalTitle">Learned blocked words</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-text-review-learned-list-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="admin-learned-terms-body">
+        <form id="adminTextReviewLearnedAddForm" class="admin-learned-term-add">
+          <label class="admin-field admin-learned-term-add-field">
+            <span>Custom blocked word(s)</span>
+            <input
+              type="text"
+              id="adminTextReviewLearnedAddTerms"
+              placeholder="word or phrase, comma separated"
+              autocomplete="off"
+            >
+          </label>
+          <label class="admin-field admin-learned-term-add-field admin-learned-term-add-risk-field">
+            <span>Risk score</span>
+            <input
+              type="number"
+              id="adminTextReviewLearnedAddRisk"
+              min="1"
+              max="100"
+              step="1"
+              value="90"
+            >
+          </label>
+          <button type="submit" class="admin-primary-btn" id="adminTextReviewLearnedAddBtn">Save</button>
+        </form>
+
+        <p class="admin-status-action-summary" id="adminTextReviewLearnedListSummary">Loading learned words...</p>
+        <div class="admin-table-wrap" id="adminTextReviewLearnedListTable">
+          <p class="admin-empty">Loading...</p>
+        </div>
+      </div>
+
+      <div class="admin-modal-actions">
+        <button type="button" class="admin-secondary-btn" data-text-review-learned-list-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminTextReviewPresetRiskListModal" hidden>
+    <div class="admin-modal-backdrop" data-text-review-preset-risk-close></div>
+    <div class="admin-modal-dialog admin-status-reason-dialog admin-learned-terms-dialog" role="dialog" aria-modal="true" aria-labelledby="adminTextReviewPresetRiskListModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">AI Scan</p>
+          <h2 id="adminTextReviewPresetRiskListModalTitle">Preset risk words & rules</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-text-review-preset-risk-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="admin-learned-terms-body">
+        <p class="admin-status-action-summary" id="adminTextReviewPresetRiskListSummary">Loading preset risk rules...</p>
+        <div class="admin-table-wrap" id="adminTextReviewPresetRiskListTable">
+          <p class="admin-empty">Loading...</p>
+        </div>
+      </div>
+
+      <div class="admin-modal-actions">
+        <button type="button" class="admin-secondary-btn" data-text-review-preset-risk-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-alert" id="adminAlert" hidden role="status" aria-live="polite"></div>
+
+  <script src="/js/admin-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | SiteCrew</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/login.css" rel="stylesheet">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-circle login-circle-1"></div>
+    <div class="login-circle login-circle-2"></div>
+
+    <a href="/" class="login-back"><i class="bi bi-arrow-left"></i> Back</a>
+
+    <div class="login-container">
+      <div class="login-brand">
+        <div class="login-brand-icon"><i class="bi bi-hammer"></i></div>
+        <span class="login-brand-name">SiteCrew</span>
+      </div>
+
+      <p class="login-welcome">Welcome!</p>
+      <h1 class="login-heading" id="auth-heading">Sign in</h1>
+      <p class="login-subtitle" id="auth-subtitle">Please fill your information</p>
+
+      <div class="auth-tabs" role="tablist" aria-label="Authentication mode">
+        <button type="button" class="auth-tab active" data-auth-mode="login">Sign in</button>
+        <button type="button" class="auth-tab" data-auth-mode="register">Register</button>
+      </div>
+
+      <div class="auth-alert" id="auth-alert" hidden></div>
+
+      <form id="login-form" class="auth-form">
+        <div class="login-field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" name="email" placeholder="Email" required autocomplete="email">
+          <i class="bi bi-envelope login-field-icon"></i>
+        </div>
+
+        <div class="login-field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" placeholder="Password" required autocomplete="current-password">
+          <i class="bi bi-lock login-field-icon"></i>
+        </div>
+
+        <button type="submit" class="login-btn">Sign in now</button>
+      </form>
+
+      <form id="register-form" class="auth-form" hidden>
+        <div class="role-switch">
+          <label>
+            <input type="radio" name="role" value="worker" checked>
+            <span><i class="bi bi-person-hard-hat"></i> Worker</span>
+          </label>
+          <label>
+            <input type="radio" name="role" value="company">
+            <span><i class="bi bi-building"></i> Company</span>
+          </label>
+        </div>
+
+        <div class="login-field register-worker-field">
+          <label for="register-full-name">Full name</label>
+          <input type="text" id="register-full-name" name="fullName" placeholder="Full name" autocomplete="name">
+          <i class="bi bi-person login-field-icon"></i>
+        </div>
+
+        <div class="login-field register-company-field" hidden>
+          <label for="register-company-name">Company name</label>
+          <input type="text" id="register-company-name" name="companyName" placeholder="Company name" autocomplete="organization">
+          <i class="bi bi-building login-field-icon"></i>
+        </div>
+
+        <div class="login-field">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" name="email" placeholder="Email" required autocomplete="email">
+          <i class="bi bi-envelope login-field-icon"></i>
+        </div>
+
+        <div class="login-field">
+          <label for="register-password">Password</label>
+          <input type="password" id="register-password" name="password" placeholder="Password" required minlength="8" autocomplete="new-password">
+          <i class="bi bi-lock login-field-icon"></i>
+        </div>
+
+        <div class="login-field register-worker-field">
+          <label for="register-trades">Trade</label>
+          <input type="text" id="register-trades" name="trades" placeholder="Start typing a trade" list="register-trades-options" autocomplete="off">
+          <datalist id="register-trades-options"></datalist>
+          <i class="bi bi-tools login-field-icon"></i>
+        </div>
+
+        <div class="login-field">
+          <label for="register-city">City</label>
+          <input type="text" id="register-city" name="city" placeholder="Manchester" autocomplete="address-level2">
+          <i class="bi bi-geo-alt login-field-icon"></i>
+        </div>
+
+        <button type="submit" class="login-btn">Create account</button>
+      </form>
+    </div>
+  </div>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

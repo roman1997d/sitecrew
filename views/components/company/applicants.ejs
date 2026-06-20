@@ -1,0 +1,71 @@
+<%
+  const applicantJobTitles = Array.from(new Set(applicants.map((applicant) => applicant.jobTitle))).sort((a, b) => a.localeCompare(b));
+%>
+<section class="company-section" id="applicants">
+  <div class="company-section-header">
+    <div>
+      <span>Applicants</span>
+      <h2>Review workers quickly</h2>
+    </div>
+    <% if (applicantJobTitles.length) { %>
+      <label class="company-applicant-sort">
+        <span>Sort by applied job</span>
+        <select id="applicantJobFilter">
+          <option value="">All jobs</option>
+          <% applicantJobTitles.forEach(function(jobTitle) { %>
+            <option value="<%= jobTitle %>"><%= jobTitle %></option>
+          <% }); %>
+        </select>
+      </label>
+    <% } %>
+  </div>
+
+  <div class="company-list-card">
+    <% if (!applicants.length) { %>
+      <div class="company-empty-inline">
+        <strong>No applicants yet</strong>
+        <span>Applicants will appear here after workers apply to your jobs.</span>
+      </div>
+    <% } %>
+
+    <% applicants.forEach(function(applicant) { %>
+      <div class="company-applicant-row" data-application-row data-application-id="<%= applicant.id %>" data-worker-id="<%= applicant.workerId %>" data-job-title="<%= applicant.jobTitle %>">
+        <button
+          type="button"
+          class="company-applicant-delete-btn"
+          data-delete-application
+          aria-label="Delete applicant"
+        >X</button>
+        <div class="company-worker-avatar <%= applicant.profilePhoto ? 'has-photo' : '' %>">
+          <% if (applicant.profilePhoto) { %>
+            <img src="http://localhost:4000<%= applicant.profilePhoto %>" alt="<%= applicant.name %> profile picture">
+          <% } else { %>
+            <%= applicant.name.charAt(0) %>
+          <% } %>
+        </div>
+        <div class="company-worker-info">
+          <strong><%= applicant.name %></strong>
+          <span><%= applicant.trade %> · <%= applicant.experience %> · <%= applicant.availability %></span>
+          <small class="company-applied-job">Applied for <strong><%= applicant.jobTitle %></strong></small>
+        </div>
+        <div class="company-rating"><i class="bi bi-star-fill"></i> <%= applicant.rating %></div>
+        <span class="company-application-status <%= applicant.status %>" data-application-status><%= applicant.status %></span>
+        <div class="company-row-actions">
+          <button type="button" data-application-action="accepted">Invite</button>
+          <button type="button" class="muted" data-application-action="rejected">Reject</button>
+          <button
+            type="button"
+            class="contact <%= applicant.savedContact ? 'saved' : '' %>"
+            data-save-applicant-contact
+            <%= applicant.savedContact ? 'disabled' : '' %>
+          ><%= applicant.savedContact ? 'Saved' : "Save to contact's" %></button>
+          <button type="button" class="ghost" data-view-worker-profile>View Profile</button>
+        </div>
+      </div>
+    <% }); %>
+    <div class="company-empty-inline" data-applicant-filter-empty hidden>
+      <strong>No applicants for this job</strong>
+      <span>Choose another job or show all applications.</span>
+    </div>
+  </div>
+</section>

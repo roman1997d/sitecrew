@@ -1,0 +1,45 @@
+<div class="worker-profile-modal-overlay find-job-search-overlay" id="findJobSearchModal" aria-hidden="true" data-worker-trade-interests="<%= encodeURIComponent(JSON.stringify(tradeInterests || [])) %>">
+  <div class="worker-profile-modal find-job-search-modal" role="dialog" aria-modal="true" aria-labelledby="findJobSearchTitle">
+    <div class="worker-profile-modal-header">
+      <div>
+        <span data-i18n="findJob.eyebrow">Job search</span>
+        <h2 id="findJobSearchTitle" data-i18n="findJob.title">Find your next site</h2>
+        <p data-i18n="findJob.description">Search by company name, location, or trade.</p>
+      </div>
+      <button type="button" id="closeFindJobSearch" aria-label="Close" data-i18n-attr="aria-label:common.close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form class="find-job-search-form" id="findJobSearchForm">
+      <div class="find-job-search-grid">
+        <label class="find-job-primary-field">
+          <span data-i18n="findJob.trade">Trade</span>
+          <input type="search" name="trade" placeholder="Type 3 letters, e.g. Dry" list="findJobTradeOptions" autocomplete="off" data-i18n-attr="placeholder:findJob.tradePlaceholder">
+          <datalist id="findJobTradeOptions"></datalist>
+        </label>
+        <label>
+          <span data-i18n="findJob.location">Location</span>
+          <input type="search" name="location" placeholder="Manchester, M1" data-i18n-attr="placeholder:findJob.locationPlaceholder">
+        </label>
+        <label>
+          <span data-i18n="findJob.companyName">Company name</span>
+          <input type="search" name="companyName" placeholder="Apex Build" data-i18n-attr="placeholder:findJob.companyNamePlaceholder">
+        </label>
+        <label class="find-job-checkbox-row">
+          <input type="checkbox" name="vacanciesOnly" value="open" checked>
+          <span data-i18n="findJob.vacanciesOnly">Show companies with vacancies only</span>
+        </label>
+      </div>
+      <div class="find-job-search-actions">
+        <button type="submit" class="worker-submit-btn"><i class="bi bi-search"></i> <span data-i18n="findJob.search">Search companies</span></button>
+        <button type="button" class="worker-secondary-btn" id="resetFindJobSearch" data-i18n="findJob.reset">Reset</button>
+      </div>
+    </form>
+
+    <div class="find-job-search-status" id="findJobSearchStatus" hidden></div>
+    <div class="find-job-results" id="findJobResults">
+      <p class="worker-panel-empty" data-i18n="findJob.initialState">Use the filters above to search companies.</p>
+    </div>
+  </div>
+</div>

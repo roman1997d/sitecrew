@@ -1,0 +1,94 @@
+<aside class="company-right-panel">
+  <section class="company-profile-card" id="profile">
+    <div class="company-logo-mark <%= company.logo ? 'has-logo' : '' %>">
+      <% if (company.logo) { %>
+        <img src="http://localhost:4000<%= company.logo %>" alt="<%= company.name %> logo">
+      <% } else { %>
+        <%= company.initials %>
+      <% } %>
+    </div>
+    <div>
+      <h3><%= company.name %></h3>
+      <p><%= company.location %></p>
+      <% if (company.businessType) { %><p><%= company.businessType %></p><% } %>
+      <div class="company-profile-badges">
+        <% if (company.verified) { %><span><i class="bi bi-patch-check-fill"></i> Verified</span><% } %>
+        <span><i class="bi bi-star-fill"></i> <%= company.rating %></span>
+      </div>
+    </div>
+    <a href="#settings" class="company-profile-edit-link">Edit Profile</a>
+  </section>
+
+  <section class="company-side-card" id="companySideNotifications">
+    <h3>Notifications</h3>
+    <div id="companySideNotificationsList">
+      <% if (!notifications.length) { %>
+        <p class="company-side-empty">No new notifications.</p>
+      <% } %>
+      <% notifications.forEach(function(notification) { %>
+        <div class="company-notification">
+          <i class="bi bi-bell"></i>
+          <div>
+            <strong><%= notification.title %></strong>
+            <span><%= notification.body || notification.type %></span>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </section>
+
+  <section class="company-side-card">
+    <h3>Quick insights</h3>
+    <div class="company-insight-row"><span>Active jobs</span><strong><%= insights.activeJobs %></strong></div>
+    <div class="company-insight-row"><span>Open positions</span><strong><%= insights.workersNeeded %></strong></div>
+    <div class="company-insight-row"><span>Response rate</span><strong><%= insights.responseRate %></strong></div>
+  </section>
+
+  <section class="company-side-card">
+    <h3>Company rating & feedback</h3>
+    <div class="company-insight-row"><span>Overall rating</span><strong><i class="bi bi-star-fill"></i> <%= company.rating %></strong></div>
+    <% if (!companyReviews.length) { %>
+      <p class="company-side-empty">No worker feedback yet.</p>
+    <% } %>
+    <div class="company-dashboard-review-list">
+      <% companyReviews.forEach(function(review) { %>
+        <article class="company-dashboard-review">
+          <div class="company-dashboard-review-head">
+            <a href="/workers/<%= review.workerId %>/profile">
+              <span class="<%= review.workerPhoto ? 'has-photo' : '' %>">
+                <% if (review.workerPhoto) { %>
+                  <img src="http://localhost:4000<%= review.workerPhoto %>" alt="<%= review.workerName %> photo">
+                <% } else { %>
+                  <%= review.workerInitials %>
+                <% } %>
+              </span>
+              <div>
+                <strong><%= review.workerName %></strong>
+                <small><%= review.workerTrade %></small>
+              </div>
+            </a>
+            <div class="company-dashboard-review-stars">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <i class="bi <%= i <= review.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+              <% } %>
+            </div>
+          </div>
+          <p><%= review.feedback || 'No written feedback.' %></p>
+        </article>
+      <% }); %>
+    </div>
+  </section>
+
+  <section class="company-side-card" id="messages">
+    <h3>Messages</h3>
+    <% if (!conversations.length) { %>
+      <p class="company-side-empty">No worker chats yet.</p>
+    <% } %>
+    <% conversations.forEach(function(conversation) { %>
+      <div class="company-message-preview">
+        <strong><%= conversation.worker_name %></strong>
+        <span><%= conversation.job_title || 'General conversation' %></span>
+      </div>
+    <% }); %>
+  </section>
+</aside>

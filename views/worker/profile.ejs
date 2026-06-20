@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="<%= profile.worker.languagePreference || 'en' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | SiteCrew</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/dashboard.css" rel="stylesheet">
+</head>
+<body class="dash-body social-dash-body" data-worker-language="<%= profile.worker.languagePreference || '' %>" data-public-profile="<%= profile.isPublicProfile ? 'true' : 'false' %>">
+  <div class="social-dashboard profile-page">
+    <%- include('../components/dashboard/topbar', {
+      worker: profile.topbarWorker || profile.worker,
+      counts: profile.counts
+    }) %>
+
+    <main class="profile-container">
+      <% if (profile.isPublicProfile) { %>
+        <button type="button" class="profile-go-back-btn" id="publicProfileGoBack">
+          <i class="bi bi-arrow-left"></i> Go Back
+        </button>
+      <% } %>
+      <%- include('../components/profile/header', {
+        worker: profile.worker,
+        stats: profile.stats,
+        profile: profile
+      }) %>
+
+      <% if (!profile.isPublicProfile) { %>
+        <%- include('../components/profile/actions') %>
+      <% } %>
+
+      <div class="profile-layout">
+        <div class="profile-main-column">
+          <%- include('../components/profile/posts', {
+            posts: profile.posts,
+            canDeletePosts: !profile.isPublicProfile
+          }) %>
+
+          <% if (!profile.isPublicProfile) { %>
+            <%- include('../components/profile/saved-posts', {
+              savedPosts: profile.savedPosts || []
+            }) %>
+          <% } %>
+        </div>
+
+        <aside class="profile-side-column">
+          <%- include('../components/profile/company-list', {
+            title: 'Companies & Persons you follow',
+            titleKey: 'profile.companiesYouFollow',
+            description: 'Companies and people this worker follows.',
+            descriptionKey: 'profile.companiesYouFollowDescription',
+            companies: profile.followingCompanies,
+            actionLabel: 'Following',
+            actionKey: 'profile.following'
+          }) %>
+
+          <%- include('../components/profile/company-list', {
+            title: 'Companies following you',
+            titleKey: 'profile.companiesFollowingYou',
+            description: 'Companies interested in this worker profile.',
+            descriptionKey: 'profile.companiesFollowingYouDescription',
+            companies: profile.followerCompanies,
+            actionLabel: 'Message',
+            actionKey: 'profile.message'
+          }) %>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <% if (!profile.isPublicProfile) { %>
+  <%- include('../components/dashboard/find-job-modal', { tradeInterests: profile.tradeInterests || [] }) %>
+  <div class="worker-profile-modal-overlay" id="workerProfileEditModal" aria-hidden="true">
+    <div class="worker-profile-modal" role="dialog" aria-modal="true" aria-labelledby="workerProfileEditTitle">
+      <div class="worker-profile-modal-header">
+        <div>
+          <span data-i18n="profile.modalEyebrow">Worker profile</span>
+          <h2 id="workerProfileEditTitle" data-i18n="profile.editProfile">Edit Profile</h2>
+          <p data-i18n="profile.modalDescription">These details help hiring companies understand your skills, availability, and work conditions.</p>
+        </div>
+        <button type="button" id="closeWorkerProfileEdit" aria-label="Close" data-i18n-attr="aria-label:common.close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="worker-profile-alert" id="workerProfileEditAlert" hidden></div>
+
+      <form id="workerProfileEditForm" class="worker-profile-form">
+        <label class="worker-photo-upload">
+          <span data-i18n="profile.uploadPicture">Upload profile picture</span>
+          <input type="file" name="profilePhoto" accept="image/*">
+          <small data-i18n="profile.uploadPictureHelp">Upload a clear picture of yourself. JPG, PNG, GIF or WebP are supported.</small>
+        </label>
+
+        <div class="worker-form-grid">
+          <label>
+            <span data-i18n="profile.fullName">Full name</span>
+            <input type="text" name="fullName" required>
+          </label>
+
+          <label>
+            <span data-i18n="profile.trades">Your trade / trades</span>
+            <input type="text" name="trades" placeholder="Taper, Dryliner, Carpenter" required data-i18n-attr="placeholder:profile.tradesPlaceholder">
+          </label>
+
+          <label>
+            <span data-i18n="profile.workLocations">Locations where you can work</span>
+            <input type="text" name="workLocations" placeholder="Manchester, Liverpool, Leeds" data-i18n-attr="placeholder:profile.workLocationsPlaceholder">
+          </label>
+
+          <label>
+            <span data-i18n="profile.mainCity">Main city</span>
+            <input type="text" name="city" placeholder="Manchester" data-i18n-attr="placeholder:profile.cityPlaceholder">
+          </label>
+
+          <label>
+            <span data-i18n="profile.postcode">Postcode</span>
+            <input type="text" name="postcode" placeholder="M1" data-i18n-attr="placeholder:profile.postcodePlaceholder">
+          </label>
+
+          <label>
+            <span data-i18n="profile.travelRadius">Travel radius</span>
+            <input type="text" name="workingRadius" placeholder="25 miles" data-i18n-attr="placeholder:profile.travelRadiusPlaceholder">
+          </label>
+
+          <label>
+            <span data-i18n="profile.yearsExperience">Years of construction experience</span>
+            <input type="number" name="yearsExperience" min="0" placeholder="5" data-i18n-attr="placeholder:profile.yearsExperiencePlaceholder">
+          </label>
+
+          <label>
+            <span data-i18n="profile.availability">Availability</span>
+            <select name="availabilityStatus">
+              <option value="Available Now" data-i18n="availability.availableNow">Available Now</option>
+              <option value="Available Soon" data-i18n="availability.availableSoon">Available Soon</option>
+              <option value="Busy" data-i18n="availability.busy">Busy</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="settings.language">Language</span>
+            <select name="languagePreference" class="worker-language-select">
+              <option value="en" data-i18n="languages.en">English 🇬🇧</option>
+              <option value="ro" data-i18n="languages.ro">Romanian 🇷🇴</option>
+              <option value="ru" data-i18n="languages.ru">Russian 🇷🇺</option>
+              <option value="pl" data-i18n="languages.pl">Polish 🇵🇱</option>
+              <option value="bg" data-i18n="languages.bg">Bulgarian 🇧🇬</option>
+              <option value="uk" data-i18n="languages.uk">Ukrainian 🇺🇦</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span data-i18n="profile.lastCompanies">Last 3 companies you worked for</span>
+          <input type="text" name="lastCompanies" placeholder="Apex Build, NorthBuild, Skyline" data-i18n-attr="placeholder:profile.lastCompaniesPlaceholder">
+        </label>
+
+        <label>
+          <span data-i18n="profile.qualifications">Qualifications</span>
+          <input type="text" name="qualifications" placeholder="CSCS, First Aid, IPAF" data-i18n-attr="placeholder:profile.qualificationsPlaceholder">
+        </label>
+
+        <div class="worker-form-grid">
+          <label>
+            <span data-i18n="profile.ukPermit">Permit to work in UK?</span>
+            <select name="hasUkWorkPermit">
+              <option value="false" data-i18n="common.no">No</option>
+              <option value="true" data-i18n="common.yes">Yes</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="profile.englishNative">Is English your native language?</span>
+            <select name="isEnglishNative" id="isEnglishNative">
+              <option value="false" data-i18n="common.no">No</option>
+              <option value="true" data-i18n="common.yes">Yes</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="profile.nativeLanguage">Native language</span>
+            <input type="text" name="nativeLanguage" placeholder="Romanian" data-i18n-attr="placeholder:profile.nativeLanguagePlaceholder">
+          </label>
+
+          <label>
+            <span data-i18n="profile.englishLevel">English level</span>
+            <select name="englishLevel">
+              <option value="" data-i18n="profile.selectLevel">Select level</option>
+              <option value="Basic" data-i18n="profile.levelBasic">Basic</option>
+              <option value="Intermediate" data-i18n="profile.levelIntermediate">Intermediate</option>
+              <option value="Good" data-i18n="profile.levelGood">Good</option>
+              <option value="Fluent" data-i18n="profile.levelFluent">Fluent</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="profile.hasCar">Do you have a car?</span>
+            <select name="hasCar">
+              <option value="false" data-i18n="common.no">No</option>
+              <option value="true" data-i18n="common.yes">Yes</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="profile.useCarForWork">Can you use it for work?</span>
+            <select name="canUseCarForWork">
+              <option value="false" data-i18n="common.no">No</option>
+              <option value="true" data-i18n="common.yes">Yes</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          <span data-i18n="profile.healthProblems">Health problems?</span>
+          <select name="hasHealthIssues" id="hasHealthIssues">
+            <option value="false" data-i18n="common.no">No</option>
+            <option value="true" data-i18n="common.yes">Yes</option>
+          </select>
+        </label>
+
+        <label>
+          <span data-i18n="profile.healthDetails">If yes, describe health problems</span>
+          <textarea name="healthIssuesDetails" rows="3" placeholder="Describe only what companies should know for safe work planning." data-i18n-attr="placeholder:profile.healthDetailsPlaceholder"></textarea>
+        </label>
+
+        <label>
+          <span data-i18n="profile.shortBio">Short bio</span>
+          <textarea name="bio" rows="3" placeholder="Tell companies about your work style and experience." data-i18n-attr="placeholder:profile.shortBioPlaceholder"></textarea>
+        </label>
+
+        <label class="worker-consent-row">
+          <input type="checkbox" name="dataConsent" required>
+          <span data-i18n="profile.dataConsent">I agree that these details are saved in SiteCrew and shown to hiring companies.</span>
+        </label>
+
+        <div class="worker-profile-modal-actions">
+          <button type="button" class="worker-secondary-btn" id="cancelWorkerProfileEdit" data-i18n="profile.cancel">Cancel</button>
+          <button type="submit" class="worker-submit-btn" data-i18n="profile.submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (!profile.isPublicProfile) { %>
+  <div class="worker-profile-modal-overlay" id="workerTradeInterestModal" aria-hidden="true">
+    <div class="worker-profile-modal worker-trade-interest-modal" role="dialog" aria-modal="true" aria-labelledby="workerTradeInterestTitle">
+      <div class="worker-profile-modal-header">
+        <div>
+          <span>Job feed preferences</span>
+          <h2 id="workerTradeInterestTitle">My trade interest</h2>
+          <p>Select at least one construction trade. Your worker dashboard feed will show job posts that match these interests.</p>
+        </div>
+        <button type="button" id="closeWorkerTradeInterest" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="worker-profile-alert" id="workerTradeInterestAlert" hidden></div>
+
+      <form id="workerTradeInterestForm" class="worker-profile-form worker-trade-interest-form">
+        <label>
+          <span>Search construction trade</span>
+          <input type="text" id="workerTradeInterestInput" placeholder="Type 3 letters, e.g. Dri" list="workerTradeInterestOptions" autocomplete="off">
+          <datalist id="workerTradeInterestOptions"></datalist>
+          <small>Choose a trade from the suggestions, then add more if needed.</small>
+        </label>
+
+        <div class="worker-trade-interest-selected" id="workerTradeInterestSelected"></div>
+
+        <div class="worker-profile-modal-actions">
+          <button type="button" class="worker-secondary-btn" id="cancelWorkerTradeInterest">Cancel</button>
+          <button type="submit" class="worker-submit-btn">Save interests</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <div class="worker-profile-modal-overlay" id="workerReviewsModal" aria-hidden="true">
+    <div class="worker-profile-modal worker-reviews-modal" role="dialog" aria-modal="true" aria-labelledby="workerReviewsTitle">
+      <div class="worker-profile-modal-header">
+        <div>
+          <span data-i18n="reviews.eyebrow">Company ratings</span>
+          <h2 id="workerReviewsTitle" data-i18n="reviews.title">Your reviews</h2>
+          <p data-i18n="reviews.description">See which companies rated you and what feedback they left.</p>
+        </div>
+        <button type="button" id="closeWorkerReviewsModal" aria-label="Close" data-i18n-attr="aria-label:common.close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="worker-reviews-list">
+        <% if (!profile.reviews.length) { %>
+          <article class="worker-review-empty">
+            <strong data-i18n="reviews.noReviews">No reviews yet</strong>
+            <p data-i18n="reviews.emptyDescription">Company ratings and feedback will appear here after employers review your work.</p>
+          </article>
+        <% } %>
+
+        <% profile.reviews.forEach(function(review) { %>
+          <article class="worker-review-card">
+            <div class="worker-review-head">
+              <div class="worker-review-company">
+                <span><%= review.company_name.charAt(0) %></span>
+                <div>
+                  <strong><%= review.company_name %></strong>
+                  <small><%= new Date(review.created_at).toLocaleDateString('en-GB') %></small>
+                </div>
+              </div>
+              <div class="worker-review-stars" aria-label="<%= review.rating %> stars">
+                <% for (let i = 1; i <= 5; i++) { %>
+                  <i class="bi <%= i <= review.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+                <% } %>
+              </div>
+            </div>
+            <% if (review.feedback) { %>
+              <p><%= review.feedback %></p>
+            <% } else { %>
+              <p data-i18n="reviews.noWrittenFeedback">No written feedback.</p>
+            <% } %>
+          </article>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+
+  <% if (!profile.isPublicProfile) { %>
+  <div class="worker-profile-modal-overlay worker-company-action-modal" id="workerCompanyStoryModal" aria-hidden="true">
+    <div class="worker-profile-modal" role="dialog" aria-modal="true" aria-labelledby="workerCompanyStoryTitle">
+      <div class="worker-profile-modal-header">
+        <div>
+          <span>Story</span>
+          <h2 id="workerCompanyStoryTitle">Add story</h2>
+          <p>Post as yourself, or select a company that allowed you to publish updates.</p>
+        </div>
+        <button type="button" data-close-worker-company-modal aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="worker-profile-alert" id="workerCompanyStoryAlert" hidden></div>
+      <form class="worker-profile-form worker-company-action-form" id="workerCompanyStoryForm">
+        <label>
+          <span>Post as</span>
+          <select name="companyId" data-company-permission-select data-permission-type="posts" data-allow-self="true">
+            <option value="">My own profile</option>
+          </select>
+        </label>
+        <label>
+          <span>Story media</span>
+          <input type="file" name="media" accept="image/*,video/*" required>
+          <small>Use one picture or one video up to 15 seconds.</small>
+        </label>
+        <label>
+          <span>Caption</span>
+          <textarea name="caption" rows="3" placeholder="Short story caption"></textarea>
+        </label>
+        <div class="worker-profile-modal-actions">
+          <button type="button" class="worker-secondary-btn" data-close-worker-company-modal>Cancel</button>
+          <button type="submit" class="worker-submit-btn">Add Story</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (!profile.isPublicProfile) { %>
+  <div class="worker-profile-modal-overlay worker-company-action-modal" id="workerCompanyPostModal" aria-hidden="true">
+    <div class="worker-profile-modal" role="dialog" aria-modal="true" aria-labelledby="workerCompanyPostTitle">
+      <div class="worker-profile-modal-header">
+        <div>
+          <span>Post</span>
+          <h2 id="workerCompanyPostTitle">Add post</h2>
+          <p>Post as yourself, or select a company that allowed you to publish updates.</p>
+        </div>
+        <button type="button" data-close-worker-company-modal aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="worker-profile-alert" id="workerCompanyPostAlert" hidden></div>
+      <form class="worker-profile-form worker-company-action-form" id="workerCompanyPostForm">
+        <label>
+          <span>Post as</span>
+          <select name="companyId" data-company-permission-select data-permission-type="posts" data-allow-self="true">
+            <option value="">My own profile</option>
+          </select>
+        </label>
+        <div class="worker-form-grid">
+          <label>
+            <span>Title</span>
+            <input type="text" name="title" minlength="2" placeholder="Site progress update">
+          </label>
+          <label>
+            <span>Location</span>
+            <input type="text" name="location" placeholder="Manchester">
+          </label>
+        </div>
+        <label>
+          <span>Media</span>
+          <input type="file" name="media" accept="image/*,video/*" multiple>
+          <small>Upload one video or up to 5 pictures.</small>
+        </label>
+        <label>
+          <span>Caption</span>
+          <textarea name="caption" rows="3" required placeholder="Write the company update..."></textarea>
+        </label>
+        <div class="worker-profile-modal-actions">
+          <button type="button" class="worker-secondary-btn" data-close-worker-company-modal>Cancel</button>
+          <button type="submit" class="worker-submit-btn">Add Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (!profile.isPublicProfile) { %>
+  <div class="worker-profile-modal-overlay worker-company-action-modal" id="workerCompanyJobModal" aria-hidden="true">
+    <div class="worker-profile-modal" role="dialog" aria-modal="true" aria-labelledby="workerCompanyJobTitle">
+      <div class="worker-profile-modal-header">
+        <div>
+          <span>Vacant job</span>
+          <h2 id="workerCompanyJobTitle">Add job in company name</h2>
+          <p>Select a company that allowed you to post vacant jobs.</p>
+        </div>
+        <button type="button" data-close-worker-company-modal aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="worker-profile-alert" id="workerCompanyJobAlert" hidden></div>
+      <form class="worker-profile-form worker-company-action-form" id="workerCompanyJobForm">
+        <label>
+          <span>Company</span>
+          <select name="companyId" data-company-permission-select data-permission-type="jobs" required></select>
+        </label>
+        <div class="worker-form-grid">
+          <label>
+            <span>Job title</span>
+            <input type="text" name="title" minlength="3" required placeholder="Dryliner needed">
+          </label>
+          <label>
+            <span>Trade</span>
+            <input type="text" name="tradeRequired" minlength="2" required placeholder="Drylining">
+          </label>
+          <label>
+            <span>City</span>
+            <input type="text" name="city" placeholder="Manchester">
+          </label>
+          <label>
+            <span>Postcode</span>
+            <input type="text" name="postcode" placeholder="M1">
+          </label>
+          <label>
+            <span>Experience</span>
+            <input type="text" name="experienceRequired" placeholder="3+ years">
+          </label>
+          <label>
+            <span>Workers required</span>
+            <input type="number" name="workersRequired" min="1" value="1" required>
+          </label>
+          <label>
+            <span>Start date</span>
+            <input type="date" name="startDate">
+          </label>
+          <label>
+            <span>Duration</span>
+            <input type="text" name="duration" placeholder="2 weeks">
+          </label>
+          <label>
+            <span>Rate</span>
+            <input type="text" name="rate" placeholder="£25/hour">
+          </label>
+          <label>
+            <span>Certificates</span>
+            <input type="text" name="certificatesRequired" placeholder="CSCS, IPAF">
+          </label>
+        </div>
+        <label>
+          <span>Description</span>
+          <textarea name="description" rows="4" minlength="10" required placeholder="Describe the vacancy, site, and expectations."></textarea>
+        </label>
+        <div class="worker-profile-modal-actions">
+          <button type="button" class="worker-secondary-btn" data-close-worker-company-modal>Cancel</button>
+          <button type="submit" class="worker-submit-btn">Add Job</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <script src="/js/worker-i18n.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<section class="company-section" id="company-feed">
+  <div class="company-section-header">
+    <div>
+      <span>Company Activity</span>
+      <h2>Project updates</h2>
+    </div>
+    <div class="company-feed-actions">
+      <button type="button" class="company-link-btn as-button" id="openCompanyPostModal">Add Post</button>
+      <button type="button" class="company-link-btn as-button" id="openCompanyStoryModal">Add Story</button>
+    </div>
+  </div>
+
+  <div class="company-feed-list">
+    <% if (!posts.length) { %>
+      <article class="company-empty-card">
+        <strong>No company updates yet</strong>
+        <p>Share project progress to build trust with workers.</p>
+      </article>
+    <% } %>
+
+    <% posts.forEach(function(post) { %>
+      <article
+        class="company-feed-card"
+        data-company-feed-post
+        data-post-id="<%= post.id %>"
+        data-title="<%= post.title %>"
+        data-caption="<%= post.caption %>"
+        data-location="<%= post.location %>"
+        data-tags="<%= post.tags.join(', ') %>"
+      >
+        <div class="company-feed-media <%= post.mediaClass %> <%= post.mediaUrl ? 'has-real-media' : '' %>">
+          <% if (post.mediaUrl && post.mediaType === 'video') { %>
+            <video src="<%= post.mediaSrc %>" controls playsinline></video>
+          <% } else if (post.mediaUrl) { %>
+            <img src="<%= post.mediaSrc %>" alt="<%= post.title %>">
+          <% } %>
+        </div>
+        <div>
+          <span><%= post.location %> · <%= post.time %></span>
+          <h3><%= post.title %></h3>
+          <p><%= post.caption %></p>
+          <div class="company-feed-post-actions">
+            <button type="button" data-edit-company-post>Edit this post</button>
+            <button type="button" class="danger" data-delete-company-post>Delete this post</button>
+          </div>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+</section>

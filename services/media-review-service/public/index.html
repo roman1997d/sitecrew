@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Review | SiteCrew</title>
+  <link href="/review/review.css" rel="stylesheet">
+</head>
+<body>
+  <main class="review-shell">
+    <div class="review-frame" id="reviewFrame">
+      <p class="review-empty" id="reviewEmpty">Loading queue...</p>
+      <img id="reviewImage" alt="" hidden>
+    </div>
+
+    <div class="review-actions" id="reviewActions" hidden>
+      <button type="button" class="review-btn review-btn-approve" id="reviewApproveBtn">APPROVE</button>
+      <button type="button" class="review-btn review-btn-reject" id="reviewRejectBtn">REJECT</button>
+    </div>
+
+    <p class="review-counter" id="reviewCounter"></p>
+  </main>
+
+  <script src="/review/review.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<section class="company-section" id="my-team">
+  <div class="company-section-header">
+    <div>
+      <span>My Team</span>
+      <h2>Workers hired by your company</h2>
+    </div>
+    <p>Workers appear here after you accept their job application.</p>
+  </div>
+
+  <% const leaders = teamMembers.filter(function(worker) { return worker.isLeader; }); %>
+  <% const operatives = teamMembers.filter(function(worker) { return !worker.isLeader; }); %>
+
+  <% if (!teamMembers.length) { %>
+    <article class="company-empty-card">
+      <strong>No workers hired yet</strong>
+      <p>Accepted applicants will appear here as your active team.</p>
+    </article>
+  <% } else { %>
+    <div class="company-team-sections">
+    <div class="company-team-group" data-team-group="leaders">
+      <div class="company-team-group-header">
+        <div>
+          <span>Leaders</span>
+          <h3>Workers with company permissions</h3>
+        </div>
+        <small><%= leaders.length %> active</small>
+      </div>
+      <div class="company-team-grid" data-team-grid="leaders">
+        <% if (!leaders.length) { %>
+          <article class="company-empty-card" data-team-empty="leaders">
+            <strong>No leaders yet</strong>
+            <p>Give a worker company permissions to move them here.</p>
+          </article>
+        <% } %>
+        <% leaders.forEach(function(worker) { %>
+          <%- include('./team-card', { worker: worker, roleLabel: 'Leader' }) %>
+        <% }); %>
+      </div>
+    </div>
+
+    <div class="company-team-group" data-team-group="operatives">
+      <div class="company-team-group-header">
+        <div>
+          <span>Operatives</span>
+          <h3>Workers without company permissions</h3>
+        </div>
+        <small><%= operatives.length %> active</small>
+      </div>
+      <div class="company-team-grid" data-team-grid="operatives">
+        <% if (!operatives.length) { %>
+          <article class="company-empty-card" data-team-empty="operatives">
+            <strong>No operatives yet</strong>
+            <p>Hired workers without company permissions will appear here.</p>
+          </article>
+        <% } %>
+        <% operatives.forEach(function(worker) { %>
+          <%- include('./team-card', { worker: worker, roleLabel: 'Operative' }) %>
+        <% }); %>
+      </div>
+    </div>
+    </div>
+  <% } %>
+</section>

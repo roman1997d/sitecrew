@@ -1,0 +1,39 @@
+<section class="profile-section">
+  <div class="profile-section-header">
+    <h2 data-i18n="<%= titleKey || '' %>"><%= title %></h2>
+    <p data-i18n="<%= descriptionKey || '' %>"><%= description %></p>
+  </div>
+
+  <% const avatarOnly = actionKey === 'profile.following'; %>
+  <div class="<%= avatarOnly ? 'profile-follow-avatar-list' : 'profile-company-list' %>">
+    <% if (!companies.length) { %>
+      <div class="profile-company-row">
+        <span>·</span>
+        <div>
+          <strong data-i18n="profile.noCompanies">No companies yet</strong>
+          <small data-i18n="profile.companyListEmpty">This list will update from your backend activity.</small>
+        </div>
+      </div>
+    <% } %>
+    <% companies.forEach(function(company) { %>
+      <% if (avatarOnly) { %>
+        <a href="<%= company.url %>" class="profile-follow-avatar <%= company.avatar ? 'has-avatar' : '' %>" title="<%= company.name %>" aria-label="<%= company.name %> profile">
+          <% if (company.avatar) { %>
+            <img src="http://localhost:4000<%= company.avatar %>" alt="<%= company.name %> avatar">
+          <% } else { %>
+            <%= company.initial %>
+          <% } %>
+        </a>
+      <% } else { %>
+        <div class="profile-company-row">
+          <span><%= company.initial %></span>
+          <div>
+            <strong><%= company.name %></strong>
+            <small><%= company.detail %></small>
+          </div>
+          <button type="button" data-i18n="<%= actionKey || '' %>"><%= actionLabel %></button>
+        </div>
+      <% } %>
+    <% }); %>
+  </div>
+</section>

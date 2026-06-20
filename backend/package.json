@@ -1,0 +1,28 @@
+{
+  "name": "sitecrew-backend",
+  "version": "1.0.0",
+  "description": "SiteCrew Backend API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node src/db/init.js",
+    "db:seed": "node src/db/seed.js",
+    "db:seed-demo": "node src/db/seed-demo-accounts.js",
+    "db:seed-superadmin": "node src/db/seed-superadmin.js",
+    "smoke": "node src/utils/smoke.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "heic-convert": "^2.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "pg": "^8.16.3",
+    "zod": "^4.0.17"
+  }
+}

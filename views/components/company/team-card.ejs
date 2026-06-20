@@ -1,0 +1,17 @@
+<article class="company-team-card" data-team-worker-card data-worker-id="<%= worker.id %>" data-application-id="<%= worker.applicationId %>" data-can-post-jobs="<%= worker.canPostJobs ? 'true' : 'false' %>" data-can-post-company-posts="<%= worker.canPostCompanyPosts ? 'true' : 'false' %>">
+  <div class="company-card-row">
+    <button type="button" class="company-worker-avatar company-worker-profile-trigger <%= worker.profilePhoto ? 'has-photo' : '' %>" data-team-worker-profile>
+      <% if (worker.profilePhoto) { %>
+        <img src="http://localhost:4000<%= worker.profilePhoto %>" alt="<%= worker.name %> profile picture">
+      <% } else { %>
+        <%= worker.initial %>
+      <% } %>
+    </button>
+    <span class="company-status <%= roleLabel === 'Leader' ? 'review' : 'open' %>" data-team-role-label><%= roleLabel %></span>
+  </div>
+  <h3><button type="button" class="company-team-name-btn" data-team-worker-profile><%= worker.name %></button></h3>
+  <p><%= worker.trade %></p>
+  <small><i class="bi bi-briefcase"></i> Working on <%= worker.jobTitle %></small>
+  <small><i class="bi bi-geo-alt"></i> <%= worker.city %> · <%= worker.experience %></small>
+  <small><i class="bi bi-patch-check"></i> <%= worker.certificates %></small>
+</article>

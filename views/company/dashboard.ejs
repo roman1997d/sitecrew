@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | SiteCrew</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/dashboard.css" rel="stylesheet">
+</head>
+<body class="dash-body company-dash-body">
+  <div class="company-dashboard">
+    <%- include('../components/company/sidebar') %>
+
+    <div class="company-shell">
+      <%- include('../components/company/topbar', {
+        company: dashboard.company,
+        notifications: dashboard.notifications,
+        insights: dashboard.insights
+      }) %>
+
+      <div class="company-layout">
+        <main class="company-main">
+          <%- include('../components/company/quick-actions') %>
+          <%- include('../components/company/active-jobs', { jobs: dashboard.jobs }) %>
+          <%- include('../components/company/applicants', { applicants: dashboard.applicants }) %>
+          <%- include('../components/company/my-team', { teamMembers: dashboard.teamMembers }) %>
+          <%- include('../components/company/recommended-workers', { workers: dashboard.recommendedWorkers }) %>
+          <%- include('../components/company/company-feed', { posts: dashboard.companyPosts }) %>
+          <%- include('../components/company/settings', { company: dashboard.company }) %>
+        </main>
+
+        <%- include('../components/company/right-panel', {
+          company: dashboard.company,
+          notifications: dashboard.notifications,
+          insights: dashboard.insights,
+          conversations: dashboard.conversations,
+          companyReviews: dashboard.companyReviews
+        }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="postJobModal" aria-hidden="true">
+    <div class="company-modal" role="dialog" aria-modal="true" aria-labelledby="postJobTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>New job</span>
+          <h2 id="postJobTitle">Post a job</h2>
+        </div>
+        <button type="button" id="closePostJobModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-form-alert" id="postJobAlert" hidden></div>
+
+      <form id="postJobForm" class="company-job-form">
+        <div class="company-form-grid">
+          <label>
+            <span>Job title</span>
+            <input type="text" name="title" placeholder="Dryliners needed" minlength="3" required>
+          </label>
+
+          <label>
+            <span>Trade required</span>
+            <input type="text" name="tradeRequired" placeholder="Type 3 letters, e.g. Dry" minlength="2" list="constructionTradeOptions" autocomplete="off" required>
+            <datalist id="constructionTradeOptions"></datalist>
+          </label>
+
+          <label>
+            <span>City</span>
+            <input type="text" name="city" placeholder="Liverpool">
+          </label>
+
+          <label>
+            <span>Postcode</span>
+            <input type="text" name="postcode" placeholder="L1">
+          </label>
+
+          <label>
+            <span>Rate</span>
+            <input type="text" name="rate" placeholder="£220/day">
+          </label>
+
+          <label>
+            <span>Start date</span>
+            <input type="date" name="startDate">
+          </label>
+
+          <label>
+            <span>Duration</span>
+            <input type="text" name="duration" placeholder="3 weeks">
+          </label>
+
+          <label>
+            <span>Workers needed</span>
+            <input type="number" name="workersRequired" min="1" value="1" required>
+          </label>
+        </div>
+
+        <label class="company-form-full">
+          <span>Description</span>
+          <textarea name="description" rows="4" placeholder="Describe the site, tasks, schedule and requirements..." minlength="10" required></textarea>
+        </label>
+
+        <label class="company-form-full">
+          <span>Certificates required</span>
+          <input type="text" name="certificatesRequired" placeholder="CSCS Gold, First Aid">
+        </label>
+
+        <div class="company-modal-actions">
+          <button type="button" class="company-secondary-btn" id="cancelPostJob">Cancel</button>
+          <button type="submit" class="company-submit-btn">Post Job</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="workerProfileModal" aria-hidden="true">
+    <div class="company-modal company-worker-profile-modal" role="dialog" aria-modal="true" aria-labelledby="workerProfileTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Applicant profile</span>
+          <h2 id="workerProfileTitle">Worker profile</h2>
+        </div>
+        <button type="button" id="closeWorkerProfileModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-worker-profile-content" id="workerProfileContent">
+        <p class="company-side-empty">Select an applicant to view profile details.</p>
+      </div>
+
+      <div class="company-modal-actions">
+        <button type="button" class="company-secondary-btn" id="closeWorkerProfileFooter">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="inviteWorkerModal" aria-hidden="true">
+    <div class="company-modal" role="dialog" aria-modal="true" aria-labelledby="inviteWorkerTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Job offer</span>
+          <h2 id="inviteWorkerTitle">Invite worker to job</h2>
+        </div>
+        <button type="button" id="closeInviteWorkerModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-form-alert" id="inviteWorkerAlert" hidden></div>
+
+      <form id="inviteWorkerForm" class="company-job-form">
+        <p class="company-invite-copy" id="inviteWorkerCopy">Select an active job for this worker.</p>
+        <div class="company-invite-job-list" id="inviteWorkerJobList">
+          <p class="company-side-empty">Loading active jobs...</p>
+        </div>
+
+        <div class="company-modal-actions">
+          <button type="button" class="company-secondary-btn" id="cancelInviteWorker">Cancel</button>
+          <button type="submit" class="company-submit-btn">Send invite</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="companyPostModal" aria-hidden="true">
+    <div class="company-modal" role="dialog" aria-modal="true" aria-labelledby="companyPostTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Company activity</span>
+          <h2 id="companyPostTitle">Add post</h2>
+        </div>
+        <button type="button" id="closeCompanyPostModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-form-alert" id="companyPostAlert" hidden></div>
+
+      <form id="companyPostForm" class="company-job-form">
+        <input type="hidden" name="postId">
+        <label>
+          <span>Post title</span>
+          <input type="text" name="title" placeholder="Starting 120-unit project in Liverpool" minlength="2" required>
+        </label>
+
+        <label>
+          <span>Media</span>
+          <input type="file" name="media" accept="image/*,video/*" multiple>
+          <small class="company-form-help">Upload either one video or up to 5 pictures.</small>
+        </label>
+
+        <label>
+          <span>Description</span>
+          <textarea name="description" rows="4" placeholder="Share project progress, site updates, or hiring news..." minlength="2" required></textarea>
+        </label>
+
+        <label>
+          <span>Meta tags</span>
+          <input type="text" name="tags" placeholder="liverpool, fitout, hiring">
+        </label>
+
+        <div class="company-modal-actions">
+          <button type="button" class="company-secondary-btn" id="cancelCompanyPost">Cancel</button>
+          <button type="submit" class="company-submit-btn">Add Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="companyStoryModal" aria-hidden="true">
+    <div class="company-modal company-story-modal" role="dialog" aria-modal="true" aria-labelledby="companyStoryTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>24h story</span>
+          <h2 id="companyStoryTitle">Add story</h2>
+        </div>
+        <button type="button" id="closeCompanyStoryModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-form-alert" id="companyStoryAlert" hidden></div>
+
+      <form id="companyStoryForm" class="company-job-form">
+        <label>
+          <span>Story media</span>
+          <input type="file" name="media" accept="image/*,video/*" required>
+          <small class="company-form-help">Use one picture or one video up to 15 seconds. Stories expire after 24 hours.</small>
+        </label>
+
+        <label>
+          <span>Caption</span>
+          <input type="text" name="caption" placeholder="Apex needs carpenters this week">
+        </label>
+
+        <div class="company-modal-actions">
+          <button type="button" class="company-secondary-btn" id="cancelCompanyStory">Cancel</button>
+          <button type="submit" class="company-submit-btn">Add Story</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="contactsJournalModal" aria-hidden="true">
+    <div class="company-modal company-contacts-modal" role="dialog" aria-modal="true" aria-labelledby="contactsJournalTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Contacts</span>
+          <h2 id="contactsJournalTitle">Contact journal</h2>
+        </div>
+        <button type="button" id="closeContactsJournal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <p class="company-contact-journal-intro">
+        Workers saved from Applicants are kept here as your hiring contact journal.
+      </p>
+
+      <div class="company-contact-journal-filters">
+        <label>
+          <span>Search by name</span>
+          <input type="search" id="contactJournalNameSearch" placeholder="Worker name">
+        </label>
+        <label>
+          <span>Search by city</span>
+          <input type="search" id="contactJournalCitySearch" placeholder="City or location">
+        </label>
+        <label>
+          <span>Sort by status</span>
+          <select id="contactJournalStatusFilter">
+            <option value="">All statuses</option>
+          </select>
+        </label>
+        <label>
+          <span>Sort by trade</span>
+          <select id="contactJournalTradeFilter">
+            <option value="">All trades</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="company-contacts-list" id="contactsJournalList">
+        <p class="company-side-empty">Saved contacts will appear here.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="companyNotificationsModal" aria-hidden="true">
+    <div class="company-modal company-notifications-modal" role="dialog" aria-modal="true" aria-labelledby="companyNotificationsTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Notifications</span>
+          <h2 id="companyNotificationsTitle">Notifications</h2>
+        </div>
+        <button type="button" id="closeCompanyNotifications" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-notifications-list" id="companyNotificationsList">
+        <p class="company-side-empty">Loading notifications...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="companyMessagesModal" aria-hidden="true">
+    <div class="company-modal company-messages-modal" role="dialog" aria-modal="true" aria-labelledby="companyMessagesTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Messages</span>
+          <h2 id="companyMessagesTitle">Messenger</h2>
+        </div>
+        <button type="button" id="closeCompanyMessages" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-messages-layout">
+        <div class="company-conversation-list" id="companyConversationList">
+          <p class="company-side-empty">Loading conversations...</p>
+        </div>
+
+        <div class="company-thread-panel">
+          <div class="company-thread-header" id="companyThreadHeader">Select a conversation</div>
+          <div class="company-thread-messages" id="companyThreadMessages">
+            <p class="company-side-empty">Choose a worker chat to view messages.</p>
+          </div>
+          <form class="company-thread-form" id="companyThreadForm">
+            <input type="text" name="message" placeholder="Write a message..." autocomplete="off" required disabled>
+            <button type="submit" disabled><i class="bi bi-send"></i></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="contactMessageModal" aria-hidden="true">
+    <div class="company-modal company-message-modal" role="dialog" aria-modal="true" aria-labelledby="contactMessageTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Direct message</span>
+          <h2 id="contactMessageTitle">Send message</h2>
+        </div>
+        <button type="button" id="closeContactMessageModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <form id="contactMessageForm" class="company-contact-message-form">
+        <div class="company-form-alert" id="contactMessageAlert" hidden></div>
+        <label>
+          <span>Message</span>
+          <textarea name="message" rows="5" placeholder="Hi, I saw your application and would like to discuss upcoming site work..." required></textarea>
+        </label>
+        <div class="company-modal-actions">
+          <button type="button" class="company-secondary-btn" id="cancelContactMessage">Cancel</button>
+          <button type="submit" class="company-submit-btn"><i class="bi bi-send"></i> Send message</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="company-modal-overlay" id="contactAvatarQuickview" aria-hidden="true">
+    <div class="company-modal company-avatar-quickview" role="dialog" aria-modal="true" aria-labelledby="contactAvatarQuickviewTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Photo quick view</span>
+          <h2 id="contactAvatarQuickviewTitle">Worker photo</h2>
+        </div>
+        <button type="button" id="closeContactAvatarQuickview" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-avatar-quickview-body" id="contactAvatarQuickviewBody"></div>
+
+      <div class="company-modal-actions">
+        <button type="button" class="company-secondary-btn" id="cancelContactAvatarQuickview">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/company-dashboard.js"></script>
+</body>
+</html>

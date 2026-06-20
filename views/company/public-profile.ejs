@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="<%= profile.workerLanguagePreference || 'en' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | SiteCrew</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/dashboard.css" rel="stylesheet">
+</head>
+<body class="dash-body company-public-body" data-worker-language="<%= profile.workerLanguagePreference || '' %>">
+  <main class="company-public-profile" data-company-id="<%= profile.company.id %>">
+    <a href="/worker/dashboard#feed" class="company-profile-back"><i class="bi bi-arrow-left"></i> <span data-i18n="publicCompany.backToFeed">Back to feed</span></a>
+
+    <section class="company-public-hero">
+      <div class="company-public-cover"></div>
+      <div class="company-public-content">
+        <div class="company-public-logo"><%= profile.company.initials %></div>
+        <div class="company-public-main">
+          <div>
+            <span class="company-public-eyebrow" data-i18n="publicCompany.profile">Company profile</span>
+            <h1><%= profile.company.name %></h1>
+            <p><%= profile.company.location %> · <span data-i18n="publicCompany.rating">Rating</span> <%= profile.company.rating %></p>
+            <% if (profile.company.verified) { %>
+              <span class="company-public-badge"><i class="bi bi-patch-check-fill"></i> <span data-i18n="publicCompany.verified">Verified company</span></span>
+            <% } %>
+          </div>
+          <button
+            type="button"
+            class="company-follow-btn <%= profile.isFollowing ? 'following' : '' %>"
+            id="followCompanyBtn"
+            data-company-id="<%= profile.company.id %>"
+            <%= profile.isFollowing ? 'disabled' : '' %>
+          >
+            <span data-i18n="<%= profile.isFollowing ? 'publicCompany.following' : 'publicCompany.followCompany' %>"><%= profile.isFollowing ? 'Following' : 'Follow company' %></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="company-public-grid">
+      <section class="company-public-card">
+        <h2 data-i18n="publicCompany.about">About</h2>
+        <p><%= profile.company.description %></p>
+        <div class="company-public-details">
+          <% if (profile.company.website) { %><span><i class="bi bi-globe"></i> <%= profile.company.website %></span><% } %>
+          <% if (profile.company.phone) { %><span><i class="bi bi-telephone"></i> <%= profile.company.phone %></span><% } %>
+          <span><i class="bi bi-building-check"></i> <%= profile.company.verificationStatus %></span>
+        </div>
+      </section>
+
+      <section class="company-public-card">
+        <h2 data-i18n="publicCompany.openJobs">Open jobs</h2>
+        <% if (!profile.jobs.length) { %>
+          <p data-i18n="publicCompany.noJobs">No jobs posted by this company yet.</p>
+        <% } %>
+        <div class="company-public-job-list">
+          <% profile.jobs.forEach(function(job) { %>
+            <article class="company-public-job">
+              <div>
+                <strong><%= job.title %></strong>
+                <p><%= job.description %></p>
+                <div class="company-public-job-meta">
+                  <span><i class="bi bi-tools"></i> <%= job.trade %></span>
+                  <span><i class="bi bi-geo-alt"></i> <%= job.location %></span>
+                  <% if (job.rate) { %><span><i class="bi bi-cash-stack"></i> <%= job.rate %></span><% } %>
+                  <% if (job.startDate) { %><span><i class="bi bi-calendar-event"></i> Starts <%= new Date(job.startDate).toLocaleDateString('en-GB') %></span><% } %>
+                  <% if (job.duration) { %><span><i class="bi bi-clock"></i> <%= job.duration %></span><% } %>
+                  <span><i class="bi bi-people"></i> <%= job.workersRequired %> worker<%= job.workersRequired === 1 ? '' : 's' %></span>
+                </div>
+              </div>
+              <button type="button" class="company-public-apply-btn" data-company-job-apply data-job-id="<%= job.id %>">Apply</button>
+            </article>
+          <% }); %>
+        </div>
+      </section>
+
+      <section class="company-public-card">
+        <div class="company-public-rating-head">
+          <div>
+            <span class="company-public-section-kicker">Company reputation</span>
+            <h2>Rating & worker feedback</h2>
+            <p>See how workers rate this company, or share your own experience.</p>
+          </div>
+          <strong>
+            <i class="bi bi-star-fill"></i>
+            <% if (profile.company.ratingAverage) { %>
+              <%= profile.company.ratingAverage %>/5 · <%= profile.company.ratingCount %> review<%= profile.company.ratingCount === 1 ? '' : 's' %>
+            <% } else { %>
+              No rating yet
+            <% } %>
+          </strong>
+        </div>
+
+        <form class="company-public-review-form" id="companyReviewForm">
+          <h3>Rate this company</h3>
+          <input type="hidden" name="rating" value="5">
+          <label>
+            <span>Rating stars</span>
+            <div class="company-public-stars" aria-label="Rate this company">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <button type="button" class="selected" data-company-review-star="<%= i %>" aria-label="<%= i %> stars"><i class="bi bi-star-fill"></i></button>
+              <% } %>
+            </div>
+          </label>
+          <label>
+            <span>Your feedback</span>
+            <textarea name="feedback" rows="3" placeholder="Write feedback about payment, communication, site conditions or management."></textarea>
+          </label>
+          <button type="submit">Submit rating</button>
+          <p class="company-public-review-status" id="companyReviewStatus" hidden></p>
+        </form>
+
+        <h3 class="company-public-feedback-title">Worker feedback</h3>
+        <div class="company-public-review-list">
+          <% if (!profile.reviews.length) { %>
+            <article class="company-public-review company-public-review-empty">
+              <strong>No company reviews yet</strong>
+              <p>Worker ratings and written feedback will appear here.</p>
+            </article>
+          <% } %>
+          <% profile.reviews.forEach(function(review) { %>
+            <article class="company-public-review">
+              <a href="/workers/<%= review.workerId %>/profile" class="company-public-review-worker">
+                <span class="<%= review.workerPhoto ? 'has-photo' : '' %>">
+                  <% if (review.workerPhoto) { %>
+                    <img src="http://localhost:4000<%= review.workerPhoto %>" alt="<%= review.workerName %> photo">
+                  <% } else { %>
+                    <%= review.workerInitials %>
+                  <% } %>
+                </span>
+                <div>
+                  <strong><%= review.workerName %></strong>
+                  <small><%= review.workerTrade %> · <%= new Date(review.date).toLocaleDateString('en-GB') %></small>
+                </div>
+              </a>
+              <div class="company-public-review-stars">
+                <% for (let i = 1; i <= 5; i++) { %>
+                  <i class="bi <%= i <= review.rating ? 'bi-star-fill' : 'bi-star' %>"></i>
+                <% } %>
+              </div>
+              <p class="company-public-review-feedback">
+                <%= review.feedback || 'No written feedback.' %>
+              </p>
+            </article>
+          <% }); %>
+        </div>
+      </section>
+
+      <section class="company-public-card">
+        <h2 data-i18n="publicCompany.stories">Stories</h2>
+        <% if (!profile.stories.length) { %>
+          <p data-i18n="publicCompany.noStories">No active company stories.</p>
+        <% } %>
+        <div class="company-public-story-list">
+          <% profile.stories.forEach(function(story) { %>
+            <article class="company-public-story">
+              <% if (story.caption) { %>
+                <strong><%= story.caption %></strong>
+              <% } else { %>
+                <strong data-i18n="story.companyStory">Company story</strong>
+              <% } %>
+              <span><span data-i18n="publicCompany.activeUntil">Active until</span> <%= new Date(story.expires_at).toLocaleString('en-GB') %></span>
+            </article>
+          <% }); %>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/worker-i18n.js"></script>
+  <script src="/js/company-profile.js"></script>
+</body>
+</html>
