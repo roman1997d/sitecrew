@@ -1,0 +1,67 @@
+<article
+  class="feed-card marketplace-ad-card"
+  data-feed-type="marketplaceAd"
+  data-marketplace-ad-id="<%= item.id %>"
+  <%= item.allowOnTop ? 'data-marketplace-ad-pinned="true"' : '' %>
+>
+  <div class="feed-card-header marketplace-ad-header">
+    <div class="feed-avatar marketplace-ad-avatar"><%= item.initials %></div>
+    <div>
+      <strong><%= item.clientName %></strong>
+      <small>Sponsored · <%= item.activityScope || 'Marketplace ad' %></small>
+    </div>
+    <div class="marketplace-ad-badges">
+      <span class="marketplace-ad-badge sponsored">Sponsored</span>
+      <% if (item.isPaid) { %>
+        <span class="marketplace-ad-badge paid">Paid</span>
+      <% } %>
+      <% if (item.allowOnTop) { %>
+        <span class="marketplace-ad-badge pinned">Pinned</span>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="marketplace-ad-carousel" data-marketplace-ad-carousel>
+    <% item.products.forEach(function(product, index) { %>
+      <div
+        class="marketplace-ad-slide <%= index === 0 ? 'active' : '' %>"
+        data-marketplace-ad-slide="<%= index %>"
+      >
+        <div class="marketplace-ad-product-media">
+          <% if (product.imageUrl) { %>
+            <img src="<%= assetPath(product.imageUrl) %>" alt="<%= product.title %>">
+          <% } else { %>
+            <div class="marketplace-ad-product-fallback">No image</div>
+          <% } %>
+        </div>
+        <div class="marketplace-ad-product-copy">
+          <h3><%= product.title %></h3>
+          <p><%= product.description %></p>
+          <div class="marketplace-ad-price"><%= product.priceLabel %></div>
+          <a
+            href="<%= product.findMoreUrl %>"
+            class="marketplace-ad-find-more"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Find more</a>
+        </div>
+      </div>
+    <% }); %>
+
+    <% if (item.products.length > 1) { %>
+      <div class="marketplace-ad-carousel-nav">
+        <button type="button" data-marketplace-ad-prev aria-label="Previous product">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <div class="marketplace-ad-carousel-dots" data-marketplace-ad-dots>
+          <% item.products.forEach(function(product, index) { %>
+            <span class="<%= index === 0 ? 'active' : '' %>" data-marketplace-ad-dot="<%= index %>"></span>
+          <% }); %>
+        </div>
+        <button type="button" data-marketplace-ad-next aria-label="Next product">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    <% } %>
+  </div>
+</article>

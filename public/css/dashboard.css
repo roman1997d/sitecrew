@@ -1804,6 +1804,181 @@ body.dash-body {
   box-shadow: 0 24px 70px rgba(245, 158, 11, 0.28);
 }
 
+.marketplace-ad-card {
+  overflow: hidden;
+}
+
+.marketplace-ad-header {
+  align-items: flex-start;
+}
+
+.marketplace-ad-avatar {
+  background: #FEF3C7;
+  color: #92400E;
+  font-weight: 800;
+}
+
+.marketplace-ad-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.marketplace-ad-badge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.marketplace-ad-badge.sponsored {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.marketplace-ad-badge.paid {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.marketplace-ad-badge.pinned {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.marketplace-ad-carousel {
+  padding: 0 16px 16px;
+}
+
+.marketplace-ad-slide {
+  display: none;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.marketplace-ad-slide.active {
+  display: grid;
+}
+
+.marketplace-ad-product-media img,
+.marketplace-ad-product-fallback {
+  width: 112px;
+  height: 112px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #F1F5F9;
+}
+
+.marketplace-ad-product-fallback {
+  display: grid;
+  place-items: center;
+  color: #94A3B8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.marketplace-ad-product-copy h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  line-height: 1.25;
+  color: #0F172A;
+}
+
+.marketplace-ad-product-copy p {
+  margin: 0 0 10px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.marketplace-ad-price {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 900;
+  color: #0F172A;
+}
+
+.marketplace-ad-find-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #0F172A;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.marketplace-ad-find-more:hover,
+.marketplace-ad-find-more:focus {
+  background: #1E293B;
+  color: #FFFFFF;
+}
+
+.marketplace-ad-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.marketplace-ad-carousel-nav button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #CBD5E1;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #0F172A;
+  cursor: pointer;
+}
+
+.marketplace-ad-carousel-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.marketplace-ad-carousel-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #CBD5E1;
+}
+
+.marketplace-ad-carousel-dots span.active {
+  background: #0F172A;
+}
+
+@media (max-width: 640px) {
+  .marketplace-ad-slide.active {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-ad-product-media img,
+  .marketplace-ad-product-fallback {
+    width: 100%;
+    height: 180px;
+  }
+
+  .marketplace-ad-badges {
+    width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  .marketplace-ad-header {
+    flex-wrap: wrap;
+  }
+}
+
 .worker-language-settings {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;

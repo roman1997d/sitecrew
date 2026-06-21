@@ -2418,6 +2418,47 @@
     }
   }
 
+  function setMarketplaceAdSlide(carousel, nextIndex) {
+    const slides = carousel.querySelectorAll('[data-marketplace-ad-slide]');
+    const dots = carousel.querySelectorAll('[data-marketplace-ad-dot]');
+    if (!slides.length) return;
+
+    const index = ((nextIndex % slides.length) + slides.length) % slides.length;
+    slides.forEach((slide, slideIndex) => {
+      slide.classList.toggle('active', slideIndex === index);
+    });
+    dots.forEach((dot, dotIndex) => {
+      dot.classList.toggle('active', dotIndex === index);
+    });
+    carousel.dataset.marketplaceAdSlide = String(index);
+  }
+
+  document.querySelector('.social-feed')?.addEventListener('click', (event) => {
+    const carousel = event.target.closest('[data-marketplace-ad-carousel]');
+    if (!carousel) return;
+
+    if (event.target.closest('[data-marketplace-ad-prev]')) {
+      const current = Number(carousel.dataset.marketplaceAdSlide || 0);
+      setMarketplaceAdSlide(carousel, current - 1);
+      return;
+    }
+
+    if (event.target.closest('[data-marketplace-ad-next]')) {
+      const current = Number(carousel.dataset.marketplaceAdSlide || 0);
+      setMarketplaceAdSlide(carousel, current + 1);
+      return;
+    }
+
+    const dot = event.target.closest('[data-marketplace-ad-dot]');
+    if (dot) {
+      setMarketplaceAdSlide(carousel, Number(dot.dataset.marketplaceAdDot));
+    }
+  });
+
+  document.querySelectorAll('[data-marketplace-ad-carousel]').forEach((carousel) => {
+    carousel.dataset.marketplaceAdSlide = '0';
+  });
+
   const feedFilterButtons = document.querySelectorAll('.feed-filter-btn');
   const feedCards = document.querySelectorAll('.social-feed .feed-card');
 

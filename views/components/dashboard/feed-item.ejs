@@ -1,4 +1,6 @@
-<% if (item.type === 'rateInsight') { %>
+<% if (item.type === 'marketplaceAd') { %>
+  <%- include('marketplace-ad-card', { item: item }) %>
+<% } else if (item.type === 'rateInsight') { %>
   <article class="feed-card rate-insight-card" data-feed-type="rateInsight">
     <div class="feed-card-header">
       <div class="feed-avatar rate-insight-avatar"><%= item.initials %></div>

@@ -1,0 +1,68 @@
+{
+  "ads": [
+    {
+      "id": "ad-screwfix-demo",
+      "internalTitle": "Screwfix — hand tools promo",
+      "status": "active",
+      "startsAt": "2026-01-01",
+      "endsAt": "2027-12-31",
+      "allowOnTop": true,
+      "targetTrades": ["Electrician", "Builder"],
+      "clientName": "Screwfix",
+      "clientAddress": "Trade counters nationwide",
+      "activityScope": "Electrical supplies, hand tools and fixings",
+      "isPaid": true,
+      "createdAt": "2026-06-19T09:00:00.000Z",
+      "products": [
+        {
+          "id": "product-cable",
+          "title": "Cable reel 25m",
+          "description": "Heavy-duty cable reel for site and workshop use.",
+          "priceGbp": "24.99",
+          "imageUrl": "/images/marketplace/mock-cable.svg",
+          "findMoreUrl": "https://www.screwfix.com/"
+        },
+        {
+          "id": "product-pliers",
+          "title": "Insulated pliers set",
+          "description": "Comfort grip pliers for daily electrical work.",
+          "priceGbp": "14.50",
+          "imageUrl": "/images/marketplace/mock-pliers.svg",
+          "findMoreUrl": "https://www.screwfix.com/"
+        },
+        {
+          "id": "product-screwdriver",
+          "title": "VDE screwdriver kit",
+          "description": "Six-piece insulated screwdriver set.",
+          "priceGbp": "19.99",
+          "imageUrl": "/images/marketplace/mock-screwdriver.svg",
+          "findMoreUrl": "https://www.screwfix.com/"
+        }
+      ]
+    },
+    {
+      "id": "ad-general-tools",
+      "internalTitle": "General tools marketplace test",
+      "status": "active",
+      "startsAt": "2026-01-01",
+      "endsAt": "2027-12-31",
+      "allowOnTop": false,
+      "targetTrades": [],
+      "clientName": "SiteCrew Marketplace",
+      "clientAddress": "Demo advertiser",
+      "activityScope": "General construction supplies",
+      "isPaid": true,
+      "createdAt": "2026-06-18T12:00:00.000Z",
+      "products": [
+        {
+          "id": "product-hammer",
+          "title": "Claw hammer 20oz",
+          "description": "Balanced hammer with fibreglass handle.",
+          "priceGbp": "11.99",
+          "imageUrl": "/images/marketplace/mock-hammer.svg",
+          "findMoreUrl": "https://www.screwfix.com/"
+        }
+      ]
+    }
+  ]
+}
