@@ -22,13 +22,25 @@ const workerRegisterSchema = z.object({
   body: z.object({
     email: z.string().email(),
     password: z.string().min(8),
-    fullName: z.string().min(2),
+    fullName: z.string().trim().min(2, 'Full name is required.'),
     phone: z.string().optional(),
-    trade: z.string().min(2),
-    city: z.string().optional(),
+    trade: z.string().trim().min(2).optional(),
+    trades: z.array(z.string().trim().min(1)).optional(),
+    city: z.string().trim().optional(),
     postcode: z.string().optional(),
   }),
 });
+
+function getRegistrationTrade(body = {}) {
+  const directTrade = String(body.trade || '').trim();
+  if (directTrade.length >= 2) {
+    return directTrade;
+  }
+
+  const legacyTrades = Array.isArray(body.trades) ? body.trades : [];
+  const firstLegacyTrade = String(legacyTrades[0] || '').trim();
+  return firstLegacyTrade.length >= 2 ? firstLegacyTrade : '';
+}
 
 async function resolveConstructionTrade(client, tradeName) {
   const result = await client.query(
@@ -82,7 +94,13 @@ async function createUser(client, { email, password, role }) {
 }
 
 router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(async (req, res) => {
-  const { email, password, fullName, phone, trade, city, postcode } = req.validated.body;
+  const { email, password, fullName, phone, city, postcode } = req.validated.body;
+  const trade = getRegistrationTrade(req.validated.body);
+
+  if (!trade) {
+    return res.status(400).json({ error: 'Please select your trade from the suggestions.' });
+  }
+
   const client = await pool.connect();
 
   try {

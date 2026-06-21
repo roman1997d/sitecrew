@@ -119,7 +119,10 @@ async function apiRequest(path, payload) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.error || 'Request failed. Please try again.');
+    const issueMessage = Array.isArray(data.issues) && data.issues.length
+      ? data.issues.map((issue) => issue.message).filter(Boolean).join(' ')
+      : '';
+    throw new Error(data.error || issueMessage || 'Request failed. Please try again.');
   }
 
   return data;
@@ -417,9 +420,17 @@ registerForm.addEventListener('submit', async (event) => {
       return;
     }
 
+    const fullName = formData.get('fullName')?.trim() || '';
+    if (!fullName) {
+      throw new Error('Full name is required.');
+    }
+
     const trade = getRegisterTradeQuery(formData.get('trade'));
     if (!trade) {
       throw new Error('Please select your trade.');
+    }
+    if (trade.length < 2) {
+      throw new Error('Please select a valid trade from the suggestions.');
     }
 
     const sharedPayload = {
@@ -430,7 +441,7 @@ registerForm.addEventListener('submit', async (event) => {
 
     const payload = {
       ...sharedPayload,
-      fullName: formData.get('fullName').trim(),
+      fullName,
       trade,
     };
 
