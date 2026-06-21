@@ -27,6 +27,7 @@
         <button type="button" data-admin-section="users" title="Users"><i class="bi bi-people"></i> Users</button>
         <button type="button" data-admin-section="companies" title="Company Accounts"><i class="bi bi-building"></i> Companies</button>
         <button type="button" data-admin-section="billing" title="Billing and Plans"><i class="bi bi-credit-card"></i> Billing</button>
+        <button type="button" data-admin-section="market" title="Market and Money"><i class="bi bi-currency-pound"></i> Market</button>
         <button type="button" data-admin-section="posts" title="Posts Moderator"><i class="bi bi-card-text"></i> Posts</button>
         <button type="button" data-admin-section="api-logs" title="API Logs"><i class="bi bi-terminal"></i> API Logs</button>
         <button type="button" data-admin-section="audit" title="Audit Trails"><i class="bi bi-journal-text"></i> Audit</button>
@@ -208,6 +209,7 @@
                 <option value="">All plans</option>
                 <option value="free">Free</option>
                 <option value="pro">Pro</option>
+                <option value="ultra">Ultra</option>
               </select>
             </label>
 
@@ -222,6 +224,16 @@
 
           <div class="admin-table-wrap" id="adminBillingTable">
             <p class="admin-empty">Loading billing accounts...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-market" data-section="market" hidden>
+        <p class="admin-section-lead">Configure company access plans, monthly pricing, promotional discounts, and plan benefits.</p>
+        <div class="admin-market-panel">
+          <p class="admin-results-meta" id="adminMarketMeta">Loading access plans...</p>
+          <div class="admin-market-grid" id="adminMarketPlansGrid">
+            <p class="admin-empty">Loading access plans...</p>
           </div>
         </div>
       </section>

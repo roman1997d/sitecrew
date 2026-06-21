@@ -111,6 +111,14 @@ const billingPauseSchema = z.object({
   }),
 });
 
+const updateAccessPlanSchema = z.object({
+  body: z.object({
+    priceGbp: z.number().min(0).max(999999),
+    discountPercent: z.number().min(0).max(100),
+    benefits: z.array(z.string().min(1).max(300)).min(1).max(30),
+  }),
+});
+
 const companyAccountEventSchema = z.object({
   body: z.object({
     reason: z.string().min(3).max(2000),
@@ -1619,6 +1627,72 @@ router.post('/billing/:companyId/pause', validate(billingPauseSchema), asyncHand
   });
 
   res.json({ user: result.rows[0] });
+}));
+
+function mapAccessPlan(row) {
+  const priceGbp = Number(row.price_gbp);
+  const discountPercent = Number(row.discount_percent);
+  return {
+    planKey: row.plan_key,
+    displayName: row.display_name,
+    priceGbp,
+    discountPercent,
+    effectivePriceGbp: Number((priceGbp * (1 - discountPercent / 100)).toFixed(2)),
+    benefits: Array.isArray(row.benefits) ? row.benefits : [],
+    updatedAt: row.updated_at,
+  };
+}
+
+router.get('/market/plans', asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    `SELECT plan_key, display_name, price_gbp, discount_percent, benefits, updated_at
+     FROM company_access_plans
+     ORDER BY CASE plan_key
+       WHEN 'free' THEN 1
+       WHEN 'pro' THEN 2
+       WHEN 'ultra' THEN 3
+       ELSE 4
+     END`
+  );
+
+  res.json({ plans: result.rows.map(mapAccessPlan) });
+}));
+
+router.patch('/market/plans/:planKey', validate(updateAccessPlanSchema), asyncHandler(async (req, res) => {
+  const planKey = String(req.params.planKey || '').toLowerCase();
+  if (!['free', 'pro', 'ultra'].includes(planKey)) {
+    return res.status(400).json({ error: 'Invalid plan key.' });
+  }
+
+  const { priceGbp, discountPercent, benefits } = req.validated.body;
+  const result = await pool.query(
+    `UPDATE company_access_plans
+     SET price_gbp = $2,
+         discount_percent = $3,
+         benefits = $4,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE plan_key = $1
+     RETURNING plan_key, display_name, price_gbp, discount_percent, benefits, updated_at`,
+    [planKey, priceGbp, discountPercent, benefits]
+  );
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: 'Plan not found.' });
+  }
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'market.plan_updated',
+    entityType: 'company_access_plan',
+    entityId: planKey,
+    metadata: {
+      priceGbp,
+      discountPercent,
+      benefitsCount: benefits.length,
+    },
+  });
+
+  res.json({ plan: mapAccessPlan(result.rows[0]) });
 }));
 
 module.exports = router;

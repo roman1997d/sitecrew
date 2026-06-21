@@ -601,3 +601,60 @@ CREATE INDEX IF NOT EXISTS idx_company_account_history_company ON company_accoun
 ALTER TABLE company_account_history DROP CONSTRAINT IF EXISTS company_account_history_action_check;
 ALTER TABLE company_account_history ADD CONSTRAINT company_account_history_action_check
   CHECK (action IN ('active', 'paused', 'suspended', 'deleted', 'event'));
+
+CREATE TABLE IF NOT EXISTS company_access_plans (
+  plan_key VARCHAR(20) PRIMARY KEY,
+  display_name VARCHAR(80) NOT NULL,
+  price_gbp NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  discount_percent NUMERIC(5, 2) NOT NULL DEFAULT 0,
+  benefits TEXT[] NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT company_access_plans_plan_key_check CHECK (plan_key IN ('free', 'pro', 'ultra')),
+  CONSTRAINT company_access_plans_price_check CHECK (price_gbp >= 0),
+  CONSTRAINT company_access_plans_discount_check CHECK (discount_percent >= 0 AND discount_percent <= 100)
+);
+
+INSERT INTO company_access_plans (plan_key, display_name, price_gbp, discount_percent, benefits)
+VALUES
+  (
+    'free',
+    'Free',
+    0,
+    0,
+    ARRAY[
+      'Basic company profile',
+      'Up to 2 active job posts',
+      'Standard applicant inbox',
+      'Community support'
+    ]
+  ),
+  (
+    'pro',
+    'Pro',
+    49,
+    0,
+    ARRAY[
+      'Unlimited job posts',
+      'Applicant management and team tools',
+      'Company feed and stories',
+      'Contacts journal',
+      'Priority email support'
+    ]
+  ),
+  (
+    'ultra',
+    'Ultra',
+    99,
+    0,
+    ARRAY[
+      'Everything in Pro',
+      'Featured company placement',
+      'Advanced worker search filters',
+      'Worker invite campaigns',
+      'Dedicated account support'
+    ]
+  )
+ON CONFLICT (plan_key) DO NOTHING;
+
+ALTER TABLE company_profiles DROP CONSTRAINT IF EXISTS company_profiles_plan_check;
+ALTER TABLE company_profiles ADD CONSTRAINT company_profiles_plan_check CHECK (plan IN ('free', 'pro', 'ultra'));

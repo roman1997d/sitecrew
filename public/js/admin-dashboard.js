@@ -5,6 +5,7 @@
     users: 'Users',
     companies: 'Company Accounts',
     billing: 'Billing and Plans',
+    market: 'Market and Money',
     posts: 'Posts Moderator',
     'api-logs': 'API Logs',
     audit: 'Audit Trails',
@@ -1616,6 +1617,123 @@
     openCompanyStatusReasonModal('paused', companyId);
   }
 
+  function formatGbp(value) {
+    return `£${Number(value || 0).toFixed(2)}`;
+  }
+
+  function renderMarketBenefitRow(value = '') {
+    return `
+      <div class="admin-market-benefit-row">
+        <input type="text" data-market-benefit value="${escapeHtml(value)}" maxlength="300" placeholder="Plan benefit">
+        <button type="button" data-market-remove-benefit aria-label="Remove benefit"><i class="bi bi-trash"></i></button>
+      </div>
+    `;
+  }
+
+  function updateMarketEffectivePrice(card) {
+    const price = Number(card.querySelector('[data-market-price]')?.value || 0);
+    const discount = Number(card.querySelector('[data-market-discount]')?.value || 0);
+    const effective = price * (1 - Math.min(Math.max(discount, 0), 100) / 100);
+    const target = card.querySelector('[data-market-effective]');
+    if (target) {
+      target.textContent = `Effective price: ${formatGbp(effective)} / month`;
+    }
+  }
+
+  function renderMarketPlans(plans = []) {
+    const grid = document.getElementById('adminMarketPlansGrid');
+    const meta = document.getElementById('adminMarketMeta');
+    if (!grid) return;
+
+    if (!plans.length) {
+      if (meta) meta.textContent = 'No access plans configured yet.';
+      grid.innerHTML = '<p class="admin-empty">No access plans found.</p>';
+      return;
+    }
+
+    if (meta) {
+      meta.textContent = 'Edit monthly price, discount, and benefits for each company access plan.';
+    }
+
+    grid.innerHTML = plans.map((plan) => {
+      const benefitsHtml = (plan.benefits || []).map((benefit) => renderMarketBenefitRow(benefit)).join('');
+      return `
+        <article class="admin-market-card" data-market-plan="${escapeHtml(plan.planKey)}">
+          <div class="admin-market-card-header">
+            <h3>${escapeHtml(plan.displayName)}</h3>
+            <span class="admin-market-plan-badge" data-plan="${escapeHtml(plan.planKey)}">${escapeHtml(plan.planKey)}</span>
+          </div>
+          <label class="admin-market-field">
+            <span>Monthly price (GBP)</span>
+            <input type="number" data-market-price min="0" step="0.01" value="${Number(plan.priceGbp).toFixed(2)}">
+          </label>
+          <label class="admin-market-field">
+            <span>Discount (%)</span>
+            <input type="number" data-market-discount min="0" max="100" step="0.01" value="${Number(plan.discountPercent).toFixed(2)}">
+          </label>
+          <p class="admin-market-effective" data-market-effective>Effective price: ${formatGbp(plan.effectivePriceGbp)} / month</p>
+          <div class="admin-market-benefits">
+            <div class="admin-market-benefits-header">
+              <span>Benefits</span>
+              <button type="button" class="admin-secondary-btn" data-market-add-benefit>Add benefit</button>
+            </div>
+            <div class="admin-market-benefits-list" data-market-benefits-list>
+              ${benefitsHtml}
+            </div>
+          </div>
+          <div class="admin-market-card-actions">
+            <button type="button" class="admin-primary-btn" data-market-save>Save plan</button>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  async function loadMarketSection() {
+    const data = await apiRequest('/api/admin/market/plans');
+    renderMarketPlans(data.plans || []);
+    return data;
+  }
+
+  async function saveMarketPlan(planKey, button) {
+    const card = document.querySelector(`[data-market-plan="${planKey}"]`);
+    if (!card) return;
+
+    const priceGbp = Number(card.querySelector('[data-market-price]')?.value);
+    const discountPercent = Number(card.querySelector('[data-market-discount]')?.value);
+    const benefits = Array.from(card.querySelectorAll('[data-market-benefit]'))
+      .map((input) => input.value.trim())
+      .filter(Boolean);
+
+    if (!Number.isFinite(priceGbp) || priceGbp < 0) {
+      showAlert('Enter a valid monthly price.');
+      return;
+    }
+    if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100) {
+      showAlert('Discount must be between 0 and 100.');
+      return;
+    }
+    if (!benefits.length) {
+      showAlert('Add at least one plan benefit.');
+      return;
+    }
+
+    button.disabled = true;
+    try {
+      const data = await apiRequest(`/api/admin/market/plans/${planKey}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ priceGbp, discountPercent, benefits }),
+      });
+      showAlert(`${data.plan.displayName} plan updated.`, 'success');
+      const plans = (await apiRequest('/api/admin/market/plans')).plans || [];
+      renderMarketPlans(plans);
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   function renderAuditTable(trails = []) {
     const container = document.getElementById('adminAuditTable');
     if (!container) return;
@@ -1737,6 +1855,10 @@
     }
     if (section === 'billing') {
       await loadBillingSection();
+      return;
+    }
+    if (section === 'market') {
+      await loadMarketSection();
       return;
     }
     if (section === 'posts') {
@@ -3156,6 +3278,45 @@
     const pauseBtn = event.target.closest('[data-billing-pause]');
     if (pauseBtn) {
       await pauseBillingAccount(pauseBtn.dataset.billingPause, pauseBtn);
+    }
+  });
+
+  document.getElementById('adminMarketPlansGrid')?.addEventListener('click', async (event) => {
+    const card = event.target.closest('[data-market-plan]');
+    if (!card) return;
+
+    const planKey = card.dataset.marketPlan;
+    const addBtn = event.target.closest('[data-market-add-benefit]');
+    if (addBtn) {
+      const list = card.querySelector('[data-market-benefits-list]');
+      list?.insertAdjacentHTML('beforeend', renderMarketBenefitRow(''));
+      return;
+    }
+
+    const removeBtn = event.target.closest('[data-market-remove-benefit]');
+    if (removeBtn) {
+      const rows = card.querySelectorAll('.admin-market-benefit-row');
+      if (rows.length <= 1) {
+        showAlert('Each plan must keep at least one benefit.');
+        return;
+      }
+      removeBtn.closest('.admin-market-benefit-row')?.remove();
+      return;
+    }
+
+    const saveBtn = event.target.closest('[data-market-save]');
+    if (saveBtn) {
+      await saveMarketPlan(planKey, saveBtn);
+    }
+  });
+
+  document.getElementById('adminMarketPlansGrid')?.addEventListener('input', (event) => {
+    if (!event.target.matches('[data-market-price], [data-market-discount]')) {
+      return;
+    }
+    const card = event.target.closest('[data-market-plan]');
+    if (card) {
+      updateMarketEffectivePrice(card);
     }
   });
 

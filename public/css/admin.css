@@ -1098,6 +1098,146 @@
   border-color: #FECACA;
 }
 
+.admin-market-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-market-card {
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.admin-market-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-market-card-header h3 {
+  margin: 0;
+  font-size: 22px;
+  color: #0F172A;
+}
+
+.admin-market-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.admin-market-plan-badge[data-plan='pro'] {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.admin-market-plan-badge[data-plan='ultra'] {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+
+.admin-market-field {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-market-field span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.admin-market-field input {
+  width: 100%;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.admin-market-effective {
+  margin: 0;
+  font-size: 14px;
+  color: #0F766E;
+  font-weight: 600;
+}
+
+.admin-market-benefits {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-market-benefits-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-market-benefits-header span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.admin-market-benefits-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-market-benefit-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.admin-market-benefit-row input {
+  width: 100%;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.admin-market-benefit-row button {
+  border: 1px solid #FECACA;
+  background: #FFF1F2;
+  color: #B91C1C;
+  border-radius: 10px;
+  width: 40px;
+  cursor: pointer;
+}
+
+.admin-market-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 1200px) {
+  .admin-market-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .admin-status-reason-modal {
   z-index: 1100;
 }
