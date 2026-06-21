@@ -4,7 +4,6 @@
     metrics: 'Metrics Tracker',
     users: 'Users',
     companies: 'Company Accounts',
-    billing: 'Billing and Plans',
     market: 'Market and Money',
     posts: 'Posts Moderator',
     'api-logs': 'API Logs',
@@ -21,10 +20,8 @@
   let cachedCompanies = [];
   let companiesSearchTimer = null;
   let selectedCompanyId = null;
+  let showCompaniesExpiringOnly = false;
   let showApiLogsProblemsOnly = false;
-  let cachedBillingAccounts = [];
-  let billingSearchTimer = null;
-  let showBillingExpiringOnly = false;
   let adminSessionUser = null;
   let pendingCompanyStatusChange = null;
   let currentMediaReviewItem = null;
@@ -196,6 +193,17 @@
   function formatDate(value) {
     if (!value) return '—';
     return new Date(value).toLocaleString();
+  }
+
+  function formatBillingDate(value) {
+    if (!value) return '—';
+    return new Date(value).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   function formatRatingLabel(averageRating, reviewCount) {
@@ -842,6 +850,16 @@
     return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
   }
 
+  function getPlanStateLabel(planState) {
+    const labels = {
+      free: 'Free',
+      active: 'Active',
+      expiring_soon: 'Expiring soon',
+      expired: 'Expired',
+    };
+    return labels[planState] || planState;
+  }
+
   function renderCompaniesTable(companies = [], emptyMessage = 'No companies found.') {
     const container = document.getElementById('adminCompaniesTable');
     if (!container) return;
@@ -852,14 +870,17 @@
     }
 
     container.innerHTML = `
-      <table class="admin-table">
+      <table class="admin-table admin-companies-table">
         <thead>
           <tr>
             <th>Company</th>
             <th>Email</th>
-            <th>Registered</th>
+            <th>Plan</th>
+            <th>Purchased</th>
+            <th>Expires</th>
+            <th>Plan status</th>
             <th>Verification</th>
-            <th>User status</th>
+            <th>Account</th>
             <th>Rating</th>
             <th>Actions</th>
           </tr>
@@ -869,8 +890,13 @@
             const logoMarkup = company.logo
               ? `<img src="${escapeHtml(getMediaUrl(company.logo))}" alt="">`
               : escapeHtml(getCompanyInitials(company.company_name));
+            const canRemind = company.plan !== 'free'
+              && company.expiresAt
+              && company.planState !== 'expired';
+            const isPaused = company.user_status === 'paused';
+            const canExtend = company.plan !== 'free';
             return `
-            <tr class="admin-company-row" data-company-id="${escapeHtml(company.user_id)}">
+            <tr class="admin-company-row" data-company-id="${escapeHtml(company.user_id)}" data-company-row="${escapeHtml(company.user_id)}">
               <td>
                 <div class="admin-user-cell">
                   <span class="admin-user-thumb ${company.logo ? 'has-photo' : ''}">${logoMarkup}</span>
@@ -878,11 +904,46 @@
                 </div>
               </td>
               <td>${escapeHtml(company.email)}</td>
-              <td>${escapeHtml(formatDate(company.created_at))}</td>
+              <td><span class="admin-pill">${escapeHtml(company.plan || 'free')}</span></td>
+              <td>${escapeHtml(formatBillingDate(company.purchasedAt))}</td>
+              <td>${escapeHtml(formatBillingDate(company.expiresAt))}</td>
+              <td><span class="admin-pill plan-${escapeHtml(company.planState || 'free')}">${escapeHtml(getPlanStateLabel(company.planState || 'free'))}</span></td>
               <td><span class="admin-pill verify-${escapeHtml(company.verification_status)}">${escapeHtml(company.verification_status)}</span></td>
-              <td>${escapeHtml(company.user_status)}</td>
+              <td><span class="admin-pill status-${escapeHtml(company.user_status)}">${escapeHtml(company.user_status)}</span></td>
               <td>${escapeHtml(formatRatingLabel(company.average_rating, company.review_count))}</td>
-              <td class="admin-actions">
+              <td class="admin-billing-actions">
+                <div class="admin-billing-plan-edit">
+                  <select data-billing-plan-select="${escapeHtml(company.user_id)}" aria-label="Change plan for ${escapeHtml(company.company_name)}">
+                    <option value="free" ${company.plan === 'free' ? 'selected' : ''}>Free</option>
+                    <option value="pro" ${company.plan === 'pro' ? 'selected' : ''}>Pro</option>
+                    <option value="ultra" ${company.plan === 'ultra' ? 'selected' : ''}>Ultra</option>
+                  </select>
+                  <button type="button" data-billing-update-plan="${escapeHtml(company.user_id)}">
+                    Update plan
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  data-billing-add-month="${escapeHtml(company.user_id)}"
+                  ${canExtend ? '' : 'disabled'}
+                >
+                  Add extra Month
+                </button>
+                <button
+                  type="button"
+                  data-billing-remind="${escapeHtml(company.user_id)}"
+                  ${canRemind ? '' : 'disabled'}
+                >
+                  Remind expiry
+                </button>
+                <button
+                  type="button"
+                  class="admin-danger-btn"
+                  data-billing-pause="${escapeHtml(company.user_id)}"
+                  ${isPaused ? 'disabled' : ''}
+                >
+                  Pause account
+                </button>
                 <select data-company-verify="${escapeHtml(company.user_id)}" aria-label="Update verification">
                   <option value="">Verification</option>
                   <option value="pending">Pending</option>
@@ -900,16 +961,20 @@
   }
 
   const adminCompaniesSearch = document.getElementById('adminCompaniesSearch');
+  const adminCompaniesPlanFilter = document.getElementById('adminCompaniesPlanFilter');
   const adminCompaniesVerificationFilter = document.getElementById('adminCompaniesVerificationFilter');
   const adminCompaniesStatusFilter = document.getElementById('adminCompaniesStatusFilter');
   const adminCompaniesRatingFilter = document.getElementById('adminCompaniesRatingFilter');
   const adminCompaniesSort = document.getElementById('adminCompaniesSort');
+  const adminCompaniesExpiringBtn = document.getElementById('adminCompaniesExpiringBtn');
   const adminCompaniesClearBtn = document.getElementById('adminCompaniesClearBtn');
   const adminCompaniesResultsMeta = document.getElementById('adminCompaniesResultsMeta');
 
   function getCompaniesFilterState() {
     return {
       search: adminCompaniesSearch?.value.trim().toLowerCase() || '',
+      plan: adminCompaniesPlanFilter?.value || '',
+      expiringOnly: showCompaniesExpiringOnly,
       verification: adminCompaniesVerificationFilter?.value || '',
       status: adminCompaniesStatusFilter?.value || '',
       rating: adminCompaniesRatingFilter?.value || '',
@@ -925,6 +990,8 @@
       company.company_name,
       company.email,
       company.city,
+      company.plan,
+      company.planState,
       company.verification_status,
       company.user_status,
     ]
@@ -976,6 +1043,8 @@
     const filters = getCompaniesFilterState();
     return companies
       .filter((company) => {
+        if (filters.plan && company.plan !== filters.plan) return false;
+        if (filters.expiringOnly && company.planState !== 'expiring_soon') return false;
         if (filters.verification && company.verification_status !== filters.verification) return false;
         if (filters.status && company.user_status !== filters.status) return false;
         if (!matchesRatingFilter(company.average_rating, company.review_count, filters.rating)) return false;
@@ -1016,10 +1085,16 @@
 
   function clearCompaniesFilters() {
     if (adminCompaniesSearch) adminCompaniesSearch.value = '';
+    if (adminCompaniesPlanFilter) adminCompaniesPlanFilter.value = '';
     if (adminCompaniesVerificationFilter) adminCompaniesVerificationFilter.value = '';
     if (adminCompaniesStatusFilter) adminCompaniesStatusFilter.value = '';
     if (adminCompaniesRatingFilter) adminCompaniesRatingFilter.value = '';
     if (adminCompaniesSort) adminCompaniesSort.value = 'created_desc';
+    showCompaniesExpiringOnly = false;
+    if (adminCompaniesExpiringBtn) {
+      adminCompaniesExpiringBtn.classList.remove('is-active');
+      adminCompaniesExpiringBtn.setAttribute('aria-pressed', 'false');
+    }
     applyCompaniesView();
   }
 
@@ -1179,7 +1254,7 @@
           body: JSON.stringify({ reason }),
         });
         showAlert('Company account paused.', 'success');
-        await loadBillingSection();
+        setCachedCompanies((await apiRequest('/api/admin/companies')).companies);
       } else {
         await apiRequest(`/api/admin/users/${userId}/status`, {
           method: 'PATCH',
@@ -1438,160 +1513,28 @@
     return data;
   }
 
-  function getPlanStateLabel(planState) {
-    const labels = {
-      free: 'Free',
-      active: 'Active',
-      expiring_soon: 'Expiring soon',
-      expired: 'Expired',
-    };
-    return labels[planState] || planState;
-  }
-
-  function renderBillingTable(accounts = [], emptyMessage = 'No billing accounts found.') {
-    const container = document.getElementById('adminBillingTable');
-    if (!container) return;
-
-    if (!accounts.length) {
-      container.innerHTML = `<p class="admin-empty">${escapeHtml(emptyMessage)}</p>`;
-      return;
-    }
-
-    container.innerHTML = `
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Company</th>
-            <th>Email</th>
-            <th>Plan</th>
-            <th>Purchased</th>
-            <th>Expires</th>
-            <th>Plan status</th>
-            <th>Account</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${accounts.map((account) => {
-            const canRemind = account.plan !== 'free'
-              && account.expiresAt
-              && account.planState !== 'expired';
-            const isPaused = account.userStatus === 'paused';
-            return `
-            <tr>
-              <td>${escapeHtml(account.companyName)}</td>
-              <td>${escapeHtml(account.email)}</td>
-              <td><span class="admin-pill">${escapeHtml(account.plan)}</span></td>
-              <td>${escapeHtml(formatDate(account.purchasedAt))}</td>
-              <td>${escapeHtml(account.expiresAt ? formatDate(account.expiresAt) : '—')}</td>
-              <td><span class="admin-pill plan-${escapeHtml(account.planState)}">${escapeHtml(getPlanStateLabel(account.planState))}</span></td>
-              <td><span class="admin-pill status-${escapeHtml(account.userStatus)}">${escapeHtml(account.userStatus)}</span></td>
-              <td class="admin-billing-actions">
-                <button
-                  type="button"
-                  data-billing-remind="${escapeHtml(account.companyId)}"
-                  ${canRemind ? '' : 'disabled'}
-                >
-                  Remind expiry
-                </button>
-                <button
-                  type="button"
-                  class="admin-danger-btn"
-                  data-billing-pause="${escapeHtml(account.companyId)}"
-                  ${isPaused ? 'disabled' : ''}
-                >
-                  Pause account
-                </button>
-              </td>
-            </tr>
-          `;
-          }).join('')}
-        </tbody>
-      </table>
-    `;
-  }
-
-  const adminBillingSearch = document.getElementById('adminBillingSearch');
-  const adminBillingPlanFilter = document.getElementById('adminBillingPlanFilter');
-  const adminBillingExpiringBtn = document.getElementById('adminBillingExpiringBtn');
-  const adminBillingClearBtn = document.getElementById('adminBillingClearBtn');
-  const adminBillingResultsMeta = document.getElementById('adminBillingResultsMeta');
-
-  function getBillingFilterState() {
+  function mergeBillingAccountIntoCompany(company, account) {
+    if (!company || !account) return company;
     return {
-      search: adminBillingSearch?.value.trim().toLowerCase() || '',
-      plan: adminBillingPlanFilter?.value || '',
-      expiringOnly: showBillingExpiringOnly,
+      ...company,
+      plan: account.plan,
+      plan_purchased_at: account.purchasedAt,
+      plan_expires_at: account.expiresAt,
+      purchasedAt: account.purchasedAt,
+      expiresAt: account.expiresAt,
+      planState: account.planState,
+      user_status: account.userStatus || company.user_status,
     };
   }
 
-  function billingMatchesSearch(account, search) {
-    if (!search) return true;
-    const haystack = [
-      account.companyId,
-      account.companyName,
-      account.email,
-      account.plan,
-      account.userStatus,
-      account.planState,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(search);
-  }
-
-  function filterBillingAccounts(accounts = []) {
-    const filters = getBillingFilterState();
-    return accounts.filter((account) => {
-      if (filters.plan && account.plan !== filters.plan) return false;
-      if (filters.expiringOnly && account.planState !== 'expiring_soon') return false;
-      return billingMatchesSearch(account, filters.search);
-    });
-  }
-
-  function updateBillingResultsMeta(visibleCount, totalCount) {
-    if (!adminBillingResultsMeta) return;
-    if (!totalCount) {
-      adminBillingResultsMeta.textContent = 'No company billing accounts yet.';
-      return;
-    }
-    if (visibleCount === totalCount) {
-      adminBillingResultsMeta.textContent = `Showing ${totalCount} billing account${totalCount === 1 ? '' : 's'}.`;
-      return;
-    }
-    adminBillingResultsMeta.textContent = `Showing ${visibleCount} of ${totalCount} billing accounts.`;
-  }
-
-  function applyBillingView() {
-    const filteredAccounts = filterBillingAccounts(cachedBillingAccounts);
-    updateBillingResultsMeta(filteredAccounts.length, cachedBillingAccounts.length);
-    renderBillingTable(
-      filteredAccounts,
-      cachedBillingAccounts.length ? 'No billing accounts match your filters.' : 'No billing accounts found.'
-    );
-  }
-
-  function setCachedBillingAccounts(accounts = []) {
-    cachedBillingAccounts = accounts;
-    applyBillingView();
-  }
-
-  function clearBillingFilters() {
-    if (adminBillingSearch) adminBillingSearch.value = '';
-    if (adminBillingPlanFilter) adminBillingPlanFilter.value = '';
-    showBillingExpiringOnly = false;
-    if (adminBillingExpiringBtn) {
-      adminBillingExpiringBtn.classList.remove('is-active');
-      adminBillingExpiringBtn.setAttribute('aria-pressed', 'false');
-    }
-    applyBillingView();
-  }
-
-  async function loadBillingSection() {
-    const data = await apiRequest('/api/admin/billing');
-    setCachedBillingAccounts(data.accounts);
-    return data;
+  function replaceCompanyBilling(companyId, account) {
+    if (!account?.companyId) return;
+    cachedCompanies = cachedCompanies.map((company) => (
+      String(company.user_id) === String(companyId)
+        ? mergeBillingAccountIntoCompany(company, account)
+        : company
+    ));
+    applyCompaniesView();
   }
 
   async function sendBillingExpiryReminder(companyId, button) {
@@ -1599,6 +1542,44 @@
     try {
       await apiRequest(`/api/admin/billing/${companyId}/remind-expiry`, { method: 'POST' });
       showAlert('Expiry reminder sent to company.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function updateBillingPlan(companyId, button) {
+    const row = button.closest('[data-company-row]');
+    const select = row?.querySelector(`[data-billing-plan-select="${companyId}"]`);
+    const planKey = select?.value;
+
+    if (!planKey) {
+      showAlert('Select a plan first.');
+      return;
+    }
+
+    button.disabled = true;
+    try {
+      const data = await apiRequest(`/api/admin/billing/${companyId}/plan`, {
+        method: 'PATCH',
+        body: JSON.stringify({ planKey }),
+      });
+      replaceCompanyBilling(companyId, data.account);
+      showAlert('Company plan updated.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function addBillingMonth(companyId, button) {
+    button.disabled = true;
+    try {
+      const data = await apiRequest(`/api/admin/billing/${companyId}/add-month`, { method: 'POST' });
+      replaceCompanyBilling(companyId, data.account);
+      showAlert('One extra month added to the plan.', 'success');
     } catch (error) {
       showAlert(error.message);
     } finally {
@@ -1937,10 +1918,6 @@
     if (section === 'companies') {
       const data = await apiRequest('/api/admin/companies');
       setCachedCompanies(data.companies);
-      return;
-    }
-    if (section === 'billing') {
-      await loadBillingSection();
       return;
     }
     if (section === 'market') {
@@ -3155,13 +3132,46 @@
     companiesSearchTimer = window.setTimeout(applyCompaniesView, 200);
   });
 
+  adminCompaniesPlanFilter?.addEventListener('change', applyCompaniesView);
   adminCompaniesVerificationFilter?.addEventListener('change', applyCompaniesView);
   adminCompaniesStatusFilter?.addEventListener('change', applyCompaniesView);
   adminCompaniesRatingFilter?.addEventListener('change', applyCompaniesView);
   adminCompaniesSort?.addEventListener('change', applyCompaniesView);
+
+  adminCompaniesExpiringBtn?.addEventListener('click', () => {
+    showCompaniesExpiringOnly = !showCompaniesExpiringOnly;
+    adminCompaniesExpiringBtn.classList.toggle('is-active', showCompaniesExpiringOnly);
+    adminCompaniesExpiringBtn.setAttribute('aria-pressed', showCompaniesExpiringOnly ? 'true' : 'false');
+    applyCompaniesView();
+  });
+
   adminCompaniesClearBtn?.addEventListener('click', clearCompaniesFilters);
 
   document.getElementById('adminCompaniesTable')?.addEventListener('click', async (event) => {
+    const updatePlanBtn = event.target.closest('[data-billing-update-plan]');
+    if (updatePlanBtn) {
+      await updateBillingPlan(updatePlanBtn.dataset.billingUpdatePlan, updatePlanBtn);
+      return;
+    }
+
+    const addMonthBtn = event.target.closest('[data-billing-add-month]');
+    if (addMonthBtn) {
+      await addBillingMonth(addMonthBtn.dataset.billingAddMonth, addMonthBtn);
+      return;
+    }
+
+    const remindBtn = event.target.closest('[data-billing-remind]');
+    if (remindBtn) {
+      await sendBillingExpiryReminder(remindBtn.dataset.billingRemind, remindBtn);
+      return;
+    }
+
+    const pauseBtn = event.target.closest('[data-billing-pause]');
+    if (pauseBtn) {
+      await pauseBillingAccount(pauseBtn.dataset.billingPause, pauseBtn);
+      return;
+    }
+
     if (event.target.closest('select, button, a, label, input')) return;
     const row = event.target.closest('[data-company-id]');
     if (!row) return;
@@ -3335,35 +3345,6 @@
       showAlert(error.message);
     } finally {
       adminAuditCleanAllBtn.disabled = false;
-    }
-  });
-
-  adminBillingSearch?.addEventListener('input', () => {
-    window.clearTimeout(billingSearchTimer);
-    billingSearchTimer = window.setTimeout(applyBillingView, 200);
-  });
-
-  adminBillingPlanFilter?.addEventListener('change', applyBillingView);
-
-  adminBillingExpiringBtn?.addEventListener('click', () => {
-    showBillingExpiringOnly = !showBillingExpiringOnly;
-    adminBillingExpiringBtn.classList.toggle('is-active', showBillingExpiringOnly);
-    adminBillingExpiringBtn.setAttribute('aria-pressed', showBillingExpiringOnly ? 'true' : 'false');
-    applyBillingView();
-  });
-
-  adminBillingClearBtn?.addEventListener('click', clearBillingFilters);
-
-  document.getElementById('adminBillingTable')?.addEventListener('click', async (event) => {
-    const remindBtn = event.target.closest('[data-billing-remind]');
-    if (remindBtn) {
-      await sendBillingExpiryReminder(remindBtn.dataset.billingRemind, remindBtn);
-      return;
-    }
-
-    const pauseBtn = event.target.closest('[data-billing-pause]');
-    if (pauseBtn) {
-      await pauseBillingAccount(pauseBtn.dataset.billingPause, pauseBtn);
     }
   });
 

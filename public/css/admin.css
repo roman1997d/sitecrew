@@ -616,6 +616,10 @@
   min-width: 860px;
 }
 
+.admin-companies-table {
+  min-width: 1320px;
+}
+
 .admin-table th,
 .admin-table td {
   padding: 12px 14px;
@@ -1075,6 +1079,25 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 260px;
+}
+
+.admin-billing-plan-edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+}
+
+.admin-billing-plan-edit select {
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 12px;
+  background: #FFFFFF;
+  min-width: 92px;
 }
 
 .admin-billing-actions button {

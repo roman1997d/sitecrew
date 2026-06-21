@@ -111,6 +111,12 @@ const billingPauseSchema = z.object({
   }),
 });
 
+const billingPlanUpdateSchema = z.object({
+  body: z.object({
+    planKey: z.enum(['free', 'pro', 'ultra']),
+  }),
+});
+
 const updateAccessPlanSchema = z.object({
   body: z.object({
     priceGbp: z.number().min(0).max(999999),
@@ -721,11 +727,7 @@ router.get('/companies', asyncHandler(async (req, res) => {
      ORDER BY cp.created_at DESC`
   );
   res.json({
-    companies: result.rows.map((row) => ({
-      ...row,
-      average_rating: row.average_rating ? Number(row.average_rating) : null,
-      review_count: Number(row.review_count || 0),
-    })),
+    companies: result.rows.map(mapCompanyListRow),
   });
 }));
 
@@ -1508,29 +1510,95 @@ router.delete('/audit-trails', asyncHandler(async (req, res) => {
   res.json(result);
 }));
 
-function mapBillingAccount(row) {
-  const now = Date.now();
-  const expiresAt = row.plan_expires_at ? new Date(row.plan_expires_at).getTime() : null;
-  let planState = 'active';
+function addOneMonth(date) {
+  const result = new Date(date);
+  result.setMonth(result.getMonth() + 1);
+  return result;
+}
 
-  if (row.plan === 'free') {
-    planState = 'free';
-  } else if (expiresAt && expiresAt < now) {
-    planState = 'expired';
-  } else if (expiresAt && expiresAt - now <= 7 * 24 * 60 * 60 * 1000) {
-    planState = 'expiring_soon';
+function resolveBillingDates(row) {
+  let purchasedAt = row.plan_purchased_at;
+  if (!purchasedAt && row.plan_terms_accepted_at) {
+    purchasedAt = row.plan_terms_accepted_at;
   }
+  if (!purchasedAt && row.created_at) {
+    purchasedAt = row.created_at;
+  }
+
+  let expiresAt = row.plan_expires_at;
+  if (row.plan !== 'free' && !expiresAt && purchasedAt) {
+    expiresAt = addOneMonth(purchasedAt);
+  }
+
+  return { purchasedAt, expiresAt };
+}
+
+function computePlanState(plan, expiresAt) {
+  const now = Date.now();
+  const expiresAtMs = expiresAt ? new Date(expiresAt).getTime() : null;
+
+  if (plan === 'free') {
+    return 'free';
+  }
+  if (expiresAtMs && expiresAtMs < now) {
+    return 'expired';
+  }
+  if (expiresAtMs && expiresAtMs - now <= 7 * 24 * 60 * 60 * 1000) {
+    return 'expiring_soon';
+  }
+  return 'active';
+}
+
+function mapCompanyListRow(row) {
+  const { purchasedAt, expiresAt } = resolveBillingDates(row);
+  return {
+    ...row,
+    average_rating: row.average_rating ? Number(row.average_rating) : null,
+    review_count: Number(row.review_count || 0),
+    purchasedAt,
+    expiresAt,
+    planState: computePlanState(row.plan, expiresAt),
+  };
+}
+
+function mapBillingAccount(row) {
+  const { purchasedAt, expiresAt } = resolveBillingDates(row);
 
   return {
     companyId: row.user_id,
     companyName: row.company_name,
     email: row.email,
     plan: row.plan,
-    purchasedAt: row.plan_purchased_at,
-    expiresAt: row.plan_expires_at,
+    purchasedAt,
+    expiresAt,
     userStatus: row.user_status,
-    planState,
+    planState: computePlanState(row.plan, expiresAt),
   };
+}
+
+async function fetchBillingAccount(companyId) {
+  const result = await pool.query(
+    `SELECT
+       cp.user_id,
+       cp.company_name,
+       cp.plan,
+       cp.plan_purchased_at,
+       cp.plan_expires_at,
+       cp.plan_terms_accepted_at,
+       cp.created_at,
+       u.email,
+       u.status AS user_status
+     FROM company_profiles cp
+     JOIN users u ON u.id = cp.user_id
+     WHERE cp.user_id = $1`,
+    [companyId]
+  );
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  return mapBillingAccount(result.rows[0]);
 }
 
 router.get('/billing', asyncHandler(async (req, res) => {
@@ -1541,6 +1609,8 @@ router.get('/billing', asyncHandler(async (req, res) => {
        cp.plan,
        cp.plan_purchased_at,
        cp.plan_expires_at,
+       cp.plan_terms_accepted_at,
+       cp.created_at,
        u.email,
        u.status AS user_status
      FROM company_profiles cp
@@ -1549,6 +1619,105 @@ router.get('/billing', asyncHandler(async (req, res) => {
   );
 
   res.json({ accounts: result.rows.map(mapBillingAccount) });
+}));
+
+router.patch('/billing/:companyId/plan', validate(billingPlanUpdateSchema), asyncHandler(async (req, res) => {
+  const { planKey } = req.validated.body;
+  const companyId = req.params.companyId;
+
+  const existing = await pool.query(
+    `SELECT user_id, plan, plan_purchased_at
+     FROM company_profiles
+     WHERE user_id = $1`,
+    [companyId]
+  );
+
+  if (existing.rowCount === 0) {
+    return res.status(404).json({ error: 'Company not found' });
+  }
+
+  const current = existing.rows[0];
+  const purchasedAt = planKey === 'free'
+    ? (current.plan_purchased_at || new Date())
+    : new Date();
+  const expiresAt = planKey === 'free' ? null : addOneMonth(purchasedAt);
+
+  await pool.query(
+    `UPDATE company_profiles
+     SET plan = $2,
+         plan_purchased_at = $3,
+         plan_expires_at = $4,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = $1`,
+    [companyId, planKey, purchasedAt, expiresAt]
+  );
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'billing.plan_updated',
+    entityType: 'company',
+    entityId: Number(companyId),
+    metadata: { previousPlan: current.plan, planKey, purchasedAt, expiresAt },
+  });
+
+  const account = await fetchBillingAccount(companyId);
+  res.json({ account });
+}));
+
+router.post('/billing/:companyId/add-month', asyncHandler(async (req, res) => {
+  const companyId = req.params.companyId;
+
+  const existing = await pool.query(
+    `SELECT
+       cp.user_id,
+       cp.company_name,
+       cp.plan,
+       cp.plan_purchased_at,
+       cp.plan_expires_at,
+       cp.plan_terms_accepted_at,
+       cp.created_at,
+       u.email,
+       u.status AS user_status
+     FROM company_profiles cp
+     JOIN users u ON u.id = cp.user_id
+     WHERE cp.user_id = $1`,
+    [companyId]
+  );
+
+  if (existing.rowCount === 0) {
+    return res.status(404).json({ error: 'Company not found' });
+  }
+
+  const row = existing.rows[0];
+  if (row.plan === 'free') {
+    return res.status(400).json({ error: 'Free plans do not have a billing period to extend.' });
+  }
+
+  const { purchasedAt, expiresAt } = resolveBillingDates(row);
+  const now = new Date();
+  const baseDate = expiresAt && new Date(expiresAt) > now ? new Date(expiresAt) : now;
+  const newExpiresAt = addOneMonth(baseDate);
+  const newPurchasedAt = row.plan_purchased_at || purchasedAt || now;
+
+  await pool.query(
+    `UPDATE company_profiles
+     SET plan_purchased_at = $2,
+         plan_expires_at = $3,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = $1`,
+    [companyId, newPurchasedAt, newExpiresAt]
+  );
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'billing.month_added',
+    entityType: 'company',
+    entityId: Number(companyId),
+    metadata: { previousExpiresAt: expiresAt, expiresAt: newExpiresAt },
+  });
+
+  const account = await fetchBillingAccount(companyId);
+  res.json({ account });
 }));
 
 router.post('/billing/:companyId/remind-expiry', asyncHandler(async (req, res) => {

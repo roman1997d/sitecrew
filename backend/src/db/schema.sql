@@ -670,3 +670,11 @@ CREATE TABLE IF NOT EXISTS sales_plan_terms_versions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sales_plan_terms_versions_created ON sales_plan_terms_versions(created_at DESC);
+
+UPDATE company_profiles
+SET plan_purchased_at = COALESCE(plan_purchased_at, plan_terms_accepted_at, created_at)
+WHERE plan_purchased_at IS NULL;
+
+UPDATE company_profiles
+SET plan_expires_at = COALESCE(plan_purchased_at, plan_terms_accepted_at, created_at) + INTERVAL '1 month'
+WHERE plan <> 'free' AND plan_expires_at IS NULL;

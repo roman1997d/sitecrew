@@ -133,9 +133,14 @@ router.post('/register-company', validate(companyRegisterSchema), asyncHandler(a
          postcode,
          plan,
          plan_terms_version,
-         plan_terms_accepted_at
+         plan_terms_accepted_at,
+         plan_purchased_at,
+         plan_expires_at
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+       VALUES (
+         $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,
+         CASE WHEN $7 = 'free' THEN NULL ELSE CURRENT_TIMESTAMP + INTERVAL '1 month' END
+       )`,
       [user.id, companyName, phone || null, website || null, city || null, postcode || null, planKey, termsVersion]
     );
     await client.query('COMMIT');

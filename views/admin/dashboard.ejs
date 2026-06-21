@@ -26,7 +26,6 @@
         <button type="button" class="active" data-admin-section="metrics" title="Metrics Tracker"><i class="bi bi-speedometer2"></i> Metrics</button>
         <button type="button" data-admin-section="users" title="Users"><i class="bi bi-people"></i> Users</button>
         <button type="button" data-admin-section="companies" title="Company Accounts"><i class="bi bi-building"></i> Companies</button>
-        <button type="button" data-admin-section="billing" title="Billing and Plans"><i class="bi bi-credit-card"></i> Billing</button>
         <button type="button" data-admin-section="market" title="Market and Money"><i class="bi bi-currency-pound"></i> Market</button>
         <button type="button" data-admin-section="posts" title="Posts Moderator"><i class="bi bi-card-text"></i> Posts</button>
         <button type="button" data-admin-section="api-logs" title="API Logs"><i class="bi bi-terminal"></i> API Logs</button>
@@ -127,12 +126,22 @@
       </section>
 
       <section class="admin-section" id="adminSection-companies" data-section="companies" hidden>
-        <p class="admin-section-lead">Click a company row to view and edit account details.</p>
+        <p class="admin-section-lead">Manage company accounts, subscriptions, verification, and billing actions. Click a row to open full details.</p>
         <div class="admin-users-panel">
           <div class="admin-toolbar" id="adminCompaniesToolbar">
             <label class="admin-search-field">
               <i class="bi bi-search" aria-hidden="true"></i>
               <input type="search" id="adminCompaniesSearch" placeholder="Search by company, email, city or ID" autocomplete="off">
+            </label>
+
+            <label class="admin-toolbar-field">
+              <span>Plan</span>
+              <select id="adminCompaniesPlanFilter" aria-label="Filter by plan">
+                <option value="">All plans</option>
+                <option value="free">Free</option>
+                <option value="pro">Pro</option>
+                <option value="ultra">Ultra</option>
+              </select>
             </label>
 
             <label class="admin-toolbar-field">
@@ -183,6 +192,10 @@
               </select>
             </label>
 
+            <button type="button" class="admin-secondary-btn" id="adminCompaniesExpiringBtn" aria-pressed="false">
+              Expiring soon only
+            </button>
+
             <button type="button" class="admin-secondary-btn" id="adminCompaniesClearBtn">Clear filters</button>
           </div>
 
@@ -190,40 +203,6 @@
 
           <div class="admin-table-wrap" id="adminCompaniesTable">
             <p class="admin-empty">Loading companies...</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="admin-section" id="adminSection-billing" data-section="billing" hidden>
-        <p class="admin-section-lead">Track company subscriptions, expiry dates, reminders, and account pauses.</p>
-        <div class="admin-users-panel">
-          <div class="admin-toolbar" id="adminBillingToolbar">
-            <label class="admin-search-field">
-              <i class="bi bi-search" aria-hidden="true"></i>
-              <input type="search" id="adminBillingSearch" placeholder="Search by company, email or ID" autocomplete="off">
-            </label>
-
-            <label class="admin-toolbar-field">
-              <span>Plan</span>
-              <select id="adminBillingPlanFilter" aria-label="Filter by plan">
-                <option value="">All plans</option>
-                <option value="free">Free</option>
-                <option value="pro">Pro</option>
-                <option value="ultra">Ultra</option>
-              </select>
-            </label>
-
-            <button type="button" class="admin-secondary-btn" id="adminBillingExpiringBtn" aria-pressed="false">
-              Expiring soon only
-            </button>
-
-            <button type="button" class="admin-secondary-btn" id="adminBillingClearBtn">Clear filters</button>
-          </div>
-
-          <p class="admin-results-meta" id="adminBillingResultsMeta">Loading billing accounts...</p>
-
-          <div class="admin-table-wrap" id="adminBillingTable">
-            <p class="admin-empty">Loading billing accounts...</p>
           </div>
         </div>
       </section>
