@@ -70,7 +70,7 @@ async function run() {
     const fixed = normalizeMediaPath(story.media_url);
     if (!fixed || fixed === story.media_url) continue;
 
-    await pool.query('UPDATE stories SET media_url = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $1', [
+    await pool.query('UPDATE stories SET media_url = $2 WHERE id = $1', [
       story.id,
       fixed,
     ]);
