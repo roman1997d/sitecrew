@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const { z } = require('zod');
 const pool = require('../../db/pool');
 const requireAuth = require('../../middleware/auth');
@@ -141,6 +142,13 @@ const updateSalesPlanTermsSchema = z.object({
 const companyAccountEventSchema = z.object({
   body: z.object({
     reason: z.string().min(3).max(2000),
+  }),
+});
+
+const deleteCompanySchema = z.object({
+  body: z.object({
+    reason: z.string().min(3).max(2000),
+    adminPassword: z.string().min(1).max(256),
   }),
 });
 
@@ -781,6 +789,69 @@ router.post('/companies/:id/account-history', validate(companyAccountEventSchema
 
   const history = await fetchCompanyAccountHistory(req.params.id);
   res.status(201).json({ history });
+}));
+
+router.post('/companies/:id/delete', validate(deleteCompanySchema), asyncHandler(async (req, res) => {
+  const companyId = Number(req.params.id);
+  const { reason, adminPassword } = req.validated.body;
+
+  const adminRow = await pool.query(
+    'SELECT password_hash FROM users WHERE id = $1',
+    [req.user.id]
+  );
+
+  if (adminRow.rowCount === 0) {
+    return res.status(401).json({ error: 'Administrator session is invalid.' });
+  }
+
+  const passwordValid = await bcrypt.compare(adminPassword, adminRow.rows[0].password_hash);
+  if (!passwordValid) {
+    return res.status(403).json({ error: 'Incorrect administrator password.' });
+  }
+
+  const existing = await pool.query(
+    `SELECT u.id, u.email, u.role, cp.company_name
+     FROM users u
+     JOIN company_profiles cp ON cp.user_id = u.id
+     WHERE u.id = $1`,
+    [companyId]
+  );
+
+  if (existing.rowCount === 0) {
+    return res.status(404).json({ error: 'Company not found' });
+  }
+
+  const company = existing.rows[0];
+  if (company.role !== 'company') {
+    return res.status(400).json({ error: 'This account is not a company.' });
+  }
+
+  await logCompanyAccountHistory({
+    companyId,
+    actorId: req.user.id,
+    actorEmail: req.user.email,
+    action: 'deleted',
+    reason,
+  });
+
+  await pool.query(
+    'DELETE FROM users WHERE id = $1 AND role = $2',
+    [companyId, 'company']
+  );
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'company.deleted',
+    entityType: 'company',
+    entityId: companyId,
+    metadata: {
+      reason,
+      email: company.email,
+      companyName: company.company_name,
+    },
+  });
+
+  res.json({ ok: true, deletedCompanyId: companyId });
 }));
 
 router.patch('/companies/:id', validate(updateCompanyAdminSchema), asyncHandler(async (req, res) => {

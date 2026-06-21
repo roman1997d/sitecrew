@@ -956,6 +956,13 @@
                 >
                   Pause account
                 </button>
+                <button
+                  type="button"
+                  class="admin-danger-btn"
+                  data-billing-delete-company="${escapeHtml(company.user_id)}"
+                >
+                  Delete this company
+                </button>
                 <select data-company-verify="${escapeHtml(company.user_id)}" aria-label="Update verification">
                   <option value="">Verification</option>
                   <option value="pending">Pending</option>
@@ -1158,10 +1165,21 @@
     }
     if (adminCompanyStatusConfirmBtn) {
       adminCompanyStatusConfirmBtn.textContent = 'Confirm action';
+      adminCompanyStatusConfirmBtn.classList.remove('admin-danger-btn');
+      adminCompanyStatusConfirmBtn.classList.add('admin-primary-btn');
     }
     const reasonInput = document.getElementById('adminCompanyStatusReason');
     if (reasonInput) {
       reasonInput.placeholder = 'Explain why you are taking this action';
+    }
+    const passwordField = document.getElementById('adminCompanyStatusPasswordField');
+    const passwordInput = document.getElementById('adminCompanyStatusPassword');
+    if (passwordField) {
+      passwordField.hidden = true;
+    }
+    if (passwordInput) {
+      passwordInput.value = '';
+      passwordInput.required = false;
     }
   }
 
@@ -1185,10 +1203,14 @@
     confirmLabel,
     metadata = {},
     button = null,
+    requirePassword = false,
+    confirmDanger = false,
   }) {
     const dateInput = document.getElementById('adminCompanyStatusDate');
     const summaryEl = document.getElementById('adminCompanyStatusSummary');
     const reasonInput = document.getElementById('adminCompanyStatusReason');
+    const passwordField = document.getElementById('adminCompanyStatusPasswordField');
+    const passwordInput = document.getElementById('adminCompanyStatusPassword');
 
     pendingCompanyStatusChange = {
       userId,
@@ -1196,6 +1218,7 @@
       billingAction,
       metadata,
       button,
+      requirePassword,
     };
 
     resetCompanyStatusReasonModalCopy();
@@ -1205,6 +1228,10 @@
     }
     if (adminCompanyStatusConfirmBtn) {
       adminCompanyStatusConfirmBtn.textContent = confirmLabel;
+      if (confirmDanger) {
+        adminCompanyStatusConfirmBtn.classList.remove('admin-primary-btn');
+        adminCompanyStatusConfirmBtn.classList.add('admin-danger-btn');
+      }
     }
     if (dateInput) {
       dateInput.value = new Date().toLocaleDateString('en-GB');
@@ -1216,13 +1243,20 @@
       reasonInput.value = '';
       reasonInput.placeholder = 'Explain why you are taking this action';
     }
+    if (passwordField) {
+      passwordField.hidden = !requirePassword;
+    }
+    if (passwordInput) {
+      passwordInput.value = '';
+      passwordInput.required = requirePassword;
+    }
 
     if (button) {
       button.disabled = true;
     }
 
     adminCompanyStatusModal.hidden = false;
-    reasonInput?.focus();
+    (requirePassword ? passwordInput : reasonInput)?.focus();
   }
 
   function openCompanyStatusReasonModal(status, userId) {
@@ -1294,7 +1328,16 @@
       return;
     }
 
-    const { userId, status, source } = pendingCompanyStatusChange;
+    const { userId, status, source, requirePassword } = pendingCompanyStatusChange;
+    let adminPassword = '';
+
+    if (requirePassword) {
+      adminPassword = document.getElementById('adminCompanyStatusPassword')?.value || '';
+      if (!adminPassword) {
+        showAlert('Enter your administrator password to confirm.');
+        return;
+      }
+    }
 
     if (status === 'deleted' && !window.confirm('Mark this company account as deleted?')) {
       return;
@@ -1341,9 +1384,21 @@
             body: JSON.stringify({ reason }),
           });
           showAlert('Expiry reminder sent to company.', 'success');
+        } else if (billingAction === 'delete_company') {
+          await apiRequest(`/api/admin/companies/${userId}/delete`, {
+            method: 'POST',
+            body: JSON.stringify({ reason, adminPassword }),
+          });
+          if (String(selectedCompanyId) === String(userId)) {
+            closeCompanyModal();
+          }
+          setCachedCompanies((await apiRequest('/api/admin/companies')).companies);
+          showAlert('Company account deleted permanently.', 'success');
         }
 
-        await refreshOpenCompanyModalHistory(userId);
+        if (billingAction !== 'delete_company') {
+          await refreshOpenCompanyModalHistory(userId);
+        }
       } else {
         await apiRequest(`/api/admin/users/${userId}/status`, {
           method: 'PATCH',
@@ -1686,6 +1741,20 @@
       summary: `You are about to pause company account #${companyId}. Add a note for account history.`,
       confirmLabel: 'Pause account',
       button,
+    });
+  }
+
+  async function deleteCompanyAccount(companyId, button) {
+    const company = cachedCompanies.find((item) => String(item.user_id) === String(companyId));
+    openBillingActionReasonModal({
+      userId: companyId,
+      billingAction: 'delete_company',
+      title: 'Delete company account',
+      summary: `You are about to permanently delete ${company?.company_name || 'this company'} (#${companyId}). This removes the account and related data. Enter your administrator password to confirm.`,
+      confirmLabel: 'Delete company',
+      button,
+      requirePassword: true,
+      confirmDanger: true,
     });
   }
 
@@ -3260,6 +3329,12 @@
     const pauseBtn = event.target.closest('[data-billing-pause]');
     if (pauseBtn) {
       await pauseBillingAccount(pauseBtn.dataset.billingPause, pauseBtn);
+      return;
+    }
+
+    const deleteBtn = event.target.closest('[data-billing-delete-company]');
+    if (deleteBtn) {
+      await deleteCompanyAccount(deleteBtn.dataset.billingDeleteCompany, deleteBtn);
       return;
     }
 
