@@ -6,14 +6,54 @@ const express = require('express');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:4000';
+const PUBLIC_URL = process.env.PUBLIC_URL || process.env.API_BASE_URL || 'http://localhost:3000';
+const ADMIN_PUBLIC_URL = process.env.ADMIN_PUBLIC_URL || 'https://admin.sitecrew.uk';
+const ADMIN_HOST = process.env.ADMIN_HOST || 'admin.sitecrew.uk';
+const API_BASE_URL = process.env.API_BASE_URL || PUBLIC_URL;
+const API_INTERNAL_URL = process.env.API_INTERNAL_URL || 'http://127.0.0.1:4000';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('trust proxy', 1);
+
+function getRequestHost(req) {
+  const forwarded = req.headers['x-forwarded-host'] || req.headers.host || '';
+  return String(forwarded).split(',')[0].trim().split(':')[0].toLowerCase();
+}
+
+function isAdminHost(req) {
+  return getRequestHost(req) === ADMIN_HOST.toLowerCase();
+}
+
+function getPublicApiBaseUrl(req) {
+  return isAdminHost(req) ? ADMIN_PUBLIC_URL : PUBLIC_URL;
+}
 
 app.use((req, res, next) => {
-  res.locals.apiBaseUrl = API_BASE_URL;
+  res.locals.apiBaseUrl = getPublicApiBaseUrl(req);
   next();
+});
+
+app.use((req, res, next) => {
+  if (isAdminHost(req) && req.path === '/') {
+    return res.redirect('/admin/login');
+  }
+
+  if (!isAdminHost(req) && (req.path === '/admin' || req.path.startsWith('/admin/'))) {
+    return res.redirect(`${ADMIN_PUBLIC_URL}${req.path}`);
+  }
+
+  if (isAdminHost(req) && !req.path.startsWith('/admin') && !req.path.startsWith('/api')) {
+    const publicAsset = req.path.startsWith('/uploads/')
+      || req.path.startsWith('/css/')
+      || req.path.startsWith('/js/')
+      || req.path === '/favicon.ico';
+    if (!publicAsset) {
+      return res.redirect('/admin/login');
+    }
+  }
+
+  return next();
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -38,7 +78,7 @@ async function getSessionFromRequest(req) {
     return null;
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+  const response = await fetch(`${API_INTERNAL_URL}/api/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -62,7 +102,7 @@ async function getAdminSessionFromRequest(req) {
     return null;
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+  const response = await fetch(`${API_INTERNAL_URL}/api/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -132,7 +172,7 @@ async function requireAdminAuth(req, res, next) {
 }
 
 async function apiGet(pathname, token) {
-  const response = await fetch(`${API_BASE_URL}${pathname}`, {
+  const response = await fetch(`${API_INTERNAL_URL}${pathname}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
@@ -343,7 +383,7 @@ function getApiAssetUrl(mediaUrl) {
   const publicPath = getPublicAssetUrl(mediaUrl);
   if (!publicPath) return null;
   if (/^https?:\/\//i.test(publicPath)) return publicPath;
-  return `${API_BASE_URL}${publicPath}`;
+  return `${PUBLIC_URL}${publicPath}`;
 }
 
 function getDailyRateInsightDate() {
@@ -1024,7 +1064,7 @@ app.get('/__sitecrew/deploy-check', async (req, res) => {
 
   let sampleMedia = null;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/feed`);
+    const response = await fetch(`${API_INTERNAL_URL}/api/feed`);
     const payload = await response.json();
     const firstWithMedia = (payload.posts || []).find((post) => Array.isArray(post.media_urls) && post.media_urls.length);
     if (firstWithMedia) {
@@ -1042,7 +1082,8 @@ app.get('/__sitecrew/deploy-check', async (req, res) => {
 
   res.json({
     ok: true,
-    apiBaseUrl: API_BASE_URL,
+    apiBaseUrl: PUBLIC_URL,
+    adminPublicUrl: ADMIN_PUBLIC_URL,
     uploadsDir,
     uploadCount: uploadFiles.length,
     sampleUploadFile: uploadFiles[0] || null,

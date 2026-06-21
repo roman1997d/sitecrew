@@ -1,6 +1,6 @@
 # SiteCrew — Domeniu `sitecrew.uk` pe VPS (Nginx + SSL)
 
-Ghid pas cu pas pentru a expune platforma la **https://sitecrew.uk** în loc de `http://IP:3000`.
+Ghid pas cu pas pentru a expune platforma la **https://sitecrew.uk** și panoul admin la **https://admin.sitecrew.uk**.
 
 ## Arhitectură
 
@@ -9,10 +9,15 @@ Browser  →  Nginx (80/443)  →  sitecrew-web :3000  (frontend EJS)
                             →  sitecrew-api  :4000  (doar /api/*)
 ```
 
-Un singur domeniu:
-- `https://sitecrew.uk/` — site-ul
-- `https://sitecrew.uk/api/...` — API backend
-- `https://sitecrew.uk/uploads/...` — imagini
+| URL | Rol |
+|-----|-----|
+| `https://sitecrew.uk/` | Site public + worker + company |
+| `https://sitecrew.uk/api/...` | API backend |
+| `https://admin.sitecrew.uk/` | Admin login (redirect la `/admin/login`) |
+| `https://admin.sitecrew.uk/admin/dashboard` | Panou administrare |
+| `https://admin.sitecrew.uk/api/...` | API (același backend, same-origin pentru admin) |
+
+Accesul la `/admin/*` pe domeniul principal este redirecționat automat către `admin.sitecrew.uk`.
 
 ---
 
@@ -24,15 +29,17 @@ Adaugă aceste înregistrări (IP-ul VPS-ului tău: `217.174.245.112`):
 |-----|-------------|---------|-----|
 | **A** | `@` | `217.174.245.112` | 300–3600 |
 | **A** | `www` | `217.174.245.112` | 300–3600 |
+| **A** | `admin` | `217.174.245.112` | 300–3600 |
 
 Verifică propagarea (poate dura 5–60 minute):
 
 ```bash
 dig +short sitecrew.uk A
 dig +short www.sitecrew.uk A
+dig +short admin.sitecrew.uk A
 ```
 
-Ambele trebuie să returneze `217.174.245.112`.
+Toate trebuie să returneze `217.174.245.112`.
 
 ---
 
@@ -60,7 +67,11 @@ git pull origin main
 
 ```env
 PORT=3000
+PUBLIC_URL=https://sitecrew.uk
+ADMIN_PUBLIC_URL=https://admin.sitecrew.uk
+ADMIN_HOST=admin.sitecrew.uk
 API_BASE_URL=https://sitecrew.uk
+API_INTERNAL_URL=http://127.0.0.1:4000
 ```
 
 ### `/var/www/sitecrew/backend/.env` (backend)
@@ -68,7 +79,7 @@ API_BASE_URL=https://sitecrew.uk
 Actualizează cel puțin:
 
 ```env
-FRONTEND_ORIGIN=https://sitecrew.uk
+FRONTEND_ORIGIN=https://sitecrew.uk,https://admin.sitecrew.uk
 ```
 
 (`DATABASE_URL`, `JWT_SECRET` etc. rămân neschimbate.)
@@ -109,7 +120,7 @@ Test în browser: **http://sitecrew.uk** (fără port, fără HTTPS încă).
 ## Pasul 5 — Certificat SSL (Let's Encrypt)
 
 ```bash
-sudo certbot --nginx -d sitecrew.uk -d www.sitecrew.uk
+sudo certbot --nginx -d sitecrew.uk -d www.sitecrew.uk -d admin.sitecrew.uk
 ```
 
 - Alege redirect HTTP → HTTPS când întreabă.
@@ -162,8 +173,9 @@ curl -s https://sitecrew.uk/__sitecrew/deploy-check
 
 În browser:
 - https://sitecrew.uk — landing
-- https://sitecrew.uk/login — login
-- https://sitecrew.uk/admin/login — admin
+- https://sitecrew.uk/login — login worker/company
+- https://admin.sitecrew.uk — admin login
+- https://admin.sitecrew.uk/admin/dashboard — panou admin
 
 ---
 
@@ -179,10 +191,10 @@ pm2 logs sitecrew-api --lines 30
 ### Login / API „Failed to fetch”
 Verifică `.env`:
 ```bash
-grep API_BASE_URL /var/www/sitecrew/.env
+grep -E 'PUBLIC_URL|ADMIN_|API_' /var/www/sitecrew/.env
 grep FRONTEND_ORIGIN /var/www/sitecrew/backend/.env
 ```
-Trebuie `https://sitecrew.uk`, nu `localhost` și nu IP cu port.
+Trebuie `https://sitecrew.uk` și `https://admin.sitecrew.uk`, nu `localhost` și nu IP cu port.
 
 ### Certbot eșuează
 - DNS-ul trebuie să pointeze la VPS **înainte** de certbot.
@@ -203,11 +215,17 @@ pm2 restart sitecrew-web
 cd /var/www/sitecrew && git pull origin main
 
 # .env frontend
-echo 'PORT=3000' > /var/www/sitecrew/.env
-echo 'API_BASE_URL=https://sitecrew.uk' >> /var/www/sitecrew/.env
+cat > /var/www/sitecrew/.env <<'EOF'
+PORT=3000
+PUBLIC_URL=https://sitecrew.uk
+ADMIN_PUBLIC_URL=https://admin.sitecrew.uk
+ADMIN_HOST=admin.sitecrew.uk
+API_BASE_URL=https://sitecrew.uk
+API_INTERNAL_URL=http://127.0.0.1:4000
+EOF
 
-# .env backend — editează manual FRONTEND_ORIGIN dacă nu există:
-# FRONTEND_ORIGIN=https://sitecrew.uk
+# .env backend — editează manual dacă nu există:
+# FRONTEND_ORIGIN=https://sitecrew.uk,https://admin.sitecrew.uk
 
 pm2 restart sitecrew-web sitecrew-api
 
