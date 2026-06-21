@@ -16,6 +16,7 @@ const followRoutes = require('./modules/follows/routes');
 const messageRoutes = require('./modules/messages/routes');
 const notificationRoutes = require('./modules/notifications/routes');
 const marketRoutes = require('./modules/market/routes');
+const marketplaceRoutes = require('./modules/marketplace/routes');
 const apiLogger = require('./middleware/apiLogger');
 const adminRoutes = require('./modules/admin/routes');
 
@@ -54,6 +55,7 @@ app.use('/api/follows', followRoutes);
 app.use('/api/conversations', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/market', marketRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {

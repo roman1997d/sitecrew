@@ -9,6 +9,11 @@ const upload = require('../../middleware/upload');
 const asyncHandler = require('../../utils/asyncHandler');
 const logAudit = require('../../utils/audit');
 const logCompanyAccountHistory = require('../../utils/companyAccountHistory');
+const {
+  mapMarketplaceAd,
+  fetchMarketplaceAdProducts,
+  replaceMarketplaceAdProducts,
+} = require('../../utils/marketplaceAds');
 const { enqueueMediaForReview, enqueueUploadedFile } = require('../../utils/mediaReviewQueue');
 const {
   getMediaReviewStats,
@@ -149,6 +154,36 @@ const deleteCompanySchema = z.object({
   body: z.object({
     reason: z.string().min(3).max(2000),
     adminPassword: z.string().min(1).max(256),
+  }),
+});
+
+const marketplaceAdProductSchema = z.object({
+  title: z.string().min(1).max(120),
+  description: z.string().min(1).max(160),
+  priceGbp: z.coerce.number().min(0).max(999999),
+  imageUrl: z.string().max(500000).optional().nullable(),
+  findMoreUrl: z.string().url().max(500),
+});
+
+const marketplaceAdWriteSchema = z.object({
+  body: z.object({
+    internalTitle: z.string().min(1).max(120),
+    status: z.enum(['draft', 'active', 'paused']),
+    startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    endsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    allowOnTop: z.boolean(),
+    targetTrades: z.array(z.string().min(1).max(160)).max(20).default([]),
+    clientName: z.string().min(1).max(160),
+    clientAddress: z.string().max(300).optional().default(''),
+    activityScope: z.string().max(500).optional().default(''),
+    isPaid: z.boolean(),
+    products: z.array(marketplaceAdProductSchema).min(1).max(3),
+  }),
+});
+
+const marketplaceAdStatusSchema = z.object({
+  body: z.object({
+    status: z.enum(['draft', 'active', 'paused']),
   }),
 });
 
@@ -2058,6 +2093,255 @@ router.put('/market/terms', validate(updateSalesPlanTermsSchema), asyncHandler(a
   );
 
   res.json({ terms: mapSalesPlanTerms(enriched.rows[0]) });
+}));
+
+function validateMarketplaceAdDates(startsAt, endsAt) {
+  if (new Date(`${endsAt}T23:59:59`) < new Date(`${startsAt}T00:00:00`)) {
+    const error = new Error('End date must be on or after the start date.');
+    error.status = 400;
+    throw error;
+  }
+}
+
+async function fetchMarketplaceAdById(adId, client = pool) {
+  const result = await client.query(
+    `SELECT
+       id,
+       internal_title,
+       status,
+       starts_at,
+       ends_at,
+       allow_on_top,
+       target_trades,
+       client_name,
+       client_address,
+       activity_scope,
+       is_paid,
+       created_by,
+       created_at,
+       updated_at
+     FROM marketplace_ads
+     WHERE id = $1`,
+    [adId]
+  );
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  const products = await fetchMarketplaceAdProducts(client, adId);
+  return mapMarketplaceAd(result.rows[0], products);
+}
+
+router.get('/market/ads', asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    `SELECT
+       id,
+       internal_title,
+       status,
+       starts_at,
+       ends_at,
+       allow_on_top,
+       target_trades,
+       client_name,
+       client_address,
+       activity_scope,
+       is_paid,
+       created_by,
+       created_at,
+       updated_at
+     FROM marketplace_ads
+     ORDER BY updated_at DESC, id DESC`
+  );
+
+  const ads = await Promise.all(
+    result.rows.map(async (row) => {
+      const products = await fetchMarketplaceAdProducts(pool, row.id);
+      return mapMarketplaceAd(row, products);
+    })
+  );
+
+  res.json({ ads });
+}));
+
+router.get('/market/ads/:id', asyncHandler(async (req, res) => {
+  const ad = await fetchMarketplaceAdById(req.params.id);
+  if (!ad) {
+    return res.status(404).json({ error: 'Marketplace ad not found.' });
+  }
+  res.json({ ad });
+}));
+
+router.post('/market/ads', validate(marketplaceAdWriteSchema), asyncHandler(async (req, res) => {
+  const payload = req.validated.body;
+  validateMarketplaceAdDates(payload.startsAt, payload.endsAt);
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const created = await client.query(
+      `INSERT INTO marketplace_ads (
+         internal_title,
+         status,
+         starts_at,
+         ends_at,
+         allow_on_top,
+         target_trades,
+         client_name,
+         client_address,
+         activity_scope,
+         is_paid,
+         created_by
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id`,
+      [
+        payload.internalTitle,
+        payload.status,
+        payload.startsAt,
+        payload.endsAt,
+        payload.allowOnTop,
+        payload.targetTrades,
+        payload.clientName,
+        payload.clientAddress || null,
+        payload.activityScope || null,
+        payload.isPaid,
+        req.user.id,
+      ]
+    );
+
+    const adId = created.rows[0].id;
+    await replaceMarketplaceAdProducts(client, adId, payload.products);
+    await client.query('COMMIT');
+
+    await logAudit({
+      actorId: req.user.id,
+      action: 'marketplace.ad_created',
+      entityType: 'marketplace_ad',
+      entityId: adId,
+      metadata: { status: payload.status, productCount: payload.products.length },
+    });
+
+    const ad = await fetchMarketplaceAdById(adId);
+    res.status(201).json({ ad });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}));
+
+router.patch('/market/ads/:id', validate(marketplaceAdWriteSchema), asyncHandler(async (req, res) => {
+  const payload = req.validated.body;
+  validateMarketplaceAdDates(payload.startsAt, payload.endsAt);
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const updated = await client.query(
+      `UPDATE marketplace_ads
+       SET internal_title = $2,
+           status = $3,
+           starts_at = $4,
+           ends_at = $5,
+           allow_on_top = $6,
+           target_trades = $7,
+           client_name = $8,
+           client_address = $9,
+           activity_scope = $10,
+           is_paid = $11,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING id`,
+      [
+        req.params.id,
+        payload.internalTitle,
+        payload.status,
+        payload.startsAt,
+        payload.endsAt,
+        payload.allowOnTop,
+        payload.targetTrades,
+        payload.clientName,
+        payload.clientAddress || null,
+        payload.activityScope || null,
+        payload.isPaid,
+      ]
+    );
+
+    if (updated.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Marketplace ad not found.' });
+    }
+
+    await replaceMarketplaceAdProducts(client, req.params.id, payload.products);
+    await client.query('COMMIT');
+
+    await logAudit({
+      actorId: req.user.id,
+      action: 'marketplace.ad_updated',
+      entityType: 'marketplace_ad',
+      entityId: Number(req.params.id),
+      metadata: { status: payload.status, productCount: payload.products.length },
+    });
+
+    const ad = await fetchMarketplaceAdById(req.params.id);
+    res.json({ ad });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}));
+
+router.patch('/market/ads/:id/status', validate(marketplaceAdStatusSchema), asyncHandler(async (req, res) => {
+  const { status } = req.validated.body;
+  const result = await pool.query(
+    `UPDATE marketplace_ads
+     SET status = $2, updated_at = CURRENT_TIMESTAMP
+     WHERE id = $1
+     RETURNING id`,
+    [req.params.id, status]
+  );
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: 'Marketplace ad not found.' });
+  }
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'marketplace.ad_status_updated',
+    entityType: 'marketplace_ad',
+    entityId: Number(req.params.id),
+    metadata: { status },
+  });
+
+  const ad = await fetchMarketplaceAdById(req.params.id);
+  res.json({ ad });
+}));
+
+router.delete('/market/ads/:id', asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    'DELETE FROM marketplace_ads WHERE id = $1 RETURNING id, internal_title',
+    [req.params.id]
+  );
+
+  if (result.rowCount === 0) {
+    return res.status(404).json({ error: 'Marketplace ad not found.' });
+  }
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'marketplace.ad_deleted',
+    entityType: 'marketplace_ad',
+    entityId: Number(req.params.id),
+    metadata: { internalTitle: result.rows[0].internal_title },
+  });
+
+  res.json({ ok: true, deletedId: Number(req.params.id) });
 }));
 
 module.exports = router;

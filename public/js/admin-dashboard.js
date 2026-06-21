@@ -72,10 +72,10 @@
   let showTextReviewRiskOnly = false;
   let activeMarketPanel = 'plans';
   let editingMarketAdId = null;
+  let editingMarketAdIsNew = false;
   let cachedMarketAds = [];
   let marketAdTradeSearchTimer = null;
   let marketAdPreviewSlide = 0;
-  const MARKET_ADS_STORAGE_KEY = 'sitecrewAdminMarketAdsV1';
   let mediaReviewObjectUrl = null;
   const adminPostsModerationStatus = document.getElementById('adminPostsModerationStatus');
   const adminMediaReviewEmpty = document.getElementById('adminMediaReviewEmpty');
@@ -116,6 +116,9 @@
 
   function getMediaUrl(path) {
     if (!path) return '';
+    if (String(path).startsWith('data:')) {
+      return path;
+    }
     if (/^https?:\/\//i.test(path)) {
       try {
         return new URL(path).pathname;
@@ -1839,7 +1842,9 @@
   async function loadMarketSection() {
     const data = await apiRequest('/api/admin/market/plans');
     renderMarketPlans(data.plans || []);
-    loadMarketAdsSection();
+    if (activeMarketPanel === 'ads') {
+      await loadMarketAdsSection();
+    }
     return data;
   }
 
@@ -1876,20 +1881,6 @@
     };
   }
 
-  function readMarketAdsFromStorage() {
-    try {
-      const raw = localStorage.getItem(MARKET_ADS_STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function writeMarketAdsToStorage(ads = []) {
-    localStorage.setItem(MARKET_ADS_STORAGE_KEY, JSON.stringify(ads));
-  }
-
   function normalizeMarketAdStatus(ad) {
     if (!ad || ad.status === 'paused' || ad.status === 'draft') {
       return ad?.status || 'draft';
@@ -1912,8 +1903,9 @@
     }[status] || status;
   }
 
-  function loadMarketAdsSection() {
-    cachedMarketAds = readMarketAdsFromStorage().map((ad) => ({
+  async function loadMarketAdsSection() {
+    const data = await apiRequest('/api/admin/market/ads');
+    cachedMarketAds = (data.ads || []).map((ad) => ({
       ...ad,
       status: normalizeMarketAdStatus(ad),
     }));
@@ -1928,8 +1920,8 @@
 
     if (meta) {
       meta.textContent = cachedMarketAds.length
-        ? `Showing ${cachedMarketAds.length} marketplace ad${cachedMarketAds.length === 1 ? '' : 's'}. Saved locally until backend is connected.`
-        : 'Create sponsored feed posts for workers. Data is stored locally for this frontend phase.';
+        ? `Showing ${cachedMarketAds.length} marketplace ad${cachedMarketAds.length === 1 ? '' : 's'}.`
+        : 'Create sponsored feed posts for workers.';
     }
 
     if (!cachedMarketAds.length) {
@@ -1997,12 +1989,13 @@
     });
 
     if (panel === 'ads') {
-      loadMarketAdsSection();
+      loadMarketAdsSection().catch((error) => showAlert(error.message));
     }
   }
 
   function showMarketAdsListView() {
     editingMarketAdId = null;
+    editingMarketAdIsNew = false;
     marketAdPreviewSlide = 0;
     document.getElementById('adminMarketAdsListView')?.removeAttribute('hidden');
     document.getElementById('adminMarketAdsEditorView')?.setAttribute('hidden', '');
@@ -2018,8 +2011,8 @@
         </div>
         <div class="admin-market-ad-product-image-row">
           <div class="admin-market-ad-product-thumb" data-market-ad-product-preview="${escapeHtml(product.id)}">
-            ${product.imageDataUrl
-              ? `<img src="${escapeHtml(product.imageDataUrl)}" alt="">`
+            ${product.imageUrl || product.imageDataUrl
+              ? `<img src="${escapeHtml(getMediaUrl(product.imageUrl || product.imageDataUrl))}" alt="">`
               : 'No image'}
           </div>
           <label class="admin-field">
@@ -2067,7 +2060,7 @@
     if (!container) return;
 
     const products = (ad?.products || []).filter((product) => (
-      product.title || product.description || product.priceGbp || product.imageDataUrl || product.findMoreUrl
+      product.title || product.description || product.priceGbp || product.imageUrl || product.imageDataUrl || product.findMoreUrl
     ));
     const safeSlide = products.length ? Math.min(slideIndex, products.length - 1) : 0;
     marketAdPreviewSlide = safeSlide;
@@ -2079,8 +2072,8 @@
 
     const slidesHtml = products.map((product, index) => `
       <div class="admin-market-ad-preview-slide ${index === safeSlide ? 'active' : ''}" data-market-ad-preview-slide="${index}">
-        ${product.imageDataUrl
-          ? `<img src="${escapeHtml(product.imageDataUrl)}" alt="">`
+        ${product.imageUrl || product.imageDataUrl
+          ? `<img src="${escapeHtml(getMediaUrl(product.imageUrl || product.imageDataUrl))}" alt="">`
           : '<div class="admin-market-ad-preview-slide-fallback">Image</div>'}
         <div>
           <h4>${escapeHtml(product.title || 'Product title')}</h4>
@@ -2122,7 +2115,7 @@
 
   function openMarketAdEditor(adId = null) {
     const ad = adId
-      ? cachedMarketAds.find((item) => item.id === adId)
+      ? cachedMarketAds.find((item) => String(item.id) === String(adId))
       : createEmptyMarketAd();
 
     if (!ad) {
@@ -2130,7 +2123,8 @@
       return;
     }
 
-    editingMarketAdId = ad.id;
+    editingMarketAdIsNew = !adId;
+    editingMarketAdId = adId ? ad.id : null;
     marketAdPreviewSlide = 0;
 
     document.getElementById('adminMarketAdsListView')?.setAttribute('hidden', '');
@@ -2170,7 +2164,7 @@
         title: card.querySelector(`[data-market-ad-product-title="${productId}"]`)?.value.trim() || '',
         description: card.querySelector(`[data-market-ad-product-description="${productId}"]`)?.value.trim() || '',
         priceGbp: card.querySelector(`[data-market-ad-product-price="${productId}"]`)?.value.trim() || '',
-        imageDataUrl: card.querySelector(`[data-market-ad-product-preview="${productId}"] img`)?.getAttribute('src') || '',
+        imageUrl: card.querySelector(`[data-market-ad-product-preview="${productId}"] img`)?.getAttribute('src') || '',
         findMoreUrl: card.querySelector(`[data-market-ad-product-link="${productId}"]`)?.value.trim() || '',
       };
     });
@@ -2180,7 +2174,6 @@
       .filter(Boolean);
 
     return {
-      id: editingMarketAdId || `ad-${Date.now()}`,
       internalTitle: document.getElementById('adminMarketAdInternalTitle')?.value.trim() || '',
       startsAt: document.getElementById('adminMarketAdStartsAt')?.value || '',
       endsAt: document.getElementById('adminMarketAdEndsAt')?.value || '',
@@ -2237,7 +2230,7 @@
         showAlert(`Enter the external Find more link for product ${index + 1}.`);
         return false;
       }
-      if (publishing && !product.imageDataUrl) {
+      if (publishing && !product.imageUrl) {
         showAlert(`Upload an image for product ${index + 1} before publishing.`);
         return false;
       }
@@ -2246,55 +2239,108 @@
     return true;
   }
 
-  function upsertMarketAd(payload, status = 'draft') {
-    const existing = cachedMarketAds.find((item) => item.id === payload.id);
-    const nextAd = {
-      ...(existing || {}),
-      ...payload,
+  function buildMarketAdApiPayload(payload, status) {
+    return {
+      internalTitle: payload.internalTitle,
       status,
-      updatedAt: new Date().toISOString(),
-      createdAt: existing?.createdAt || new Date().toISOString(),
+      startsAt: payload.startsAt,
+      endsAt: payload.endsAt,
+      allowOnTop: payload.allowOnTop,
+      targetTrades: payload.targetTrades,
+      clientName: payload.clientName,
+      clientAddress: payload.clientAddress,
+      activityScope: payload.activityScope,
+      isPaid: payload.isPaid,
+      products: payload.products.map((product) => ({
+        title: product.title,
+        description: product.description,
+        priceGbp: Number(product.priceGbp),
+        imageUrl: product.imageUrl || null,
+        findMoreUrl: product.findMoreUrl,
+      })),
     };
-
-    cachedMarketAds = [
-      nextAd,
-      ...cachedMarketAds.filter((item) => item.id !== nextAd.id),
-    ];
-    writeMarketAdsToStorage(cachedMarketAds);
-    editingMarketAdId = nextAd.id;
-    renderMarketAdPreview(nextAd, marketAdPreviewSlide);
   }
 
-  function saveMarketAdDraft() {
+  async function saveMarketAdToApi(status) {
     const payload = getMarketAdEditorState();
-    if (!validateMarketAdPayload(payload)) return;
-    upsertMarketAd(payload, 'draft');
-    showAlert('Ad draft saved locally.', 'success');
+    const isPublishing = status === 'active';
+    if (!validateMarketAdPayload(payload, { publishing: isPublishing })) {
+      return null;
+    }
+
+    const body = buildMarketAdApiPayload(payload, status);
+    if (editingMarketAdIsNew || !editingMarketAdId) {
+      const data = await apiRequest('/api/admin/market/ads', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      editingMarketAdId = data.ad.id;
+      editingMarketAdIsNew = false;
+      return data.ad;
+    }
+
+    const data = await apiRequest(`/api/admin/market/ads/${editingMarketAdId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+    return data.ad;
   }
 
-  function publishMarketAd(event) {
+  async function saveMarketAdDraft() {
+    const button = document.getElementById('adminMarketAdSaveDraftBtn');
+    if (button) button.disabled = true;
+    try {
+      const ad = await saveMarketAdToApi('draft');
+      if (!ad) return;
+      await loadMarketAdsSection();
+      renderMarketAdPreview(ad, marketAdPreviewSlide);
+      showAlert('Ad draft saved.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function publishMarketAd(event) {
     event.preventDefault();
-    const payload = getMarketAdEditorState();
-    if (!validateMarketAdPayload(payload, { publishing: true })) return;
-    upsertMarketAd(payload, 'active');
-    showAlert('Ad published locally. Backend integration will activate it in the worker feed.', 'success');
-    showMarketAdsListView();
+    const button = document.getElementById('adminMarketAdPublishBtn');
+    if (button) button.disabled = true;
+    try {
+      const ad = await saveMarketAdToApi('active');
+      if (!ad) return;
+      await loadMarketAdsSection();
+      showAlert('Ad published to the worker feed.', 'success');
+      showMarketAdsListView();
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      if (button) button.disabled = false;
+    }
   }
 
-  function deleteMarketAd(adId) {
+  async function deleteMarketAd(adId) {
     if (!window.confirm('Delete this marketplace ad?')) return;
-    cachedMarketAds = cachedMarketAds.filter((item) => item.id !== adId);
-    writeMarketAdsToStorage(cachedMarketAds);
-    renderMarketAdsTable();
-    showAlert('Marketplace ad deleted.', 'success');
+    try {
+      await apiRequest(`/api/admin/market/ads/${adId}`, { method: 'DELETE' });
+      await loadMarketAdsSection();
+      showAlert('Marketplace ad deleted.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    }
   }
 
-  function setMarketAdStatus(adId, status) {
-    const ad = cachedMarketAds.find((item) => item.id === adId);
-    if (!ad) return;
-    upsertMarketAd({ ...ad }, status);
-    renderMarketAdsTable();
-    showAlert(`Ad marked as ${getMarketAdStatusLabel(status).toLowerCase()}.`, 'success');
+  async function setMarketAdStatus(adId, status) {
+    try {
+      await apiRequest(`/api/admin/market/ads/${adId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+      await loadMarketAdsSection();
+      showAlert(`Ad marked as ${getMarketAdStatusLabel(status).toLowerCase()}.`, 'success');
+    } catch (error) {
+      showAlert(error.message);
+    }
   }
 
   async function searchMarketAdTrades(query) {

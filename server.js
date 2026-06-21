@@ -428,105 +428,6 @@ function buildDailyRateInsight(rates = [], feedback = {}) {
   };
 }
 
-function loadMarketplaceAdsMock() {
-  const filePath = path.join(__dirname, 'data/marketplace-ads-feed.mock.json');
-  if (!fs.existsSync(filePath)) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    return Array.isArray(parsed?.ads) ? parsed.ads : [];
-  } catch (error) {
-    return [];
-  }
-}
-
-function filterMarketplaceAdsForWorker(ads = [], tradeInterests = []) {
-  const now = Date.now();
-  const interests = Array.isArray(tradeInterests)
-    ? tradeInterests.map((trade) => String(trade).toLowerCase())
-    : [];
-
-  return ads.filter((ad) => {
-    if (ad.status !== 'active') {
-      return false;
-    }
-
-    const startsAt = ad.startsAt ? new Date(`${ad.startsAt}T00:00:00`).getTime() : null;
-    const endsAt = ad.endsAt ? new Date(`${ad.endsAt}T23:59:59`).getTime() : null;
-    if (startsAt && startsAt > now) {
-      return false;
-    }
-    if (endsAt && endsAt < now) {
-      return false;
-    }
-
-    const targetTrades = Array.isArray(ad.targetTrades) ? ad.targetTrades : [];
-    if (!targetTrades.length) {
-      return true;
-    }
-    if (!interests.length) {
-      return false;
-    }
-
-    return targetTrades.some((trade) => interests.includes(String(trade).toLowerCase()));
-  });
-}
-
-function formatMarketplacePrice(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) {
-    return '£0.00';
-  }
-  return `£${amount.toFixed(2)}`;
-}
-
-function getMarketplaceInitials(name = '') {
-  const parts = String(name).trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return 'AD';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
-}
-
-function mapMarketplaceAdFeedItem(ad) {
-  const products = (ad.products || []).slice(0, 3).map((product) => ({
-    title: product.title || 'Product',
-    description: product.description || '',
-    priceLabel: formatMarketplacePrice(product.priceGbp),
-    findMoreUrl: product.findMoreUrl || '#',
-    imageUrl: product.imageUrl || product.imageDataUrl || '',
-  }));
-
-  if (!products.length) {
-    return null;
-  }
-
-  return {
-    id: ad.id,
-    type: 'marketplaceAd',
-    createdAt: ad.createdAt || `${ad.startsAt}T09:00:00.000Z`,
-    allowOnTop: Boolean(ad.allowOnTop),
-    clientName: ad.clientName || 'Marketplace advertiser',
-    clientAddress: ad.clientAddress || '',
-    activityScope: ad.activityScope || '',
-    isPaid: ad.isPaid !== false,
-    initials: getMarketplaceInitials(ad.clientName),
-    products,
-  };
-}
-
-function buildWorkerMarketplaceFeedItems(tradeInterests = []) {
-  const ads = filterMarketplaceAdsForWorker(loadMarketplaceAdsMock(), tradeInterests)
-    .map(mapMarketplaceAdFeedItem)
-    .filter(Boolean);
-
-  return {
-    pinnedAds: ads.filter((ad) => ad.allowOnTop),
-    regularAds: ads.filter((ad) => !ad.allowOnTop),
-  };
-}
-
 function mapFeedPost(post, index = 0) {
   const isCompany = post.author_role === 'company';
   const author = post.author_name || (isCompany ? 'Company' : 'Worker');
@@ -897,7 +798,16 @@ async function buildWorkerDashboard(token, userId, profile) {
     }
   }
 
-  const { pinnedAds, regularAds } = buildWorkerMarketplaceFeedItems(tradeInterests);
+  let pinnedAds = [];
+  let regularAds = [];
+  try {
+    const marketplaceFeed = await apiGet('/api/marketplace/ads/feed', token);
+    pinnedAds = marketplaceFeed.pinnedAds || [];
+    regularAds = marketplaceFeed.regularAds || [];
+  } catch (error) {
+    pinnedAds = [];
+    regularAds = [];
+  }
 
   const chronologicalFeedItems = [
     ...(dailyRateInsight ? [dailyRateInsight] : []),

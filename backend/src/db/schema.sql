@@ -678,3 +678,114 @@ WHERE plan_purchased_at IS NULL;
 UPDATE company_profiles
 SET plan_expires_at = COALESCE(plan_purchased_at, plan_terms_accepted_at, created_at) + INTERVAL '1 month'
 WHERE plan <> 'free' AND plan_expires_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS marketplace_ads (
+  id SERIAL PRIMARY KEY,
+  internal_title VARCHAR(120) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'expired')),
+  starts_at DATE NOT NULL,
+  ends_at DATE NOT NULL,
+  allow_on_top BOOLEAN NOT NULL DEFAULT FALSE,
+  target_trades TEXT[] NOT NULL DEFAULT '{}',
+  client_name VARCHAR(160) NOT NULL,
+  client_address VARCHAR(300),
+  activity_scope TEXT,
+  is_paid BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS marketplace_ad_products (
+  id SERIAL PRIMARY KEY,
+  ad_id INTEGER NOT NULL REFERENCES marketplace_ads(id) ON DELETE CASCADE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  title VARCHAR(120) NOT NULL,
+  description VARCHAR(160) NOT NULL,
+  price_gbp NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  image_url VARCHAR(500),
+  find_more_url VARCHAR(500) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(ad_id, sort_order)
+);
+
+CREATE INDEX IF NOT EXISTS idx_marketplace_ads_status_dates ON marketplace_ads(status, starts_at, ends_at);
+CREATE INDEX IF NOT EXISTS idx_marketplace_ad_products_ad ON marketplace_ad_products(ad_id, sort_order);
+
+INSERT INTO marketplace_ads (
+  internal_title,
+  status,
+  starts_at,
+  ends_at,
+  allow_on_top,
+  target_trades,
+  client_name,
+  client_address,
+  activity_scope,
+  is_paid
+)
+SELECT
+  'Screwfix — hand tools promo',
+  'active',
+  DATE '2026-01-01',
+  DATE '2027-12-31',
+  TRUE,
+  ARRAY['Electrician', 'Builder'],
+  'Screwfix',
+  'Trade counters nationwide',
+  'Electrical supplies, hand tools and fixings',
+  TRUE
+WHERE NOT EXISTS (
+  SELECT 1 FROM marketplace_ads WHERE internal_title = 'Screwfix — hand tools promo'
+);
+
+INSERT INTO marketplace_ad_products (ad_id, sort_order, title, description, price_gbp, image_url, find_more_url)
+SELECT ad.id, 0, 'Cable reel 25m', 'Heavy-duty cable reel for site and workshop use.', 24.99, '/images/marketplace/mock-cable.svg', 'https://www.screwfix.com/'
+FROM marketplace_ads ad
+WHERE ad.internal_title = 'Screwfix — hand tools promo'
+  AND NOT EXISTS (SELECT 1 FROM marketplace_ad_products p WHERE p.ad_id = ad.id AND p.sort_order = 0);
+
+INSERT INTO marketplace_ad_products (ad_id, sort_order, title, description, price_gbp, image_url, find_more_url)
+SELECT ad.id, 1, 'Insulated pliers set', 'Comfort grip pliers for daily electrical work.', 14.50, '/images/marketplace/mock-pliers.svg', 'https://www.screwfix.com/'
+FROM marketplace_ads ad
+WHERE ad.internal_title = 'Screwfix — hand tools promo'
+  AND NOT EXISTS (SELECT 1 FROM marketplace_ad_products p WHERE p.ad_id = ad.id AND p.sort_order = 1);
+
+INSERT INTO marketplace_ad_products (ad_id, sort_order, title, description, price_gbp, image_url, find_more_url)
+SELECT ad.id, 2, 'VDE screwdriver kit', 'Six-piece insulated screwdriver set.', 19.99, '/images/marketplace/mock-screwdriver.svg', 'https://www.screwfix.com/'
+FROM marketplace_ads ad
+WHERE ad.internal_title = 'Screwfix — hand tools promo'
+  AND NOT EXISTS (SELECT 1 FROM marketplace_ad_products p WHERE p.ad_id = ad.id AND p.sort_order = 2);
+
+INSERT INTO marketplace_ads (
+  internal_title,
+  status,
+  starts_at,
+  ends_at,
+  allow_on_top,
+  target_trades,
+  client_name,
+  client_address,
+  activity_scope,
+  is_paid
+)
+SELECT
+  'General tools marketplace test',
+  'active',
+  DATE '2026-01-01',
+  DATE '2027-12-31',
+  FALSE,
+  '{}',
+  'SiteCrew Marketplace',
+  'Demo advertiser',
+  'General construction supplies',
+  TRUE
+WHERE NOT EXISTS (
+  SELECT 1 FROM marketplace_ads WHERE internal_title = 'General tools marketplace test'
+);
+
+INSERT INTO marketplace_ad_products (ad_id, sort_order, title, description, price_gbp, image_url, find_more_url)
+SELECT ad.id, 0, 'Claw hammer 20oz', 'Balanced hammer with fibreglass handle.', 11.99, '/images/marketplace/mock-hammer.svg', 'https://www.screwfix.com/'
+FROM marketplace_ads ad
+WHERE ad.internal_title = 'General tools marketplace test'
+  AND NOT EXISTS (SELECT 1 FROM marketplace_ad_products p WHERE p.ad_id = ad.id AND p.sort_order = 0);
