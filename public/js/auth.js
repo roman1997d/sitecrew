@@ -11,7 +11,20 @@ const workerFields = document.querySelectorAll('.register-worker-field');
 const companyFields = document.querySelectorAll('.register-company-field');
 const registerTradesInput = document.querySelector('#register-trades');
 const registerTradesOptions = document.querySelector('#register-trades-options');
+const companyPlanModal = document.querySelector('#companyPlanModal');
+const companyPlanGrid = document.querySelector('#companyPlanGrid');
+const companyPlanTermsOpenBtn = document.querySelector('#companyPlanTermsOpenBtn');
+const companyPlanTermsAgree = document.querySelector('#companyPlanTermsAgree');
+const companyPlanContinueBtn = document.querySelector('#companyPlanContinueBtn');
+const companyPlanTermsVersion = document.querySelector('#companyPlanTermsVersion');
+const companyTermsModal = document.querySelector('#companyTermsModal');
+const companyTermsContent = document.querySelector('#companyTermsContent');
+const companyTermsModalVersion = document.querySelector('#companyTermsModalVersion');
 let registerTradeSearchTimer;
+let pendingCompanyRegistration = null;
+let companyMarketPlans = [];
+let companyMarketTerms = null;
+let selectedCompanyPlanKey = null;
 
 function showAlert(message, type = 'error') {
   alertBox.textContent = message;
@@ -112,6 +125,194 @@ async function apiRequest(path, payload) {
   return data;
 }
 
+async function fetchMarketData() {
+  const [plansResponse, termsResponse] = await Promise.all([
+    fetch(`${API_BASE_URL}/api/market/plans`),
+    fetch(`${API_BASE_URL}/api/market/terms`),
+  ]);
+
+  const plansData = await plansResponse.json().catch(() => ({}));
+  const termsData = await termsResponse.json().catch(() => ({}));
+
+  if (!plansResponse.ok) {
+    throw new Error(plansData.error || 'Unable to load company plans.');
+  }
+  if (!termsResponse.ok) {
+    throw new Error(termsData.error || 'Unable to load terms and conditions.');
+  }
+
+  return {
+    plans: plansData.plans || [],
+    terms: termsData.terms || null,
+  };
+}
+
+function formatPlanPrice(plan) {
+  const effective = Number(plan.effectivePriceGbp || 0);
+  const base = Number(plan.priceGbp || 0);
+  const discount = Number(plan.discountPercent || 0);
+  const priceLabel = `£${effective.toFixed(2)}`;
+  const suffix = '<small>/ month</small>';
+
+  if (discount > 0 && base > effective) {
+    return `${priceLabel}${suffix}<span class="company-plan-price-old">£${base.toFixed(2)}</span>`;
+  }
+
+  return `${priceLabel}${suffix}`;
+}
+
+function renderCompanyPlanCards() {
+  if (!companyPlanGrid) return;
+
+  if (!companyMarketPlans.length) {
+    companyPlanGrid.innerHTML = '<p class="company-plan-empty">No company plans are available right now.</p>';
+    return;
+  }
+
+  companyPlanGrid.innerHTML = companyMarketPlans.map((plan) => `
+    <article
+      class="company-plan-card ${selectedCompanyPlanKey === plan.planKey ? 'selected' : ''}"
+      data-company-plan-card="${escapeHtml(plan.planKey)}"
+      tabindex="0"
+      role="button"
+      aria-pressed="${selectedCompanyPlanKey === plan.planKey ? 'true' : 'false'}"
+    >
+      <div class="company-plan-card-head">
+        <h3>${escapeHtml(plan.displayName)}</h3>
+        <span class="company-plan-badge">${escapeHtml(plan.planKey)}</span>
+      </div>
+      <p class="company-plan-price">${formatPlanPrice(plan)}</p>
+      <ul class="company-plan-benefits">
+        ${(plan.benefits || []).map((benefit) => `<li>${escapeHtml(benefit)}</li>`).join('')}
+      </ul>
+    </article>
+  `).join('');
+}
+
+function updateCompanyPlanContinueState() {
+  if (!companyPlanContinueBtn) return;
+  const canContinue = Boolean(
+    selectedCompanyPlanKey
+    && companyPlanTermsAgree?.checked
+    && companyMarketTerms?.version
+  );
+  companyPlanContinueBtn.disabled = !canContinue;
+}
+
+function renderCompanyTermsMeta() {
+  if (companyPlanTermsVersion) {
+    companyPlanTermsVersion.textContent = companyMarketTerms?.version
+      ? `Current version: v${companyMarketTerms.version}`
+      : 'Terms are not published yet.';
+  }
+  if (companyTermsModalVersion) {
+    companyTermsModalVersion.textContent = companyMarketTerms?.version
+      ? `Version ${companyMarketTerms.version}`
+      : 'No published version';
+  }
+}
+
+function openCompanyPlanModal() {
+  if (!companyPlanModal) return;
+  companyPlanModal.hidden = false;
+  companyPlanModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  updateCompanyPlanContinueState();
+}
+
+function closeCompanyPlanModal() {
+  if (!companyPlanModal) return;
+  companyPlanModal.hidden = true;
+  companyPlanModal.setAttribute('aria-hidden', 'true');
+  if (companyTermsModal?.hidden !== false) {
+    document.body.style.overflow = '';
+  }
+}
+
+function openCompanyTermsModal() {
+  if (!companyTermsModal || !companyTermsContent) return;
+  if (!companyMarketTerms?.content) {
+    showAlert('Sales plan terms are not published yet.');
+    return;
+  }
+  companyTermsContent.innerHTML = companyMarketTerms.content;
+  if (companyTermsModalVersion) {
+    companyTermsModalVersion.textContent = `Version ${companyMarketTerms.version}`;
+  }
+  companyTermsModal.hidden = false;
+  companyTermsModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeCompanyTermsModal() {
+  if (!companyTermsModal) return;
+  companyTermsModal.hidden = true;
+  companyTermsModal.setAttribute('aria-hidden', 'true');
+  if (companyPlanModal?.hidden) {
+    document.body.style.overflow = '';
+  }
+}
+
+function buildCompanyRegistrationPayload(formData) {
+  return {
+    email: formData.get('email').trim(),
+    password: formData.get('password'),
+    city: formData.get('city').trim() || undefined,
+    companyName: formData.get('companyName').trim(),
+  };
+}
+
+function validateCompanyRegistrationForm(formData) {
+  const companyName = formData.get('companyName')?.trim();
+  if (!companyName) {
+    throw new Error('Company name is required.');
+  }
+}
+
+async function openCompanyRegistrationFlow(formData) {
+  validateCompanyRegistrationForm(formData);
+  pendingCompanyRegistration = buildCompanyRegistrationPayload(formData);
+  selectedCompanyPlanKey = null;
+  if (companyPlanTermsAgree) {
+    companyPlanTermsAgree.checked = false;
+  }
+
+  if (companyPlanGrid) {
+    companyPlanGrid.innerHTML = '<p class="company-plan-empty">Loading plans...</p>';
+  }
+
+  openCompanyPlanModal();
+
+  const market = await fetchMarketData();
+  companyMarketPlans = market.plans;
+  companyMarketTerms = market.terms;
+  renderCompanyPlanCards();
+  renderCompanyTermsMeta();
+  updateCompanyPlanContinueState();
+
+  if (!companyMarketTerms?.version) {
+    showAlert('Sales plan terms are not published yet. Please contact support.');
+  }
+}
+
+async function completeCompanyRegistration() {
+  if (!pendingCompanyRegistration || !selectedCompanyPlanKey) {
+    throw new Error('Select a company plan to continue.');
+  }
+  if (!companyPlanTermsAgree?.checked) {
+    throw new Error('You must agree to the Sales plan Terms & Conditions.');
+  }
+  if (!companyMarketTerms?.version) {
+    throw new Error('Sales plan terms are not available yet.');
+  }
+
+  return apiRequest('/api/auth/register-company', {
+    ...pendingCompanyRegistration,
+    planKey: selectedCompanyPlanKey,
+    termsVersion: companyMarketTerms.version,
+    termsAccepted: true,
+  });
+}
+
 function getActiveTradeQuery(value = '') {
   return value.split(',').pop().trim();
 }
@@ -207,28 +408,27 @@ registerForm.addEventListener('submit', async (event) => {
   setButtonLoading(button, true, 'Create account');
 
   try {
+    if (role === 'company') {
+      await openCompanyRegistrationFlow(formData);
+      return;
+    }
+
     const sharedPayload = {
       email: formData.get('email').trim(),
       password: formData.get('password'),
       city: formData.get('city').trim() || undefined,
     };
 
-    const payload = role === 'company'
-      ? {
-          ...sharedPayload,
-          companyName: formData.get('companyName').trim(),
-        }
-      : {
-          ...sharedPayload,
-          fullName: formData.get('fullName').trim(),
-          trades: formData.get('trades')
-            .split(',')
-            .map((trade) => trade.trim())
-            .filter(Boolean),
-        };
+    const payload = {
+      ...sharedPayload,
+      fullName: formData.get('fullName').trim(),
+      trades: formData.get('trades')
+        .split(',')
+        .map((trade) => trade.trim())
+        .filter(Boolean),
+    };
 
-    const endpoint = role === 'company' ? '/api/auth/register-company' : '/api/auth/register-worker';
-    const data = await apiRequest(endpoint, payload);
+    const data = await apiRequest('/api/auth/register-worker', payload);
 
     if (!isPlatformRole(data.user?.role)) {
       throw new Error('Registration is not available for this account type.');
@@ -241,6 +441,65 @@ registerForm.addEventListener('submit', async (event) => {
     showAlert(error.message);
   } finally {
     setButtonLoading(button, false, 'Create account');
+  }
+});
+
+companyPlanGrid?.addEventListener('click', (event) => {
+  const card = event.target.closest('[data-company-plan-card]');
+  if (!card) return;
+  selectedCompanyPlanKey = card.dataset.companyPlanCard;
+  renderCompanyPlanCards();
+  updateCompanyPlanContinueState();
+});
+
+companyPlanGrid?.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const card = event.target.closest('[data-company-plan-card]');
+  if (!card) return;
+  event.preventDefault();
+  selectedCompanyPlanKey = card.dataset.companyPlanCard;
+  renderCompanyPlanCards();
+  updateCompanyPlanContinueState();
+});
+
+companyPlanTermsAgree?.addEventListener('change', updateCompanyPlanContinueState);
+
+companyPlanTermsOpenBtn?.addEventListener('click', openCompanyTermsModal);
+
+companyPlanModal?.querySelectorAll('[data-company-plan-close]').forEach((button) => {
+  button.addEventListener('click', () => {
+    closeCompanyPlanModal();
+    pendingCompanyRegistration = null;
+  });
+});
+
+companyTermsModal?.querySelectorAll('[data-company-terms-close]').forEach((button) => {
+  button.addEventListener('click', closeCompanyTermsModal);
+});
+
+companyPlanContinueBtn?.addEventListener('click', async () => {
+  clearAlert();
+  companyPlanContinueBtn.disabled = true;
+  companyPlanContinueBtn.textContent = 'Please wait...';
+
+  try {
+    const data = await completeCompanyRegistration();
+
+    if (!isPlatformRole(data.user?.role)) {
+      throw new Error('Registration is not available for this account type.');
+    }
+
+    closeCompanyPlanModal();
+    closeCompanyTermsModal();
+    saveSession(data, pendingCompanyRegistration.email);
+    pendingCompanyRegistration = null;
+    showAlert('Account created. Redirecting...', 'success');
+    redirectAfterAuth(data.user);
+  } catch (error) {
+    showAlert(error.message);
+    updateCompanyPlanContinueState();
+  } finally {
+    companyPlanContinueBtn.textContent = 'Continue with your Account';
   }
 });
 

@@ -7,6 +7,7 @@ const env = require('../../config/env');
 const validate = require('../../middleware/validate');
 const requireAuth = require('../../middleware/auth');
 const asyncHandler = require('../../utils/asyncHandler');
+const { getLatestSalesPlanTerms } = require('../../utils/accessPlans');
 
 const router = express.Router();
 
@@ -38,6 +39,9 @@ const companyRegisterSchema = z.object({
     website: z.string().url().optional(),
     city: z.string().optional(),
     postcode: z.string().optional(),
+    planKey: z.enum(['free', 'pro', 'ultra']),
+    termsVersion: z.number().int().positive(),
+    termsAccepted: z.literal(true),
   }),
 });
 
@@ -86,16 +90,53 @@ router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(asy
 }));
 
 router.post('/register-company', validate(companyRegisterSchema), asyncHandler(async (req, res) => {
-  const { email, password, companyName, phone, website, city, postcode } = req.validated.body;
+  const {
+    email,
+    password,
+    companyName,
+    phone,
+    website,
+    city,
+    postcode,
+    planKey,
+    termsVersion,
+  } = req.validated.body;
+
+  const latestTerms = await getLatestSalesPlanTerms(pool);
+  if (!latestTerms.version) {
+    return res.status(400).json({ error: 'Sales plan terms are not available yet. Please try again later.' });
+  }
+  if (termsVersion !== latestTerms.version) {
+    return res.status(400).json({ error: 'Please review and accept the latest terms and conditions.' });
+  }
+
+  const planExists = await pool.query(
+    'SELECT 1 FROM company_access_plans WHERE plan_key = $1',
+    [planKey]
+  );
+  if (planExists.rowCount === 0) {
+    return res.status(400).json({ error: 'Selected plan is not available.' });
+  }
+
   const client = await pool.connect();
 
   try {
     await client.query('BEGIN');
     const user = await createUser(client, { email, password, role: 'company' });
     await client.query(
-      `INSERT INTO company_profiles (user_id, company_name, phone, website, city, postcode)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [user.id, companyName, phone || null, website || null, city || null, postcode || null]
+      `INSERT INTO company_profiles (
+         user_id,
+         company_name,
+         phone,
+         website,
+         city,
+         postcode,
+         plan,
+         plan_terms_version,
+         plan_terms_accepted_at
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+      [user.id, companyName, phone || null, website || null, city || null, postcode || null, planKey, termsVersion]
     );
     await client.query('COMMIT');
     res.status(201).json({ user, token: signToken(user) });

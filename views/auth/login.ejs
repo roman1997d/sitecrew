@@ -101,6 +101,61 @@
       </form>
     </div>
   </div>
+
+  <div class="company-plan-modal" id="companyPlanModal" hidden aria-hidden="true">
+    <div class="company-plan-backdrop" data-company-plan-close></div>
+    <div class="company-plan-dialog" role="dialog" aria-modal="true" aria-labelledby="companyPlanModalTitle">
+      <header class="company-plan-header">
+        <div>
+          <p class="company-plan-kicker">Choose your company plan</p>
+          <h2 id="companyPlanModalTitle">Select a plan to continue</h2>
+          <p class="company-plan-subtitle" id="companyPlanModalSubtitle">Pick the access level that fits your hiring needs.</p>
+        </div>
+        <button type="button" class="company-plan-close" data-company-plan-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="company-plan-grid" id="companyPlanGrid">
+        <p class="company-plan-empty">Loading plans...</p>
+      </div>
+
+      <div class="company-plan-terms-row">
+        <button type="button" class="company-plan-link-btn" id="companyPlanTermsOpenBtn">
+          <i class="bi bi-file-earmark-text"></i> View Sales plan Terms &amp; Conditions
+        </button>
+        <p class="company-plan-terms-version" id="companyPlanTermsVersion"></p>
+      </div>
+
+      <label class="company-plan-agree">
+        <input type="checkbox" id="companyPlanTermsAgree">
+        <span>I agree to the Sales plan Terms &amp; Conditions</span>
+      </label>
+
+      <button type="button" class="login-btn" id="companyPlanContinueBtn" disabled>
+        Continue with your Account
+      </button>
+    </div>
+  </div>
+
+  <div class="company-plan-modal company-terms-modal" id="companyTermsModal" hidden aria-hidden="true">
+    <div class="company-plan-backdrop" data-company-terms-close></div>
+    <div class="company-plan-dialog company-terms-dialog" role="dialog" aria-modal="true" aria-labelledby="companyTermsModalTitle">
+      <header class="company-plan-header">
+        <div>
+          <p class="company-plan-kicker">Legal</p>
+          <h2 id="companyTermsModalTitle">Sales plan Terms &amp; Conditions</h2>
+          <p class="company-plan-terms-version" id="companyTermsModalVersion"></p>
+        </div>
+        <button type="button" class="company-plan-close" data-company-terms-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+      <div class="company-terms-content" id="companyTermsContent"></div>
+      <button type="button" class="login-btn company-terms-close-btn" data-company-terms-close>Close</button>
+    </div>
+  </div>
+
   <%- include('../partials/api-config') %>
   <script src="/js/auth.js"></script>
 </body>

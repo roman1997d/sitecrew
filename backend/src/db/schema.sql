@@ -66,6 +66,8 @@ ALTER TABLE company_profiles ADD COLUMN IF NOT EXISTS business_type VARCHAR(120)
 ALTER TABLE company_profiles ADD COLUMN IF NOT EXISTS trades TEXT[] NOT NULL DEFAULT '{}';
 ALTER TABLE company_profiles ADD COLUMN IF NOT EXISTS plan_purchased_at TIMESTAMP;
 ALTER TABLE company_profiles ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP;
+ALTER TABLE company_profiles ADD COLUMN IF NOT EXISTS plan_terms_version INTEGER;
+ALTER TABLE company_profiles ADD COLUMN IF NOT EXISTS plan_terms_accepted_at TIMESTAMP;
 ALTER TABLE worker_profiles ADD COLUMN IF NOT EXISTS language_preference VARCHAR(10);
 ALTER TABLE worker_profiles ADD COLUMN IF NOT EXISTS trade_interests TEXT[] NOT NULL DEFAULT '{}';
 ALTER TABLE worker_profiles ADD COLUMN IF NOT EXISTS verification_status VARCHAR(20) NOT NULL DEFAULT 'pending';
