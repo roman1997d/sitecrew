@@ -602,7 +602,7 @@ CREATE TABLE IF NOT EXISTS company_account_history (
 CREATE INDEX IF NOT EXISTS idx_company_account_history_company ON company_account_history(company_id, created_at DESC);
 ALTER TABLE company_account_history DROP CONSTRAINT IF EXISTS company_account_history_action_check;
 ALTER TABLE company_account_history ADD CONSTRAINT company_account_history_action_check
-  CHECK (action IN ('active', 'paused', 'suspended', 'deleted', 'event'));
+  CHECK (action IN ('active', 'paused', 'suspended', 'deleted', 'event', 'plan_updated', 'month_added', 'expiry_reminder'));
 
 CREATE TABLE IF NOT EXISTS company_access_plans (
   plan_key VARCHAR(20) PRIMARY KEY,

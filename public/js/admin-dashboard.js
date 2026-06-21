@@ -260,6 +260,14 @@
     }[status] || status;
   }
 
+  function getCompanyBillingActionVerb(action) {
+    return {
+      plan_updated: 'updated the company plan',
+      month_added: 'added one extra billing month',
+      expiry_reminder: 'sent a plan expiry reminder',
+    }[action] || action;
+  }
+
   function getCompanyStatusActionLabel(status) {
     return {
       active: 'activate',
@@ -273,6 +281,10 @@
     const date = formatHistoryDate(entry.createdAt);
     if (entry.action === 'event') {
       return `${date} → admin: ${entry.actorEmail} added an event — reason: ${entry.reason}`;
+    }
+    if (['plan_updated', 'month_added', 'expiry_reminder'].includes(entry.action)) {
+      const verb = getCompanyBillingActionVerb(entry.action);
+      return `${date} → admin: ${entry.actorEmail} ${verb} — reason: ${entry.reason}`;
     }
     const verb = getCompanyStatusActionVerb(entry.action);
     return `${date} → admin: ${entry.actorEmail} ${verb} this account — reason: ${entry.reason}`;
@@ -1157,9 +1169,60 @@
     if (!adminCompanyStatusModal) return;
     adminCompanyStatusModal.hidden = true;
     resetPendingCompanyStatusSelect();
+    if (pendingCompanyStatusChange?.button) {
+      pendingCompanyStatusChange.button.disabled = false;
+    }
     pendingCompanyStatusChange = null;
     adminCompanyStatusForm?.reset();
     resetCompanyStatusReasonModalCopy();
+  }
+
+  function openBillingActionReasonModal({
+    userId,
+    billingAction,
+    title,
+    summary,
+    confirmLabel,
+    metadata = {},
+    button = null,
+  }) {
+    const dateInput = document.getElementById('adminCompanyStatusDate');
+    const summaryEl = document.getElementById('adminCompanyStatusSummary');
+    const reasonInput = document.getElementById('adminCompanyStatusReason');
+
+    pendingCompanyStatusChange = {
+      userId,
+      source: 'billing_action',
+      billingAction,
+      metadata,
+      button,
+    };
+
+    resetCompanyStatusReasonModalCopy();
+
+    if (adminCompanyStatusModalTitle) {
+      adminCompanyStatusModalTitle.textContent = title;
+    }
+    if (adminCompanyStatusConfirmBtn) {
+      adminCompanyStatusConfirmBtn.textContent = confirmLabel;
+    }
+    if (dateInput) {
+      dateInput.value = new Date().toLocaleDateString('en-GB');
+    }
+    if (summaryEl) {
+      summaryEl.textContent = summary;
+    }
+    if (reasonInput) {
+      reasonInput.value = '';
+      reasonInput.placeholder = 'Explain why you are taking this action';
+    }
+
+    if (button) {
+      button.disabled = true;
+    }
+
+    adminCompanyStatusModal.hidden = false;
+    reasonInput?.focus();
   }
 
   function openCompanyStatusReasonModal(status, userId) {
@@ -1248,13 +1311,39 @@
         });
         renderCompanyAccountHistory(result.history || []);
         showAlert('Account event added.', 'success');
-      } else if (source === 'billing') {
-        await apiRequest(`/api/admin/billing/${userId}/pause`, {
-          method: 'POST',
-          body: JSON.stringify({ reason }),
-        });
-        showAlert('Company account paused.', 'success');
-        setCachedCompanies((await apiRequest('/api/admin/companies')).companies);
+      } else if (source === 'billing_action') {
+        const { billingAction, metadata } = pendingCompanyStatusChange;
+
+        if (billingAction === 'pause') {
+          await apiRequest(`/api/admin/billing/${userId}/pause`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+          });
+          showAlert('Company account paused.', 'success');
+          setCachedCompanies((await apiRequest('/api/admin/companies')).companies);
+        } else if (billingAction === 'update_plan') {
+          const data = await apiRequest(`/api/admin/billing/${userId}/plan`, {
+            method: 'PATCH',
+            body: JSON.stringify({ planKey: metadata.planKey, reason }),
+          });
+          replaceCompanyBilling(userId, data.account);
+          showAlert('Company plan updated.', 'success');
+        } else if (billingAction === 'add_month') {
+          const data = await apiRequest(`/api/admin/billing/${userId}/add-month`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+          });
+          replaceCompanyBilling(userId, data.account);
+          showAlert('One extra month added to the plan.', 'success');
+        } else if (billingAction === 'remind_expiry') {
+          await apiRequest(`/api/admin/billing/${userId}/remind-expiry`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+          });
+          showAlert('Expiry reminder sent to company.', 'success');
+        }
+
+        await refreshOpenCompanyModalHistory(userId);
       } else {
         await apiRequest(`/api/admin/users/${userId}/status`, {
           method: 'PATCH',
@@ -1274,6 +1363,9 @@
       closeCompanyStatusReasonModal();
     } catch (error) {
       showAlert(error.message);
+      if (pendingCompanyStatusChange?.button) {
+        pendingCompanyStatusChange.button.disabled = false;
+      }
     } finally {
       if (confirmBtn) confirmBtn.disabled = false;
     }
@@ -1538,64 +1630,63 @@
   }
 
   async function sendBillingExpiryReminder(companyId, button) {
-    button.disabled = true;
-    try {
-      await apiRequest(`/api/admin/billing/${companyId}/remind-expiry`, { method: 'POST' });
-      showAlert('Expiry reminder sent to company.', 'success');
-    } catch (error) {
-      showAlert(error.message);
-    } finally {
-      button.disabled = false;
-    }
+    openBillingActionReasonModal({
+      userId: companyId,
+      billingAction: 'remind_expiry',
+      title: 'Send expiry reminder',
+      summary: `You are about to send a plan expiry reminder to company account #${companyId}. Add a note for account history.`,
+      confirmLabel: 'Send reminder',
+      button,
+    });
   }
 
   async function updateBillingPlan(companyId, button) {
     const row = button.closest('[data-company-row]');
     const select = row?.querySelector(`[data-billing-plan-select="${companyId}"]`);
     const planKey = select?.value;
+    const company = cachedCompanies.find((item) => String(item.user_id) === String(companyId));
 
     if (!planKey) {
       showAlert('Select a plan first.');
       return;
     }
 
-    button.disabled = true;
-    try {
-      const data = await apiRequest(`/api/admin/billing/${companyId}/plan`, {
-        method: 'PATCH',
-        body: JSON.stringify({ planKey }),
-      });
-      replaceCompanyBilling(companyId, data.account);
-      showAlert('Company plan updated.', 'success');
-    } catch (error) {
-      showAlert(error.message);
-    } finally {
-      button.disabled = false;
+    if (company?.plan === planKey) {
+      showAlert('Select a different plan first.');
+      return;
     }
+
+    openBillingActionReasonModal({
+      userId: companyId,
+      billingAction: 'update_plan',
+      title: 'Update company plan',
+      summary: `You are about to change company account #${companyId} from ${company?.plan || 'free'} to ${planKey}. Add a note for account history.`,
+      confirmLabel: 'Update plan',
+      metadata: { planKey },
+      button,
+    });
   }
 
   async function addBillingMonth(companyId, button) {
-    button.disabled = true;
-    try {
-      const data = await apiRequest(`/api/admin/billing/${companyId}/add-month`, { method: 'POST' });
-      replaceCompanyBilling(companyId, data.account);
-      showAlert('One extra month added to the plan.', 'success');
-    } catch (error) {
-      showAlert(error.message);
-    } finally {
-      button.disabled = false;
-    }
+    openBillingActionReasonModal({
+      userId: companyId,
+      billingAction: 'add_month',
+      title: 'Add extra month',
+      summary: `You are about to extend the billing period for company account #${companyId} by one month. Add a note for account history.`,
+      confirmLabel: 'Add extra month',
+      button,
+    });
   }
 
   async function pauseBillingAccount(companyId, button) {
-    pendingCompanyStatusChange = {
+    openBillingActionReasonModal({
       userId: companyId,
-      status: 'paused',
-      select: null,
-      source: 'billing',
+      billingAction: 'pause',
+      title: 'Pause company account',
+      summary: `You are about to pause company account #${companyId}. Add a note for account history.`,
+      confirmLabel: 'Pause account',
       button,
-    };
-    openCompanyStatusReasonModal('paused', companyId);
+    });
   }
 
   function formatGbp(value) {

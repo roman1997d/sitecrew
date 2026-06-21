@@ -114,6 +114,13 @@ const billingPauseSchema = z.object({
 const billingPlanUpdateSchema = z.object({
   body: z.object({
     planKey: z.enum(['free', 'pro', 'ultra']),
+    reason: z.string().min(3).max(2000),
+  }),
+});
+
+const billingReasonSchema = z.object({
+  body: z.object({
+    reason: z.string().min(3).max(2000),
   }),
 });
 
@@ -1622,7 +1629,7 @@ router.get('/billing', asyncHandler(async (req, res) => {
 }));
 
 router.patch('/billing/:companyId/plan', validate(billingPlanUpdateSchema), asyncHandler(async (req, res) => {
-  const { planKey } = req.validated.body;
+  const { planKey, reason } = req.validated.body;
   const companyId = req.params.companyId;
 
   const existing = await pool.query(
@@ -1652,6 +1659,14 @@ router.patch('/billing/:companyId/plan', validate(billingPlanUpdateSchema), asyn
     [companyId, planKey, purchasedAt, expiresAt]
   );
 
+  await logCompanyAccountHistory({
+    companyId: Number(companyId),
+    actorId: req.user.id,
+    actorEmail: req.user.email,
+    action: 'plan_updated',
+    reason,
+  });
+
   await logAudit({
     actorId: req.user.id,
     action: 'billing.plan_updated',
@@ -1664,7 +1679,8 @@ router.patch('/billing/:companyId/plan', validate(billingPlanUpdateSchema), asyn
   res.json({ account });
 }));
 
-router.post('/billing/:companyId/add-month', asyncHandler(async (req, res) => {
+router.post('/billing/:companyId/add-month', validate(billingReasonSchema), asyncHandler(async (req, res) => {
+  const { reason } = req.validated.body;
   const companyId = req.params.companyId;
 
   const existing = await pool.query(
@@ -1708,6 +1724,14 @@ router.post('/billing/:companyId/add-month', asyncHandler(async (req, res) => {
     [companyId, newPurchasedAt, newExpiresAt]
   );
 
+  await logCompanyAccountHistory({
+    companyId: Number(companyId),
+    actorId: req.user.id,
+    actorEmail: req.user.email,
+    action: 'month_added',
+    reason,
+  });
+
   await logAudit({
     actorId: req.user.id,
     action: 'billing.month_added',
@@ -1720,7 +1744,9 @@ router.post('/billing/:companyId/add-month', asyncHandler(async (req, res) => {
   res.json({ account });
 }));
 
-router.post('/billing/:companyId/remind-expiry', asyncHandler(async (req, res) => {
+router.post('/billing/:companyId/remind-expiry', validate(billingReasonSchema), asyncHandler(async (req, res) => {
+  const { reason } = req.validated.body;
+
   const result = await pool.query(
     `SELECT cp.company_name, cp.plan, cp.plan_expires_at
      FROM company_profiles cp
@@ -1751,6 +1777,14 @@ router.post('/billing/:companyId/remind-expiry', asyncHandler(async (req, res) =
       `Your ${company.plan} plan for ${company.company_name} expires on ${expiryLabel}. Renew soon to avoid interruption.`,
     ]
   );
+
+  await logCompanyAccountHistory({
+    companyId: Number(req.params.companyId),
+    actorId: req.user.id,
+    actorEmail: req.user.email,
+    action: 'expiry_reminder',
+    reason,
+  });
 
   await logAudit({
     actorId: req.user.id,
