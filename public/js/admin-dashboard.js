@@ -70,6 +70,12 @@
   const adminTextReviewPresetRiskListTable = document.getElementById('adminTextReviewPresetRiskListTable');
   let textReviewLearnMode = false;
   let showTextReviewRiskOnly = false;
+  let activeMarketPanel = 'plans';
+  let editingMarketAdId = null;
+  let cachedMarketAds = [];
+  let marketAdTradeSearchTimer = null;
+  let marketAdPreviewSlide = 0;
+  const MARKET_ADS_STORAGE_KEY = 'sitecrewAdminMarketAdsV1';
   let mediaReviewObjectUrl = null;
   const adminPostsModerationStatus = document.getElementById('adminPostsModerationStatus');
   const adminMediaReviewEmpty = document.getElementById('adminMediaReviewEmpty');
@@ -1833,7 +1839,555 @@
   async function loadMarketSection() {
     const data = await apiRequest('/api/admin/market/plans');
     renderMarketPlans(data.plans || []);
+    loadMarketAdsSection();
     return data;
+  }
+
+  function createEmptyMarketAdProduct(index = 1) {
+    return {
+      id: `product-${Date.now()}-${index}`,
+      title: '',
+      description: '',
+      priceGbp: '',
+      imageDataUrl: '',
+      findMoreUrl: '',
+    };
+  }
+
+  function createEmptyMarketAd() {
+    const today = new Date();
+    const end = new Date(today);
+    end.setDate(end.getDate() + 30);
+    return {
+      id: `ad-${Date.now()}`,
+      internalTitle: '',
+      status: 'draft',
+      startsAt: today.toISOString().slice(0, 10),
+      endsAt: end.toISOString().slice(0, 10),
+      allowOnTop: false,
+      targetTrades: [],
+      clientName: '',
+      clientAddress: '',
+      activityScope: '',
+      isPaid: true,
+      products: [createEmptyMarketAdProduct(1)],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  function readMarketAdsFromStorage() {
+    try {
+      const raw = localStorage.getItem(MARKET_ADS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function writeMarketAdsToStorage(ads = []) {
+    localStorage.setItem(MARKET_ADS_STORAGE_KEY, JSON.stringify(ads));
+  }
+
+  function normalizeMarketAdStatus(ad) {
+    if (!ad || ad.status === 'paused' || ad.status === 'draft') {
+      return ad?.status || 'draft';
+    }
+    const now = Date.now();
+    const startsAt = ad.startsAt ? new Date(`${ad.startsAt}T00:00:00`).getTime() : null;
+    const endsAt = ad.endsAt ? new Date(`${ad.endsAt}T23:59:59`).getTime() : null;
+    if (endsAt && endsAt < now) return 'expired';
+    if (startsAt && startsAt > now && ad.status === 'active') return 'scheduled';
+    return ad.status || 'draft';
+  }
+
+  function getMarketAdStatusLabel(status) {
+    return {
+      draft: 'Draft',
+      active: 'Active',
+      paused: 'Paused',
+      expired: 'Expired',
+      scheduled: 'Scheduled',
+    }[status] || status;
+  }
+
+  function loadMarketAdsSection() {
+    cachedMarketAds = readMarketAdsFromStorage().map((ad) => ({
+      ...ad,
+      status: normalizeMarketAdStatus(ad),
+    }));
+    renderMarketAdsTable();
+    return cachedMarketAds;
+  }
+
+  function renderMarketAdsTable() {
+    const container = document.getElementById('adminMarketAdsTable');
+    const meta = document.getElementById('adminMarketAdsMeta');
+    if (!container) return;
+
+    if (meta) {
+      meta.textContent = cachedMarketAds.length
+        ? `Showing ${cachedMarketAds.length} marketplace ad${cachedMarketAds.length === 1 ? '' : 's'}. Saved locally until backend is connected.`
+        : 'Create sponsored feed posts for workers. Data is stored locally for this frontend phase.';
+    }
+
+    if (!cachedMarketAds.length) {
+      container.innerHTML = '<p class="admin-empty">No marketplace ads yet. Click “Create ad post” to start.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="admin-table admin-market-ads-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Client</th>
+            <th>Status</th>
+            <th>Products</th>
+            <th>Target trades</th>
+            <th>Lifetime</th>
+            <th>Pinned</th>
+            <th>Paid</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cachedMarketAds.map((ad) => {
+            const status = normalizeMarketAdStatus(ad);
+            const tradeLabel = ad.targetTrades?.length
+              ? `${ad.targetTrades.length} trade${ad.targetTrades.length === 1 ? '' : 's'}`
+              : 'All trades';
+            return `
+              <tr>
+                <td>${escapeHtml(ad.internalTitle || 'Untitled ad')}</td>
+                <td>${escapeHtml(ad.clientName || '—')}</td>
+                <td><span class="admin-pill status-${escapeHtml(status)}">${escapeHtml(getMarketAdStatusLabel(status))}</span></td>
+                <td>${escapeHtml(String(ad.products?.length || 0))}</td>
+                <td>${escapeHtml(tradeLabel)}</td>
+                <td>${escapeHtml(formatBillingDate(`${ad.startsAt}T00:00:00`))} – ${escapeHtml(formatBillingDate(`${ad.endsAt}T23:59:59`))}</td>
+                <td>${ad.allowOnTop ? 'Yes' : 'No'}</td>
+                <td>${ad.isPaid ? 'Yes' : 'No'}</td>
+                <td class="admin-billing-actions">
+                  <button type="button" data-market-ad-edit="${escapeHtml(ad.id)}">Edit</button>
+                  ${status === 'active'
+                    ? `<button type="button" data-market-ad-pause="${escapeHtml(ad.id)}">Pause</button>`
+                    : `<button type="button" data-market-ad-activate="${escapeHtml(ad.id)}">Activate</button>`}
+                  <button type="button" class="admin-danger-btn" data-market-ad-delete="${escapeHtml(ad.id)}">Delete</button>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function setActiveMarketPanel(panel = 'plans') {
+    activeMarketPanel = panel;
+    document.querySelectorAll('[data-market-panel]').forEach((element) => {
+      const isActive = element.dataset.marketPanel === panel;
+      if (element.matches('.admin-market-subnav button')) {
+        element.classList.toggle('active', isActive);
+        element.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      } else if (element.classList.contains('admin-market-panel-view')) {
+        element.classList.toggle('active', isActive);
+        element.hidden = !isActive;
+      }
+    });
+
+    if (panel === 'ads') {
+      loadMarketAdsSection();
+    }
+  }
+
+  function showMarketAdsListView() {
+    editingMarketAdId = null;
+    marketAdPreviewSlide = 0;
+    document.getElementById('adminMarketAdsListView')?.removeAttribute('hidden');
+    document.getElementById('adminMarketAdsEditorView')?.setAttribute('hidden', '');
+    renderMarketAdsTable();
+  }
+
+  function renderMarketAdProductEditor(product, index) {
+    return `
+      <article class="admin-market-ad-product-card" data-market-ad-product="${escapeHtml(product.id)}">
+        <div class="admin-market-ad-product-card-head">
+          <strong>Product ${index + 1}</strong>
+          <button type="button" class="admin-secondary-btn" data-market-ad-remove-product="${escapeHtml(product.id)}">Remove</button>
+        </div>
+        <div class="admin-market-ad-product-image-row">
+          <div class="admin-market-ad-product-thumb" data-market-ad-product-preview="${escapeHtml(product.id)}">
+            ${product.imageDataUrl
+              ? `<img src="${escapeHtml(product.imageDataUrl)}" alt="">`
+              : 'No image'}
+          </div>
+          <label class="admin-field">
+            <span>Product image</span>
+            <input type="file" accept="image/*" data-market-ad-product-image="${escapeHtml(product.id)}">
+          </label>
+        </div>
+        <label class="admin-field">
+          <span>Title</span>
+          <input type="text" data-market-ad-product-title="${escapeHtml(product.id)}" value="${escapeHtml(product.title)}" maxlength="120" placeholder="Cable reel 25m">
+        </label>
+        <label class="admin-field">
+          <span>Short description</span>
+          <textarea rows="2" data-market-ad-product-description="${escapeHtml(product.id)}" maxlength="160" placeholder="Heavy-duty cable for site use">${escapeHtml(product.description)}</textarea>
+        </label>
+        <label class="admin-field">
+          <span>Price (GBP)</span>
+          <input type="number" min="0" step="0.01" data-market-ad-product-price="${escapeHtml(product.id)}" value="${escapeHtml(product.priceGbp)}" placeholder="19.99">
+        </label>
+        <label class="admin-field">
+          <span>Find more URL</span>
+          <input type="url" data-market-ad-product-link="${escapeHtml(product.id)}" value="${escapeHtml(product.findMoreUrl)}" placeholder="https://example.com/product">
+        </label>
+      </article>
+    `;
+  }
+
+  function renderMarketAdTradeChips(trades = []) {
+    const container = document.getElementById('adminMarketAdTradeChips');
+    if (!container) return;
+    if (!trades.length) {
+      container.innerHTML = '<p class="admin-detail-empty">No trade targeting selected — ad will match all worker trade interests.</p>';
+      return;
+    }
+    container.innerHTML = trades.map((trade) => `
+      <span class="admin-market-trade-chip">
+        ${escapeHtml(trade)}
+        <button type="button" data-market-ad-remove-trade="${escapeHtml(trade)}" aria-label="Remove ${escapeHtml(trade)}">×</button>
+      </span>
+    `).join('');
+  }
+
+  function renderMarketAdPreview(ad, slideIndex = 0) {
+    const container = document.getElementById('adminMarketAdPreview');
+    if (!container) return;
+
+    const products = (ad?.products || []).filter((product) => (
+      product.title || product.description || product.priceGbp || product.imageDataUrl || product.findMoreUrl
+    ));
+    const safeSlide = products.length ? Math.min(slideIndex, products.length - 1) : 0;
+    marketAdPreviewSlide = safeSlide;
+
+    if (!products.length) {
+      container.innerHTML = '<p class="admin-detail-empty">Add at least one product to preview the sponsored feed card.</p>';
+      return;
+    }
+
+    const slidesHtml = products.map((product, index) => `
+      <div class="admin-market-ad-preview-slide ${index === safeSlide ? 'active' : ''}" data-market-ad-preview-slide="${index}">
+        ${product.imageDataUrl
+          ? `<img src="${escapeHtml(product.imageDataUrl)}" alt="">`
+          : '<div class="admin-market-ad-preview-slide-fallback">Image</div>'}
+        <div>
+          <h4>${escapeHtml(product.title || 'Product title')}</h4>
+          <p>${escapeHtml(product.description || 'Short product description')}</p>
+          <div class="admin-market-ad-preview-price">${escapeHtml(product.priceGbp ? formatGbp(product.priceGbp) : '£0.00')}</div>
+          <a href="${escapeHtml(product.findMoreUrl || '#')}" class="admin-market-ad-preview-find-more" target="_blank" rel="noopener noreferrer">Find more</a>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <article class="admin-market-ad-preview-card">
+        <div class="admin-market-ad-preview-header">
+          <div>
+            <strong>${escapeHtml(ad.clientName || 'Client name')}</strong>
+            <small>Sponsored · ${escapeHtml(ad.activityScope || 'Marketplace ad')}</small>
+          </div>
+          <div class="admin-market-ad-preview-badges">
+            <span class="admin-market-ad-preview-badge">Sponsored</span>
+            ${ad.isPaid ? '<span class="admin-market-ad-preview-badge paid">Paid</span>' : ''}
+            ${ad.allowOnTop ? '<span class="admin-market-ad-preview-badge pinned">Pinned</span>' : ''}
+          </div>
+        </div>
+        <div class="admin-market-ad-preview-carousel">
+          ${slidesHtml}
+          ${products.length > 1 ? `
+            <div class="admin-market-ad-preview-nav">
+              <button type="button" data-market-ad-preview-prev aria-label="Previous product"><i class="bi bi-chevron-left"></i></button>
+              <div class="admin-market-ad-preview-dots">
+                ${products.map((_, index) => `<span class="${index === safeSlide ? 'active' : ''}"></span>`).join('')}
+              </div>
+              <button type="button" data-market-ad-preview-next aria-label="Next product"><i class="bi bi-chevron-right"></i></button>
+            </div>
+          ` : ''}
+        </div>
+      </article>
+    `;
+  }
+
+  function openMarketAdEditor(adId = null) {
+    const ad = adId
+      ? cachedMarketAds.find((item) => item.id === adId)
+      : createEmptyMarketAd();
+
+    if (!ad) {
+      showAlert('Ad not found.');
+      return;
+    }
+
+    editingMarketAdId = ad.id;
+    marketAdPreviewSlide = 0;
+
+    document.getElementById('adminMarketAdsListView')?.setAttribute('hidden', '');
+    document.getElementById('adminMarketAdsEditorView')?.removeAttribute('hidden');
+
+    const meta = document.getElementById('adminMarketAdsEditorMeta');
+    if (meta) {
+      meta.textContent = adId ? `Edit ad: ${ad.internalTitle || 'Untitled ad'}` : 'Create ad post';
+    }
+
+    document.getElementById('adminMarketAdInternalTitle').value = ad.internalTitle || '';
+    document.getElementById('adminMarketAdStartsAt').value = ad.startsAt || '';
+    document.getElementById('adminMarketAdEndsAt').value = ad.endsAt || '';
+    document.getElementById('adminMarketAdAllowOnTop').checked = Boolean(ad.allowOnTop);
+    document.getElementById('adminMarketAdClientName').value = ad.clientName || '';
+    document.getElementById('adminMarketAdClientAddress').value = ad.clientAddress || '';
+    document.getElementById('adminMarketAdActivityScope').value = ad.activityScope || '';
+    document.getElementById('adminMarketAdIsPaid').checked = ad.isPaid !== false;
+    document.getElementById('adminMarketAdTradeSearch').value = '';
+
+    const productsList = document.getElementById('adminMarketAdProductsList');
+    if (productsList) {
+      productsList.innerHTML = (ad.products || [createEmptyMarketAdProduct()]).map((product, index) => (
+        renderMarketAdProductEditor(product, index)
+      )).join('');
+    }
+
+    renderMarketAdTradeChips(ad.targetTrades || []);
+    renderMarketAdPreview(ad, 0);
+  }
+
+  function getMarketAdEditorState() {
+    const products = Array.from(document.querySelectorAll('[data-market-ad-product]')).map((card) => {
+      const productId = card.dataset.marketAdProduct;
+      return {
+        id: productId,
+        title: card.querySelector(`[data-market-ad-product-title="${productId}"]`)?.value.trim() || '',
+        description: card.querySelector(`[data-market-ad-product-description="${productId}"]`)?.value.trim() || '',
+        priceGbp: card.querySelector(`[data-market-ad-product-price="${productId}"]`)?.value.trim() || '',
+        imageDataUrl: card.querySelector(`[data-market-ad-product-preview="${productId}"] img`)?.getAttribute('src') || '',
+        findMoreUrl: card.querySelector(`[data-market-ad-product-link="${productId}"]`)?.value.trim() || '',
+      };
+    });
+
+    const targetTrades = Array.from(document.querySelectorAll('[data-market-ad-remove-trade]'))
+      .map((button) => button.dataset.marketAdRemoveTrade)
+      .filter(Boolean);
+
+    return {
+      id: editingMarketAdId || `ad-${Date.now()}`,
+      internalTitle: document.getElementById('adminMarketAdInternalTitle')?.value.trim() || '',
+      startsAt: document.getElementById('adminMarketAdStartsAt')?.value || '',
+      endsAt: document.getElementById('adminMarketAdEndsAt')?.value || '',
+      allowOnTop: Boolean(document.getElementById('adminMarketAdAllowOnTop')?.checked),
+      targetTrades,
+      clientName: document.getElementById('adminMarketAdClientName')?.value.trim() || '',
+      clientAddress: document.getElementById('adminMarketAdClientAddress')?.value.trim() || '',
+      activityScope: document.getElementById('adminMarketAdActivityScope')?.value.trim() || '',
+      isPaid: Boolean(document.getElementById('adminMarketAdIsPaid')?.checked),
+      products,
+    };
+  }
+
+  function validateMarketAdPayload(payload, { publishing = false } = {}) {
+    if (!payload.internalTitle) {
+      showAlert('Enter an internal title for this ad post.');
+      return false;
+    }
+    if (!payload.clientName) {
+      showAlert('Enter the client name.');
+      return false;
+    }
+    if (!payload.startsAt || !payload.endsAt) {
+      showAlert('Set both start and end dates.');
+      return false;
+    }
+    if (new Date(`${payload.endsAt}T23:59:59`) < new Date(`${payload.startsAt}T00:00:00`)) {
+      showAlert('End date must be on or after the start date.');
+      return false;
+    }
+    if (!payload.products.length) {
+      showAlert('Add at least one product.');
+      return false;
+    }
+    if (payload.products.length > 3) {
+      showAlert('Each ad post can contain up to 3 products.');
+      return false;
+    }
+
+    for (const [index, product] of payload.products.entries()) {
+      if (!product.title) {
+        showAlert(`Enter a title for product ${index + 1}.`);
+        return false;
+      }
+      if (!product.description) {
+        showAlert(`Enter a short description for product ${index + 1}.`);
+        return false;
+      }
+      if (product.priceGbp === '' || Number(product.priceGbp) < 0) {
+        showAlert(`Enter a valid price for product ${index + 1}.`);
+        return false;
+      }
+      if (!product.findMoreUrl) {
+        showAlert(`Enter the external Find more link for product ${index + 1}.`);
+        return false;
+      }
+      if (publishing && !product.imageDataUrl) {
+        showAlert(`Upload an image for product ${index + 1} before publishing.`);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function upsertMarketAd(payload, status = 'draft') {
+    const existing = cachedMarketAds.find((item) => item.id === payload.id);
+    const nextAd = {
+      ...(existing || {}),
+      ...payload,
+      status,
+      updatedAt: new Date().toISOString(),
+      createdAt: existing?.createdAt || new Date().toISOString(),
+    };
+
+    cachedMarketAds = [
+      nextAd,
+      ...cachedMarketAds.filter((item) => item.id !== nextAd.id),
+    ];
+    writeMarketAdsToStorage(cachedMarketAds);
+    editingMarketAdId = nextAd.id;
+    renderMarketAdPreview(nextAd, marketAdPreviewSlide);
+  }
+
+  function saveMarketAdDraft() {
+    const payload = getMarketAdEditorState();
+    if (!validateMarketAdPayload(payload)) return;
+    upsertMarketAd(payload, 'draft');
+    showAlert('Ad draft saved locally.', 'success');
+  }
+
+  function publishMarketAd(event) {
+    event.preventDefault();
+    const payload = getMarketAdEditorState();
+    if (!validateMarketAdPayload(payload, { publishing: true })) return;
+    upsertMarketAd(payload, 'active');
+    showAlert('Ad published locally. Backend integration will activate it in the worker feed.', 'success');
+    showMarketAdsListView();
+  }
+
+  function deleteMarketAd(adId) {
+    if (!window.confirm('Delete this marketplace ad?')) return;
+    cachedMarketAds = cachedMarketAds.filter((item) => item.id !== adId);
+    writeMarketAdsToStorage(cachedMarketAds);
+    renderMarketAdsTable();
+    showAlert('Marketplace ad deleted.', 'success');
+  }
+
+  function setMarketAdStatus(adId, status) {
+    const ad = cachedMarketAds.find((item) => item.id === adId);
+    if (!ad) return;
+    upsertMarketAd({ ...ad }, status);
+    renderMarketAdsTable();
+    showAlert(`Ad marked as ${getMarketAdStatusLabel(status).toLowerCase()}.`, 'success');
+  }
+
+  async function searchMarketAdTrades(query) {
+    const results = document.getElementById('adminMarketAdTradeResults');
+    if (!results) return;
+
+    if (query.trim().length < 3) {
+      results.hidden = true;
+      results.innerHTML = '';
+      return;
+    }
+
+    try {
+      const data = await apiRequest(`/api/jobs/trades/search?q=${encodeURIComponent(query.trim())}`);
+      const trades = data.trades || [];
+      if (!trades.length) {
+        results.hidden = false;
+        results.innerHTML = '<p class="admin-empty" style="margin:0;padding:12px;">No trades found.</p>';
+        return;
+      }
+      results.hidden = false;
+      results.innerHTML = trades.map((trade) => `
+        <button type="button" data-market-ad-add-trade="${escapeHtml(trade.name)}">${escapeHtml(trade.name)}</button>
+      `).join('');
+    } catch (error) {
+      results.hidden = true;
+      results.innerHTML = '';
+    }
+  }
+
+  function addMarketAdTrade(tradeName) {
+    const ad = getMarketAdEditorState();
+    if (ad.targetTrades.includes(tradeName)) return;
+    ad.targetTrades.push(tradeName);
+    renderMarketAdTradeChips(ad.targetTrades);
+    renderMarketAdPreview({ ...ad, products: ad.products }, marketAdPreviewSlide);
+    document.getElementById('adminMarketAdTradeSearch').value = '';
+    document.getElementById('adminMarketAdTradeResults').hidden = true;
+  }
+
+  function removeMarketAdTrade(tradeName) {
+    const ad = getMarketAdEditorState();
+    ad.targetTrades = ad.targetTrades.filter((trade) => trade !== tradeName);
+    renderMarketAdTradeChips(ad.targetTrades);
+    renderMarketAdPreview({ ...ad, products: ad.products }, marketAdPreviewSlide);
+  }
+
+  function addMarketAdProduct() {
+    const productsList = document.getElementById('adminMarketAdProductsList');
+    const currentCount = productsList?.querySelectorAll('[data-market-ad-product]').length || 0;
+    if (currentCount >= 3) {
+      showAlert('Each ad post can contain up to 3 products.');
+      return;
+    }
+    const product = createEmptyMarketAdProduct(currentCount + 1);
+    productsList?.insertAdjacentHTML('beforeend', renderMarketAdProductEditor(product, currentCount));
+    renderMarketAdPreview(getMarketAdEditorState(), marketAdPreviewSlide);
+  }
+
+  function removeMarketAdProduct(productId) {
+    const productsList = document.getElementById('adminMarketAdProductsList');
+    const cards = productsList?.querySelectorAll('[data-market-ad-product]') || [];
+    if (cards.length <= 1) {
+      showAlert('Each ad post must keep at least one product.');
+      return;
+    }
+    productsList?.querySelector(`[data-market-ad-product="${productId}"]`)?.remove();
+    renderMarketAdPreview(getMarketAdEditorState(), 0);
+  }
+
+  function handleMarketAdProductImage(productId, file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const preview = document.querySelector(`[data-market-ad-product-preview="${productId}"]`);
+      if (preview) {
+        preview.innerHTML = `<img src="${reader.result}" alt="">`;
+      }
+      renderMarketAdPreview(getMarketAdEditorState(), marketAdPreviewSlide);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function shiftMarketAdPreviewSlide(direction) {
+    const ad = getMarketAdEditorState();
+    const total = ad.products.length;
+    if (total <= 1) return;
+    marketAdPreviewSlide = (marketAdPreviewSlide + direction + total) % total;
+    renderMarketAdPreview(ad, marketAdPreviewSlide);
+  }
+
+  function refreshMarketAdPreviewFromForm() {
+    renderMarketAdPreview(getMarketAdEditorState(), marketAdPreviewSlide);
   }
 
   const adminSalesTermsBtn = document.getElementById('adminSalesTermsBtn');
@@ -3550,6 +4104,96 @@
     const card = event.target.closest('[data-market-plan]');
     if (card) {
       updateMarketEffectivePrice(card);
+    }
+  });
+
+  document.querySelectorAll('[data-market-panel]').forEach((button) => {
+    if (!button.matches('.admin-market-subnav button')) return;
+    button.addEventListener('click', () => {
+      setActiveMarketPanel(button.dataset.marketPanel);
+    });
+  });
+
+  document.getElementById('adminMarketAdsCreateBtn')?.addEventListener('click', () => {
+    openMarketAdEditor(null);
+  });
+
+  document.getElementById('adminMarketAdsBackBtn')?.addEventListener('click', showMarketAdsListView);
+
+  document.getElementById('adminMarketAdForm')?.addEventListener('submit', publishMarketAd);
+
+  document.getElementById('adminMarketAdSaveDraftBtn')?.addEventListener('click', saveMarketAdDraft);
+
+  document.getElementById('adminMarketAdAddProductBtn')?.addEventListener('click', addMarketAdProduct);
+
+  document.getElementById('adminMarketAdTradeSearch')?.addEventListener('input', (event) => {
+    window.clearTimeout(marketAdTradeSearchTimer);
+    marketAdTradeSearchTimer = window.setTimeout(() => {
+      searchMarketAdTrades(event.target.value);
+    }, 250);
+  });
+
+  document.getElementById('adminMarketAdsTable')?.addEventListener('click', (event) => {
+    const editBtn = event.target.closest('[data-market-ad-edit]');
+    if (editBtn) {
+      openMarketAdEditor(editBtn.dataset.marketAdEdit);
+      return;
+    }
+    const pauseBtn = event.target.closest('[data-market-ad-pause]');
+    if (pauseBtn) {
+      setMarketAdStatus(pauseBtn.dataset.marketAdPause, 'paused');
+      return;
+    }
+    const activateBtn = event.target.closest('[data-market-ad-activate]');
+    if (activateBtn) {
+      setMarketAdStatus(activateBtn.dataset.marketAdActivate, 'active');
+      return;
+    }
+    const deleteBtn = event.target.closest('[data-market-ad-delete]');
+    if (deleteBtn) {
+      deleteMarketAd(deleteBtn.dataset.marketAdDelete);
+    }
+  });
+
+  document.getElementById('adminMarketAdsEditorView')?.addEventListener('click', (event) => {
+    const removeProductBtn = event.target.closest('[data-market-ad-remove-product]');
+    if (removeProductBtn) {
+      removeMarketAdProduct(removeProductBtn.dataset.marketAdRemoveProduct);
+      return;
+    }
+    const addTradeBtn = event.target.closest('[data-market-ad-add-trade]');
+    if (addTradeBtn) {
+      addMarketAdTrade(addTradeBtn.dataset.marketAdAddTrade);
+      return;
+    }
+    const removeTradeBtn = event.target.closest('[data-market-ad-remove-trade]');
+    if (removeTradeBtn) {
+      removeMarketAdTrade(removeTradeBtn.dataset.marketAdRemoveTrade);
+      return;
+    }
+    if (event.target.closest('[data-market-ad-preview-prev]')) {
+      shiftMarketAdPreviewSlide(-1);
+      return;
+    }
+    if (event.target.closest('[data-market-ad-preview-next]')) {
+      shiftMarketAdPreviewSlide(1);
+    }
+  });
+
+  document.getElementById('adminMarketAdsEditorView')?.addEventListener('change', (event) => {
+    const imageInput = event.target.closest('[data-market-ad-product-image]');
+    if (imageInput) {
+      handleMarketAdProductImage(imageInput.dataset.marketAdProductImage, imageInput.files?.[0]);
+      return;
+    }
+    if (event.target.matches('#adminMarketAdAllowOnTop, #adminMarketAdIsPaid')) {
+      refreshMarketAdPreviewFromForm();
+    }
+  });
+
+  document.getElementById('adminMarketAdsEditorView')?.addEventListener('input', (event) => {
+    if (event.target.closest('[data-market-ad-product-title], [data-market-ad-product-description], [data-market-ad-product-price], [data-market-ad-product-link], #adminMarketAdClientName, #adminMarketAdActivityScope')) {
+      refreshMarketAdPreviewFromForm();
     }
   });
 

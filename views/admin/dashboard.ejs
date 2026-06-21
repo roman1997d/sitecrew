@@ -208,16 +208,115 @@
       </section>
 
       <section class="admin-section" id="adminSection-market" data-section="market" hidden>
-        <p class="admin-section-lead">Configure company access plans, monthly pricing, promotional discounts, and plan benefits.</p>
+        <p class="admin-section-lead">Manage company access plans, sales terms, and paid marketplace ads for the worker feed.</p>
         <div class="admin-market-panel">
-          <div class="admin-market-toolbar">
-            <p class="admin-results-meta" id="adminMarketMeta">Loading access plans...</p>
-            <button type="button" class="admin-secondary-btn" id="adminSalesTermsBtn">
-              <i class="bi bi-file-earmark-text"></i> Sales plan T&amp;C
-            </button>
+          <div class="admin-market-subnav" role="tablist" aria-label="Market panels">
+            <button type="button" class="active" data-market-panel="plans" role="tab" aria-selected="true">Plans</button>
+            <button type="button" data-market-panel="ads" role="tab" aria-selected="false">Ads</button>
           </div>
-          <div class="admin-market-grid" id="adminMarketPlansGrid">
-            <p class="admin-empty">Loading access plans...</p>
+
+          <div class="admin-market-panel-view active" id="adminMarketPlansPanel" data-market-panel="plans" role="tabpanel">
+            <div class="admin-market-toolbar">
+              <p class="admin-results-meta" id="adminMarketMeta">Loading access plans...</p>
+              <button type="button" class="admin-secondary-btn" id="adminSalesTermsBtn">
+                <i class="bi bi-file-earmark-text"></i> Sales plan T&amp;C
+              </button>
+            </div>
+            <div class="admin-market-grid" id="adminMarketPlansGrid">
+              <p class="admin-empty">Loading access plans...</p>
+            </div>
+          </div>
+
+          <div class="admin-market-panel-view" id="adminMarketAdsPanel" data-market-panel="ads" role="tabpanel" hidden>
+            <div id="adminMarketAdsListView">
+              <div class="admin-market-ads-toolbar">
+                <p class="admin-results-meta" id="adminMarketAdsMeta">Manage sponsored feed posts for workers.</p>
+                <button type="button" class="admin-primary-btn" id="adminMarketAdsCreateBtn">
+                  <i class="bi bi-plus-lg"></i> Create ad post
+                </button>
+              </div>
+              <div class="admin-table-wrap" id="adminMarketAdsTable">
+                <p class="admin-empty">No marketplace ads yet.</p>
+              </div>
+            </div>
+
+            <div id="adminMarketAdsEditorView" hidden>
+              <div class="admin-market-ads-editor-header">
+                <button type="button" class="admin-secondary-btn" id="adminMarketAdsBackBtn">
+                  <i class="bi bi-arrow-left"></i> Back to ads
+                </button>
+                <p class="admin-results-meta" id="adminMarketAdsEditorMeta">Create ad post</p>
+              </div>
+              <div class="admin-market-ads-editor-layout">
+                <form id="adminMarketAdForm" class="admin-market-ad-form">
+                  <fieldset class="admin-market-ad-section">
+                    <legend>Ad post</legend>
+                    <label class="admin-field">
+                      <span>Internal title</span>
+                      <input type="text" id="adminMarketAdInternalTitle" maxlength="120" placeholder="Screwfix — hand tools promo" required>
+                    </label>
+                    <div class="admin-market-ad-grid-2">
+                      <label class="admin-field">
+                        <span>Start date</span>
+                        <input type="date" id="adminMarketAdStartsAt" required>
+                      </label>
+                      <label class="admin-field">
+                        <span>End date</span>
+                        <input type="date" id="adminMarketAdEndsAt" required>
+                      </label>
+                    </div>
+                    <label class="admin-field admin-market-toggle-field">
+                      <input type="checkbox" id="adminMarketAdAllowOnTop">
+                      <span>Allow on top (pinned above feed)</span>
+                    </label>
+                    <div class="admin-field">
+                      <span>Target trades</span>
+                      <input type="search" id="adminMarketAdTradeSearch" placeholder="Search trades (min 3 letters)" autocomplete="off">
+                      <div class="admin-market-trade-results" id="adminMarketAdTradeResults" hidden></div>
+                      <div class="admin-market-trade-chips" id="adminMarketAdTradeChips"></div>
+                    </div>
+                  </fieldset>
+
+                  <fieldset class="admin-market-ad-section">
+                    <div class="admin-market-ad-section-head">
+                      <legend>Products (max 3)</legend>
+                      <button type="button" class="admin-secondary-btn" id="adminMarketAdAddProductBtn">Add product</button>
+                    </div>
+                    <div id="adminMarketAdProductsList" class="admin-market-ad-products-list"></div>
+                  </fieldset>
+
+                  <fieldset class="admin-market-ad-section">
+                    <legend>Ad info</legend>
+                    <label class="admin-field">
+                      <span>Client name</span>
+                      <input type="text" id="adminMarketAdClientName" maxlength="160" placeholder="Screwfix Ltd" required>
+                    </label>
+                    <label class="admin-field">
+                      <span>Address</span>
+                      <input type="text" id="adminMarketAdClientAddress" maxlength="300" placeholder="Trade counter address">
+                    </label>
+                    <label class="admin-field">
+                      <span>Activity scope</span>
+                      <textarea id="adminMarketAdActivityScope" rows="3" maxlength="500" placeholder="Electrical supplies, hand tools, fixings"></textarea>
+                    </label>
+                    <label class="admin-field admin-market-toggle-field">
+                      <input type="checkbox" id="adminMarketAdIsPaid" checked>
+                      <span>Is this ad paid</span>
+                    </label>
+                  </fieldset>
+
+                  <div class="admin-market-ad-form-actions">
+                    <button type="button" class="admin-secondary-btn" id="adminMarketAdSaveDraftBtn">Save draft</button>
+                    <button type="submit" class="admin-primary-btn" id="adminMarketAdPublishBtn">Publish ad</button>
+                  </div>
+                </form>
+
+                <aside class="admin-market-ad-preview-panel">
+                  <p class="admin-market-ad-preview-label">Worker feed preview</p>
+                  <div id="adminMarketAdPreview" class="admin-market-ad-preview"></div>
+                </aside>
+              </div>
+            </div>
           </div>
         </div>
       </section>
