@@ -26,7 +26,8 @@
 
       <%- include('../components/dashboard/feed', {
         feedItems: dashboard.feedItems,
-        stories: dashboard.stories
+        stories: dashboard.stories,
+        tradeInterests: dashboard.tradeInterests || []
       }) %>
 
       <%- include('../components/dashboard/right-panel', {
@@ -86,7 +87,25 @@
     </div>
   </div>
 
+  <div class="marketplace-ad-preview-overlay" id="marketplaceAdPreview" aria-hidden="true">
+    <div class="marketplace-ad-preview" role="dialog" aria-modal="true" aria-labelledby="marketplaceAdPreviewCaption">
+      <button
+        type="button"
+        class="marketplace-ad-preview-close"
+        id="closeMarketplaceAdPreview"
+        aria-label="Close image preview"
+        data-i18n-attr="aria-label:marketplaceAd.previewClose"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+      <div class="marketplace-ad-preview-media" id="marketplaceAdPreviewMedia"></div>
+      <p class="marketplace-ad-preview-caption" id="marketplaceAdPreviewCaption"></p>
+    </div>
+  </div>
+
   <%- include('../components/dashboard/find-job-modal', { tradeInterests: dashboard.tradeInterests || [] }) %>
+
+  <%- include('../components/dashboard/worker-trade-interest-modal') %>
 
   <%- include('../partials/api-config') %>
   <script src="/js/worker-i18n.js"></script>

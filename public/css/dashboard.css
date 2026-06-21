@@ -1864,13 +1864,54 @@ body.dash-body {
   display: grid;
 }
 
-.marketplace-ad-product-media img,
+.marketplace-ad-product-media-btn {
+  position: relative;
+  display: block;
+  width: 112px;
+  height: 112px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: #F1F5F9;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.marketplace-ad-product-media-btn img,
 .marketplace-ad-product-fallback {
   width: 112px;
   height: 112px;
   border-radius: 16px;
   object-fit: cover;
   background: #F1F5F9;
+  display: block;
+}
+
+.marketplace-ad-product-media-zoom {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.marketplace-ad-product-media-btn:hover .marketplace-ad-product-media-zoom,
+.marketplace-ad-product-media-btn:focus-visible .marketplace-ad-product-media-zoom {
+  opacity: 1;
+}
+
+.marketplace-ad-product-media-btn:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
 }
 
 .marketplace-ad-product-fallback {
@@ -1961,10 +2002,15 @@ body.dash-body {
     grid-template-columns: 1fr;
   }
 
-  .marketplace-ad-product-media img,
+  .marketplace-ad-product-media-btn,
+  .marketplace-ad-product-media-btn img,
   .marketplace-ad-product-fallback {
     width: 100%;
     height: 180px;
+  }
+
+  .marketplace-ad-product-media-zoom {
+    opacity: 1;
   }
 
   .marketplace-ad-badges {
@@ -1977,6 +2023,76 @@ body.dash-body {
   .marketplace-ad-header {
     flex-wrap: wrap;
   }
+}
+
+.marketplace-ad-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 420;
+  background: rgba(0, 0, 0, 0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.marketplace-ad-preview-overlay.open {
+  display: flex;
+}
+
+body.marketplace-ad-preview-open {
+  overflow: hidden;
+}
+
+.marketplace-ad-preview {
+  position: relative;
+  width: min(960px, 100%);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.marketplace-ad-preview-close {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  cursor: pointer;
+}
+
+.marketplace-ad-preview-media {
+  width: 100%;
+  max-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marketplace-ad-preview-media img {
+  max-width: 100%;
+  max-height: calc(100vh - 120px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  display: block;
+}
+
+.marketplace-ad-preview-caption {
+  margin: 0;
+  max-width: 100%;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .worker-language-settings {
@@ -2288,6 +2404,70 @@ body.dash-body {
 .find-job-btn:hover {
   color: #0B1F3B;
   background: #FB923C;
+}
+
+.feed-trade-interest-hint {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid #BFDBFE;
+  background: linear-gradient(135deg, #EFF6FF, #F8FAFC);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
+.feed-trade-interest-hint-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #DBEAFE;
+  color: #1D4ED8;
+  font-size: 18px;
+}
+
+.feed-trade-interest-hint-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-trade-interest-hint-copy strong {
+  display: block;
+  color: #0F172A;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.feed-trade-interest-hint-copy p {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.feed-trade-interest-hint-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 16px;
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.feed-trade-interest-hint-btn:hover,
+.feed-trade-interest-hint-btn:focus {
+  background: #1D4ED8;
+  color: #FFFFFF;
 }
 
 .find-job-search-modal {
@@ -3244,6 +3424,16 @@ body.dash-body {
   }
 
   .find-job-btn {
+    justify-content: center;
+  }
+
+  .feed-trade-interest-hint {
+    margin: 0 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .feed-trade-interest-hint-btn {
     justify-content: center;
   }
 

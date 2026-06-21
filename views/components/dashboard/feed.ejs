@@ -7,6 +7,22 @@
     <button type="button" class="find-job-btn" id="openFindJobSearch"><i class="bi bi-search"></i> <span data-i18n="buttons.findJob">Find Job</span></button>
   </div>
 
+  <% if (!tradeInterests || !tradeInterests.length) { %>
+    <div class="feed-trade-interest-hint" role="note">
+      <div class="feed-trade-interest-hint-icon" aria-hidden="true">
+        <i class="bi bi-lightbulb"></i>
+      </div>
+      <div class="feed-trade-interest-hint-copy">
+        <strong data-i18n="feed.tradeInterestHintTitle">Complete your trade interests</strong>
+        <p data-i18n="feed.tradeInterestHintText">Add the trades you work in to see matching jobs and sponsored marketplace offers in your feed.</p>
+      </div>
+      <button type="button" class="feed-trade-interest-hint-btn" id="openWorkerTradeInterest">
+        <i class="bi bi-ui-checks-grid"></i>
+        <span data-i18n="feed.tradeInterestHintAction">Set up trade interests</span>
+      </button>
+    </div>
+  <% } %>
+
   <%- include('stories', { stories: stories }) %>
 
   <div class="feed-filter-controls" aria-label="Feed filters">

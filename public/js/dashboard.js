@@ -18,6 +18,10 @@
   const storyViewerExpires = document.getElementById('storyViewerExpires');
   const storyViewerMedia = document.getElementById('storyViewerMedia');
   const storyViewerCaption = document.getElementById('storyViewerCaption');
+  const marketplaceAdPreview = document.getElementById('marketplaceAdPreview');
+  const closeMarketplaceAdPreviewBtn = document.getElementById('closeMarketplaceAdPreview');
+  const marketplaceAdPreviewMedia = document.getElementById('marketplaceAdPreviewMedia');
+  const marketplaceAdPreviewCaption = document.getElementById('marketplaceAdPreviewCaption');
   const workerProfileEditModal = document.getElementById('workerProfileEditModal');
   const openWorkerProfileEditButtons = document.querySelectorAll('[data-open-worker-profile-edit]');
   const closeWorkerProfileEditBtn = document.getElementById('closeWorkerProfileEdit');
@@ -823,6 +827,37 @@
     storyViewer.setAttribute('aria-hidden', 'true');
   }
 
+  function openMarketplaceAdPreview(button) {
+    if (!marketplaceAdPreview || !marketplaceAdPreviewMedia) return;
+
+    const sourceImg = button.querySelector('img');
+    if (!sourceImg?.src) return;
+
+    marketplaceAdPreviewMedia.textContent = '';
+    const img = document.createElement('img');
+    img.src = sourceImg.currentSrc || sourceImg.src;
+    img.alt = button.dataset.marketplaceAdPreviewTitle || sourceImg.alt || '';
+    marketplaceAdPreviewMedia.appendChild(img);
+
+    if (marketplaceAdPreviewCaption) {
+      marketplaceAdPreviewCaption.textContent = button.dataset.marketplaceAdPreviewTitle || sourceImg.alt || '';
+    }
+
+    marketplaceAdPreview.classList.add('open');
+    marketplaceAdPreview.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('marketplace-ad-preview-open');
+  }
+
+  function closeMarketplaceAdPreview() {
+    if (!marketplaceAdPreview) return;
+    marketplaceAdPreview.classList.remove('open');
+    marketplaceAdPreview.setAttribute('aria-hidden', 'true');
+    if (marketplaceAdPreviewMedia) {
+      marketplaceAdPreviewMedia.textContent = '';
+    }
+    document.body.classList.remove('marketplace-ad-preview-open');
+  }
+
   function openWorkerProfileEditModal() {
     if (!workerProfileEditModal) return;
     workerProfileEditModal.classList.add('open');
@@ -1092,7 +1127,7 @@
     if (!workerTradeInterestSelected) return;
 
     if (!workerTradeInterestValues.length) {
-      workerTradeInterestSelected.innerHTML = '<p class="worker-trade-interest-empty">No trade interests selected yet.</p>';
+      workerTradeInterestSelected.innerHTML = `<p class="worker-trade-interest-empty">${escapeHtml(t('tradeInterest.emptySelected'))}</p>`;
       return;
     }
 
@@ -1802,6 +1837,12 @@
   refreshStoryGroupViewedStates();
 
   closeStoryViewerBtn?.addEventListener('click', closeStoryViewer);
+  closeMarketplaceAdPreviewBtn?.addEventListener('click', closeMarketplaceAdPreview);
+  marketplaceAdPreview?.addEventListener('click', (event) => {
+    if (event.target === marketplaceAdPreview) {
+      closeMarketplaceAdPreview();
+    }
+  });
 
   storyViewer?.addEventListener('click', (event) => {
     if (event.target === storyViewer) {
@@ -1907,6 +1948,9 @@
     }
     if (event.key === 'Escape' && storyViewer?.classList.contains('open')) {
       closeStoryViewer();
+    }
+    if (event.key === 'Escape' && marketplaceAdPreview?.classList.contains('open')) {
+      closeMarketplaceAdPreview();
     }
     if (event.key === 'Escape' && workerProfileEditModal?.classList.contains('open')) {
       closeWorkerProfileEditModal();
@@ -2111,22 +2155,22 @@
     if (workerTradeInterestAlert) workerTradeInterestAlert.hidden = true;
 
     if (!workerTradeInterestValues.length) {
-      setWorkerTradeInterestAlert('Please select at least one trade interest.');
+      setWorkerTradeInterestAlert(t('tradeInterest.validationRequired'));
       return;
     }
 
     const submitBtn = workerTradeInterestForm.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
+    submitBtn.textContent = t('tradeInterest.saving');
 
     try {
       await updateWorkerProfile({ tradeInterests: workerTradeInterestValues });
-      setWorkerTradeInterestAlert('Trade interests saved. Refreshing feed...', 'success');
+      setWorkerTradeInterestAlert(t('tradeInterest.savedRefreshing'), 'success');
       setTimeout(() => window.location.reload(), 700);
     } catch (error) {
       setWorkerTradeInterestAlert(error.message);
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Save interests';
+      submitBtn.textContent = t('tradeInterest.save');
     }
   });
 
@@ -2434,6 +2478,12 @@
   }
 
   document.querySelector('.social-feed')?.addEventListener('click', (event) => {
+    const previewBtn = event.target.closest('[data-marketplace-ad-preview-image]');
+    if (previewBtn) {
+      openMarketplaceAdPreview(previewBtn);
+      return;
+    }
+
     const carousel = event.target.closest('[data-marketplace-ad-carousel]');
     if (!carousel) return;
 

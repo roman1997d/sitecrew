@@ -246,36 +246,7 @@
   <% } %>
 
   <% if (!profile.isPublicProfile) { %>
-  <div class="worker-profile-modal-overlay" id="workerTradeInterestModal" aria-hidden="true">
-    <div class="worker-profile-modal worker-trade-interest-modal" role="dialog" aria-modal="true" aria-labelledby="workerTradeInterestTitle">
-      <div class="worker-profile-modal-header">
-        <div>
-          <span>Job feed preferences</span>
-          <h2 id="workerTradeInterestTitle">My trade interest</h2>
-          <p>Select at least one construction trade. Your worker dashboard feed will show job posts that match these interests.</p>
-        </div>
-        <button type="button" id="closeWorkerTradeInterest" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-      </div>
-
-      <div class="worker-profile-alert" id="workerTradeInterestAlert" hidden></div>
-
-      <form id="workerTradeInterestForm" class="worker-profile-form worker-trade-interest-form">
-        <label>
-          <span>Search construction trade</span>
-          <input type="text" id="workerTradeInterestInput" placeholder="Type 3 letters, e.g. Dri" list="workerTradeInterestOptions" autocomplete="off">
-          <datalist id="workerTradeInterestOptions"></datalist>
-          <small>Choose a trade from the suggestions, then add more if needed.</small>
-        </label>
-
-        <div class="worker-trade-interest-selected" id="workerTradeInterestSelected"></div>
-
-        <div class="worker-profile-modal-actions">
-          <button type="button" class="worker-secondary-btn" id="cancelWorkerTradeInterest">Cancel</button>
-          <button type="submit" class="worker-submit-btn">Save interests</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <%- include('../components/dashboard/worker-trade-interest-modal') %>
   <% } %>
 
   <div class="worker-profile-modal-overlay" id="workerReviewsModal" aria-hidden="true">

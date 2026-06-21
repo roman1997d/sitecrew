@@ -1,0 +1,30 @@
+<div class="worker-profile-modal-overlay" id="workerTradeInterestModal" aria-hidden="true">
+  <div class="worker-profile-modal worker-trade-interest-modal" role="dialog" aria-modal="true" aria-labelledby="workerTradeInterestTitle">
+    <div class="worker-profile-modal-header">
+      <div>
+        <span data-i18n="tradeInterest.eyebrow">Job feed preferences</span>
+        <h2 id="workerTradeInterestTitle" data-i18n="tradeInterest.title">My trade interest</h2>
+        <p data-i18n="tradeInterest.description">Select at least one construction trade. Your worker dashboard feed will show job posts and sponsored offers that match these interests.</p>
+      </div>
+      <button type="button" id="closeWorkerTradeInterest" aria-label="Close" data-i18n-attr="aria-label:common.close"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="worker-profile-alert" id="workerTradeInterestAlert" hidden></div>
+
+    <form id="workerTradeInterestForm" class="worker-profile-form worker-trade-interest-form">
+      <label>
+        <span data-i18n="tradeInterest.searchLabel">Search construction trade</span>
+        <input type="text" id="workerTradeInterestInput" data-i18n-attr="placeholder:tradeInterest.searchPlaceholder" placeholder="Type 3 letters, e.g. Dri" list="workerTradeInterestOptions" autocomplete="off">
+        <datalist id="workerTradeInterestOptions"></datalist>
+        <small data-i18n="tradeInterest.searchHelp">Choose a trade from the suggestions, then add more if needed.</small>
+      </label>
+
+      <div class="worker-trade-interest-selected" id="workerTradeInterestSelected"></div>
+
+      <div class="worker-profile-modal-actions">
+        <button type="button" class="worker-secondary-btn" id="cancelWorkerTradeInterest" data-i18n="profile.cancel">Cancel</button>
+        <button type="submit" class="worker-submit-btn" data-i18n="tradeInterest.save">Save interests</button>
+      </div>
+    </form>
+  </div>
+</div>

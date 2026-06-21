@@ -29,7 +29,18 @@
       >
         <div class="marketplace-ad-product-media">
           <% if (product.imageUrl) { %>
-            <img src="<%= assetPath(product.imageUrl) %>" alt="<%= product.title %>">
+            <button
+              type="button"
+              class="marketplace-ad-product-media-btn"
+              data-marketplace-ad-preview-image
+              data-marketplace-ad-preview-title="<%= product.title %>"
+              aria-label="View <%= product.title %> image"
+            >
+              <img src="<%= assetPath(product.imageUrl) %>" alt="<%= product.title %>">
+              <span class="marketplace-ad-product-media-zoom" aria-hidden="true">
+                <i class="bi bi-arrows-fullscreen"></i>
+              </span>
+            </button>
           <% } else { %>
             <div class="marketplace-ad-product-fallback">No image</div>
           <% } %>
