@@ -1011,20 +1011,40 @@ app.get('/admin/dashboard', requireAdminAuth, (req, res) => {
   });
 });
 
-app.get('/__sitecrew/deploy-check', (req, res) => {
+app.get('/__sitecrew/deploy-check', async (req, res) => {
   const uploadsDir = path.join(__dirname, 'backend', 'uploads');
-  let uploadCount = 0;
+  let uploadFiles = [];
   try {
-    uploadCount = fs.readdirSync(uploadsDir).length;
+    uploadFiles = fs.readdirSync(uploadsDir).filter((file) => !file.startsWith('.'));
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message, uploadsDir });
+  }
+
+  let sampleMedia = null;
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/feed`);
+    const payload = await response.json();
+    const firstWithMedia = (payload.posts || []).find((post) => Array.isArray(post.media_urls) && post.media_urls.length);
+    if (firstWithMedia) {
+      const mediaPath = getPublicAssetUrl(firstWithMedia.media_urls[0]);
+      const absolutePath = path.join(__dirname, 'backend', mediaPath.replace(/^\//, ''));
+      sampleMedia = {
+        postId: firstWithMedia.id,
+        mediaPath,
+        fileExists: fs.existsSync(absolutePath),
+      };
+    }
+  } catch (error) {
+    sampleMedia = { error: error.message };
   }
 
   res.json({
     ok: true,
     apiBaseUrl: API_BASE_URL,
     uploadsDir,
-    uploadCount,
+    uploadCount: uploadFiles.length,
+    sampleUploadFile: uploadFiles[0] || null,
+    sampleMedia,
     servesUploads: true,
   });
 });

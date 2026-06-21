@@ -54,8 +54,8 @@ async function seed() {
     await client.query(
       `INSERT INTO worker_profiles (user_id, full_name, phone, profile_photo, trades, experience, certificates, city, postcode, availability_status, expected_rate, bio)
        VALUES
-       ($1, 'Alex Turner', '+44 7700 900111', '/uploads/alex.jpg', ARRAY['Carpentry', 'Drywall', 'Site Finishing'], '8 years', ARRAY['CSCS Gold', 'First Aid'], 'Manchester', 'M1', 'Available Now', '£28/hour', 'Reliable carpenter focused on premium finishing work.'),
-       ($2, 'Maria Lopez', '+44 7700 900222', '/uploads/maria.jpg', ARRAY['Electrical', 'Testing'], '6 years', ARRAY['ECS Gold', '2391 Testing'], 'Leeds', 'LS1', 'Available Next Week', '£34/hour', 'Approved electrician for commercial fit-outs.')
+       ($1, 'Alex Turner', '+44 7700 900111', '/uploads/1780862626579-profile.jpg', ARRAY['Carpentry', 'Drywall', 'Site Finishing'], '8 years', ARRAY['CSCS Gold', 'First Aid'], 'Manchester', 'M1', 'Available Now', '£28/hour', 'Reliable carpenter focused on premium finishing work.'),
+       ($2, 'Maria Lopez', '+44 7700 900222', '/uploads/1780862713248-img-8611.jpeg', ARRAY['Electrical', 'Testing'], '6 years', ARRAY['ECS Gold', '2391 Testing'], 'Leeds', 'LS1', 'Available Next Week', '£34/hour', 'Approved electrician for commercial fit-outs.')
        ON CONFLICT (user_id) DO UPDATE SET
          full_name = EXCLUDED.full_name,
          phone = EXCLUDED.phone,
@@ -75,9 +75,9 @@ async function seed() {
     await client.query(
       `INSERT INTO company_profiles (user_id, company_name, phone, logo, description, website, trades, city, postcode, verification_status, plan)
        VALUES
-       ($1, 'Apex Build Ltd', '+44 161 100 100', '/uploads/apex.png', 'Commercial interiors and rapid site mobilization.', 'https://apexbuild.example', ARRAY['Carpentry', 'Drylining', 'Flooring'], 'Manchester', 'M2', 'approved', 'pro'),
-       ($2, 'NorthBuild Group', '+44 113 200 200', '/uploads/northbuild.png', 'Regional contractor for residential and mixed-use developments.', 'https://northbuild.example', ARRAY['Bricklaying', 'Groundworks', 'Roofing'], 'Leeds', 'LS2', 'approved', 'pro'),
-       ($3, 'Skyline Contractors', '+44 121 300 300', '/uploads/skyline.png', 'High-rise refurbishment and facade projects.', 'https://skyline.example', ARRAY['Scaffolding', 'Facade', 'Painting'], 'Birmingham', 'B1', 'pending', 'free')
+       ($1, 'Apex Build Ltd', '+44 161 100 100', '/uploads/1780862626579-profile.jpg', 'Commercial interiors and rapid site mobilization.', 'https://apexbuild.example', ARRAY['Carpentry', 'Drylining', 'Flooring'], 'Manchester', 'M2', 'approved', 'pro'),
+       ($2, 'NorthBuild Group', '+44 113 200 200', '/uploads/1781118742831-cloud.jpg', 'Regional contractor for residential and mixed-use developments.', 'https://northbuild.example', ARRAY['Bricklaying', 'Groundworks', 'Roofing'], 'Leeds', 'LS2', 'approved', 'pro'),
+       ($3, 'Skyline Contractors', '+44 121 300 300', '/uploads/1780862713248-img-8611.jpeg', 'High-rise refurbishment and facade projects.', 'https://skyline.example', ARRAY['Scaffolding', 'Facade', 'Painting'], 'Birmingham', 'B1', 'pending', 'free')
        ON CONFLICT (user_id) DO UPDATE SET
          company_name = EXCLUDED.company_name,
          phone = EXCLUDED.phone,
@@ -124,9 +124,9 @@ async function seed() {
     await client.query(
       `INSERT INTO feed_posts (author_id, post_type, caption, media_urls, tags, location, project_size, duration)
        VALUES
-       ($1, 'work_completed', 'Completed a reception desk installation with acoustic panel finishing.', ARRAY['/uploads/feed/reception.jpg'], ARRAY['carpentry', 'fit-out'], 'Manchester', 'Medium', '4 days'),
-       ($2, 'company_update', 'We are onboarding finishing crews for two new Manchester projects.', ARRAY['/uploads/feed/apex-update.jpg'], ARRAY['hiring', 'carpentry'], 'Manchester', 'Large', 'Q2'),
-       ($3, 'company_update', 'NorthBuild posted new shifts for electricians and testers.', ARRAY['/uploads/feed/northbuild-update.jpg'], ARRAY['electrical', 'testing'], 'Leeds', 'Large', '6 weeks')
+       ($1, 'work_completed', 'Completed a reception desk installation with acoustic panel finishing.', ARRAY['/uploads/1780862713248-img-8611.jpeg'], ARRAY['carpentry', 'fit-out'], 'Manchester', 'Medium', '4 days'),
+       ($2, 'company_update', 'We are onboarding finishing crews for two new Manchester projects.', ARRAY['/uploads/1780862626579-profile.jpg'], ARRAY['hiring', 'carpentry'], 'Manchester', 'Large', 'Q2'),
+       ($3, 'company_update', 'NorthBuild posted new shifts for electricians and testers.', ARRAY['/uploads/1781118742831-cloud.jpg'], ARRAY['electrical', 'testing'], 'Leeds', 'Large', '6 weeks')
        ON CONFLICT DO NOTHING`,
       [workerId, apexId, northId]
     );
@@ -134,9 +134,9 @@ async function seed() {
     await client.query(
       `INSERT INTO stories (company_id, media_url, caption, expires_at)
        VALUES
-       ($1, '/uploads/stories/apex.jpg', 'Apex needs carpenters this week', CURRENT_TIMESTAMP + INTERVAL '24 hours'),
-       ($2, '/uploads/stories/northbuild.jpg', 'NorthBuild site opening', CURRENT_TIMESTAMP + INTERVAL '24 hours'),
-       ($3, '/uploads/stories/skyline.jpg', 'Skyline facade update', CURRENT_TIMESTAMP + INTERVAL '24 hours')
+       ($1, '/uploads/1780862626579-profile.jpg', 'Apex needs carpenters this week', CURRENT_TIMESTAMP + INTERVAL '24 hours'),
+       ($2, '/uploads/1781118742831-cloud.jpg', 'NorthBuild site opening', CURRENT_TIMESTAMP + INTERVAL '24 hours'),
+       ($3, '/uploads/1780862713248-img-8611.jpeg', 'Skyline facade update', CURRENT_TIMESTAMP + INTERVAL '24 hours')
        ON CONFLICT DO NOTHING`,
       [apexId, northId, skylineId]
     );

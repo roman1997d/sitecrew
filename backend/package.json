@@ -10,6 +10,7 @@
     "db:seed": "node src/db/seed.js",
     "db:seed-demo": "node src/db/seed-demo-accounts.js",
     "db:seed-superadmin": "node src/db/seed-superadmin.js",
+    "db:fix-media-urls": "node src/db/fix-media-urls.js",
     "smoke": "node src/utils/smoke.js"
   },
   "license": "MIT",
