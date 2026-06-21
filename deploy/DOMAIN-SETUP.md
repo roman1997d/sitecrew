@@ -236,7 +236,7 @@ sudo ln -sf /etc/nginx/sites-available/sitecrew.uk /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 
-sudo certbot --nginx -d sitecrew.uk -d www.sitecrew.uk
+sudo certbot --nginx -d sitecrew.uk -d www.sitecrew.uk -d admin.sitecrew.uk
 ```
 
 ---
