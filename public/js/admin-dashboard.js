@@ -2012,7 +2012,7 @@
         <div class="admin-market-ad-product-image-row">
           <div class="admin-market-ad-product-thumb" data-market-ad-product-preview="${escapeHtml(product.id)}">
             ${product.imageUrl || product.imageDataUrl
-              ? `<img src="${escapeHtml(getMediaUrl(product.imageUrl || product.imageDataUrl))}" alt="">`
+              ? `<img src="${escapeHtml(getMediaUrl(product.imageUrl || product.imageDataUrl))}" data-uploaded-url="${escapeHtml(getMediaUrl(product.imageUrl || product.imageDataUrl))}" alt="">`
               : 'No image'}
           </div>
           <label class="admin-field">
@@ -2164,7 +2164,11 @@
         title: card.querySelector(`[data-market-ad-product-title="${productId}"]`)?.value.trim() || '',
         description: card.querySelector(`[data-market-ad-product-description="${productId}"]`)?.value.trim() || '',
         priceGbp: card.querySelector(`[data-market-ad-product-price="${productId}"]`)?.value.trim() || '',
-        imageUrl: card.querySelector(`[data-market-ad-product-preview="${productId}"] img`)?.getAttribute('src') || '',
+        imageUrl: (() => {
+          const img = card.querySelector(`[data-market-ad-product-preview="${productId}"] img`);
+          if (!img) return '';
+          return img.dataset.uploadedUrl || getMediaUrl(img.getAttribute('src') || '');
+        })(),
         findMoreUrl: card.querySelector(`[data-market-ad-product-link="${productId}"]`)?.value.trim() || '',
       };
     });
@@ -2232,6 +2236,10 @@
       }
       if (publishing && !product.imageUrl) {
         showAlert(`Upload an image for product ${index + 1} before publishing.`);
+        return false;
+      }
+      if (product.imageUrl && product.imageUrl.startsWith('data:')) {
+        showAlert(`Wait for product ${index + 1} image upload to finish before saving.`);
         return false;
       }
     }
@@ -2411,17 +2419,68 @@
     renderMarketAdPreview(getMarketAdEditorState(), 0);
   }
 
-  function handleMarketAdProductImage(productId, file) {
+  async function compressMarketAdProductImageFile(file, maxWidth = 1200, quality = 0.82) {
+    if (!file?.type?.startsWith('image/')) {
+      return file;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = objectUrl;
+      });
+      const scale = image.width > maxWidth ? maxWidth / image.width : 1;
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        return file;
+      }
+      context.drawImage(image, 0, 0, width, height);
+      const blob = await new Promise((resolve) => {
+        canvas.toBlob((result) => resolve(result), 'image/jpeg', quality);
+      });
+      if (!blob) {
+        return file;
+      }
+      return new File([blob], `product-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    } catch (error) {
+      return file;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  async function handleMarketAdProductImage(productId, file) {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const preview = document.querySelector(`[data-market-ad-product-preview="${productId}"]`);
+
+    const preview = document.querySelector(`[data-market-ad-product-preview="${productId}"]`);
+    if (preview) {
+      preview.textContent = 'Uploading image...';
+    }
+
+    try {
+      const uploadFile = await compressMarketAdProductImageFile(file);
+      const formData = new FormData();
+      formData.append('image', uploadFile);
+      const data = await apiUpload('/api/admin/market/ads/product-image', formData);
+      const imageUrl = getMediaUrl(data.imageUrl);
       if (preview) {
-        preview.innerHTML = `<img src="${reader.result}" alt="">`;
+        preview.innerHTML = `<img src="${escapeHtml(imageUrl)}" data-uploaded-url="${escapeHtml(imageUrl)}" alt="">`;
       }
       renderMarketAdPreview(getMarketAdEditorState(), marketAdPreviewSlide);
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      if (preview) {
+        preview.textContent = 'No image';
+      }
+      showAlert(error.message);
+    }
   }
 
   function shiftMarketAdPreviewSlide(direction) {

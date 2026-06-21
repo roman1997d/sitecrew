@@ -161,7 +161,7 @@ const marketplaceAdProductSchema = z.object({
   title: z.string().min(1).max(120),
   description: z.string().min(1).max(160),
   priceGbp: z.coerce.number().min(0).max(999999),
-  imageUrl: z.string().max(500000).optional().nullable(),
+  imageUrl: z.string().max(500).optional().nullable(),
   findMoreUrl: z.string().url().max(500),
 });
 
@@ -2170,6 +2170,14 @@ router.get('/market/ads/:id', asyncHandler(async (req, res) => {
     return res.status(404).json({ error: 'Marketplace ad not found.' });
   }
   res.json({ ad });
+}));
+
+router.post('/market/ads/product-image', upload.single('image'), asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Product image is required.' });
+  }
+
+  res.status(201).json({ imageUrl: `/uploads/${req.file.filename}` });
 }));
 
 router.post('/market/ads', validate(marketplaceAdWriteSchema), asyncHandler(async (req, res) => {

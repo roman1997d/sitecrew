@@ -34,8 +34,8 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(apiLogger);
 app.use('/uploads', express.static(path.join(__dirname, '..', env.uploadDir)));
 
@@ -64,9 +64,11 @@ app.use((req, res) => {
 
 app.use((error, req, res, next) => {
   console.error(error);
-  res.status(error.status || 500).json({
-    error: error.message || 'Internal server error',
-  });
+  const status = error.status || error.statusCode || 500;
+  const message = error.type === 'entity.too.large'
+    ? 'Upload too large. Use smaller product images (max 3 per ad).'
+    : (error.message || 'Internal server error');
+  res.status(status).json({ error: message });
 });
 
 module.exports = app;
