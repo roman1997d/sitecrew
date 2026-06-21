@@ -30,9 +30,9 @@
       >
         <div class="company-feed-media <%= post.mediaClass %> <%= post.mediaUrl ? 'has-real-media' : '' %>">
           <% if (post.mediaUrl && post.mediaType === 'video') { %>
-            <video src="<%= post.mediaSrc %>" controls playsinline></video>
+            <video src="<%= assetPath(post.mediaSrc || post.mediaUrl) %>" controls playsinline></video>
           <% } else if (post.mediaUrl) { %>
-            <img src="<%= post.mediaSrc %>" alt="<%= post.title %>">
+            <img src="<%= assetPath(post.mediaSrc || post.mediaUrl) %>" alt="<%= post.title %>">
           <% } %>
         </div>
         <div>

@@ -126,7 +126,7 @@
               <a href="/workers/<%= review.workerId %>/profile" class="company-public-review-worker">
                 <span class="<%= review.workerPhoto ? 'has-photo' : '' %>">
                   <% if (review.workerPhoto) { %>
-                    <img src="<%= review.workerPhoto %>" alt="<%= review.workerName %> photo">
+                    <img src="<%= assetPath(review.workerPhoto) %>" alt="<%= review.workerName %> photo">
                   <% } else { %>
                     <%= review.workerInitials %>
                   <% } %>

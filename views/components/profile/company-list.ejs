@@ -19,7 +19,7 @@
       <% if (avatarOnly) { %>
         <a href="<%= company.url %>" class="profile-follow-avatar <%= company.avatar ? 'has-avatar' : '' %>" title="<%= company.name %>" aria-label="<%= company.name %> profile">
           <% if (company.avatar) { %>
-            <img src="<%= company.avatar %>" alt="<%= company.name %> avatar">
+            <img src="<%= assetPath(company.avatar) %>" alt="<%= company.name %> avatar">
           <% } else { %>
             <%= company.initial %>
           <% } %>

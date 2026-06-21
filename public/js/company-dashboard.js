@@ -1,5 +1,18 @@
 (function () {
   const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
+
+  function getMediaUrl(mediaUrl) {
+    if (!mediaUrl) return '';
+    if (/^https?:\/\//i.test(mediaUrl)) {
+      try {
+        return new URL(mediaUrl).pathname;
+      } catch (error) {
+        return mediaUrl;
+      }
+    }
+    return mediaUrl.startsWith('/') ? mediaUrl : `/${mediaUrl}`;
+  }
+
   const logoutBtn = document.getElementById('companyLogoutBtn');
   const postJobModal = document.getElementById('postJobModal');
   const openPostJobModalBtn = document.getElementById('openPostJobModal');
@@ -987,7 +1000,7 @@
   function renderMessengerAvatar(name, photo, className = '') {
     const label = name || 'Worker';
     if (photo) {
-      return `<div class="company-messenger-avatar ${className} has-photo"><img src="${API_BASE_URL}${escapeHtml(photo)}" alt="${escapeHtml(label)} avatar"></div>`;
+      return `<div class="company-messenger-avatar ${className} has-photo"><img src="${escapeHtml(getMediaUrl(photo))}" alt="${escapeHtml(label)} avatar"></div>`;
     }
     return `<div class="company-messenger-avatar ${className}">${escapeHtml(label.charAt(0).toUpperCase())}</div>`;
   }

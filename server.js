@@ -337,6 +337,8 @@ function getPublicAssetUrl(mediaUrl) {
   return assetPath.startsWith('/') ? assetPath : `/${assetPath}`;
 }
 
+app.locals.assetPath = getPublicAssetUrl;
+
 function getApiAssetUrl(mediaUrl) {
   const publicPath = getPublicAssetUrl(mediaUrl);
   if (!publicPath) return null;

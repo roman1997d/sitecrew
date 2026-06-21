@@ -38,7 +38,7 @@
         >X</button>
         <div class="company-worker-avatar <%= applicant.profilePhoto ? 'has-photo' : '' %>">
           <% if (applicant.profilePhoto) { %>
-            <img src="<%= applicant.profilePhoto %>" alt="<%= applicant.name %> profile picture">
+            <img src="<%= assetPath(applicant.profilePhoto) %>" alt="<%= applicant.name %> profile picture">
           <% } else { %>
             <%= applicant.name.charAt(0) %>
           <% } %>

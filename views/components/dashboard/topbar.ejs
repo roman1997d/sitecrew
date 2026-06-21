@@ -34,7 +34,7 @@
     </button>
     <a href="/worker/profile" class="social-avatar-btn <%= worker.profilePhoto ? 'has-photo' : '' %> <%= worker.verified ? 'is-verified' : '' %>" id="dashboardWorkerInitials" aria-label="Profile" data-i18n-attr="aria-label:nav.profile">
       <% if (worker.profilePhoto) { %>
-        <img src="<%= worker.profilePhoto %>" alt="<%= worker.name %> profile picture">
+        <img src="<%= assetPath(worker.profilePhoto) %>" alt="<%= worker.name %> profile picture">
       <% } else { %>
         <%= worker.initials %>
       <% } %>

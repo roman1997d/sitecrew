@@ -43,7 +43,7 @@
     <div class="feed-card-header">
       <a href="/companies/<%= item.companyId %>" class="feed-avatar company-avatar-feed <%= item.logo ? 'has-logo' : (item.theme === 'north' ? 'north' : '') %>" aria-label="<%= item.company %> profile">
         <% if (item.logo) { %>
-          <img src="<%= item.logo %>" alt="<%= item.company %> logo">
+          <img src="<%= assetPath(item.logo) %>" alt="<%= item.company %> logo">
         <% } else { %>
           <%= item.initial %>
         <% } %>
@@ -117,9 +117,9 @@
     </div>
     <div class="feed-media <%= item.mediaClass %> <%= item.mediaUrl ? 'has-real-media' : '' %>">
       <% if (item.mediaUrl && item.mediaType === 'video') { %>
-        <video src="<%= item.mediaSrc %>" controls playsinline></video>
+        <video src="<%= assetPath(item.mediaSrc || item.mediaUrl) %>" controls playsinline></video>
       <% } else if (item.mediaUrl) { %>
-        <img src="<%= item.mediaSrc || item.mediaUrl %>" alt="<%= item.title || item.author %>">
+        <img src="<%= assetPath(item.mediaSrc || item.mediaUrl) %>" alt="<%= item.title || item.author %>">
       <% } else if (item.video) { %>
         <span class="video-chip"><i class="bi bi-play-fill"></i> <span data-i18n="feed.siteVideo">Site video</span></span>
       <% } %>

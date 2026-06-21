@@ -13,7 +13,7 @@
     <div class="company-settings-logo-row">
       <div class="company-settings-logo-preview <%= company.logo ? 'has-logo' : '' %>" id="companySettingsLogoPreview">
         <% if (company.logo) { %>
-          <img src="<%= company.logo %>" alt="<%= company.name %> logo">
+          <img src="<%= assetPath(company.logo) %>" alt="<%= company.name %> logo">
         <% } else { %>
           <%= company.initials %>
         <% } %>
