@@ -1,5 +1,7 @@
-const express = require('express');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+const express = require('express');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -8,7 +10,13 @@ const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:4000';
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+app.use((req, res, next) => {
+  res.locals.apiBaseUrl = API_BASE_URL;
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')));
 
 function parseCookies(cookieHeader = '') {
   return cookieHeader
@@ -315,10 +323,24 @@ function getFirstMediaUrl(mediaUrls) {
   return null;
 }
 
-function getApiAssetUrl(mediaUrl) {
+function getPublicAssetUrl(mediaUrl) {
   if (!mediaUrl) return null;
-  if (/^https?:\/\//i.test(mediaUrl)) return mediaUrl;
-  return `${API_BASE_URL}${mediaUrl.startsWith('/') ? mediaUrl : `/${mediaUrl}`}`;
+  let assetPath = mediaUrl;
+  if (/^https?:\/\//i.test(mediaUrl)) {
+    try {
+      assetPath = new URL(mediaUrl).pathname;
+    } catch (error) {
+      return mediaUrl;
+    }
+  }
+  return assetPath.startsWith('/') ? assetPath : `/${assetPath}`;
+}
+
+function getApiAssetUrl(mediaUrl) {
+  const publicPath = getPublicAssetUrl(mediaUrl);
+  if (!publicPath) return null;
+  if (/^https?:\/\//i.test(publicPath)) return publicPath;
+  return `${API_BASE_URL}${publicPath}`;
 }
 
 function getDailyRateInsightDate() {
@@ -387,7 +409,7 @@ function mapFeedPost(post, index = 0) {
     },
     title: post.title || (isCompany ? 'Company update' : 'Work update'),
     mediaUrl,
-    mediaSrc: getApiAssetUrl(mediaUrl),
+    mediaSrc: getPublicAssetUrl(mediaUrl),
     mediaType,
     mediaClass: ['media-site-1', 'media-site-2', 'media-progress', 'media-cert'][index % 4],
     video: false,
@@ -412,7 +434,7 @@ function mapProfilePost(post, index = 0) {
     date: timeAgo(post.created_at),
     mediaClass: ['media-site-1', 'media-site-2', 'media-progress', 'media-cert'][index % 4],
     mediaUrl,
-    mediaSrc: getApiAssetUrl(mediaUrl),
+    mediaSrc: getPublicAssetUrl(mediaUrl),
     mediaType,
     caption: post.posted_for_company ? `${post.caption} · for ${post.posted_for_company}` : post.caption,
     tags: (post.tags || []).map((tag) => (tag.startsWith('#') ? tag : `#${tag}`)),
@@ -434,7 +456,7 @@ function mapSavedPost(post, index = 0) {
     savedAt: timeAgo(post.saved_at),
     mediaClass: ['media-site-1', 'media-site-2', 'media-progress', 'media-cert'][index % 4],
     mediaUrl,
-    mediaSrc: getApiAssetUrl(mediaUrl),
+    mediaSrc: getPublicAssetUrl(mediaUrl),
     mediaType,
     caption: post.caption,
     tags: (post.tags || []).map((tag) => (tag.startsWith('#') ? tag : `#${tag}`)),
@@ -574,7 +596,7 @@ function mapCompanyFeedPost(post, index = 0) {
     time: timeAgo(post.created_at),
     mediaClass: ['company-feed-site', 'company-feed-progress', 'company-feed-crew'][index % 3],
     mediaUrl,
-    mediaSrc: getApiAssetUrl(mediaUrl),
+    mediaSrc: getPublicAssetUrl(mediaUrl),
     mediaType,
     tags: post.tags || [],
   };

@@ -2,7 +2,7 @@
   <section class="company-profile-card" id="profile">
     <div class="company-logo-mark <%= company.logo ? 'has-logo' : '' %>">
       <% if (company.logo) { %>
-        <img src="http://localhost:4000<%= company.logo %>" alt="<%= company.name %> logo">
+        <img src="<%= company.logo %>" alt="<%= company.name %> logo">
       <% } else { %>
         <%= company.initials %>
       <% } %>
@@ -57,7 +57,7 @@
             <a href="/workers/<%= review.workerId %>/profile">
               <span class="<%= review.workerPhoto ? 'has-photo' : '' %>">
                 <% if (review.workerPhoto) { %>
-                  <img src="http://localhost:4000<%= review.workerPhoto %>" alt="<%= review.workerName %> photo">
+                  <img src="<%= review.workerPhoto %>" alt="<%= review.workerName %> photo">
                 <% } else { %>
                   <%= review.workerInitials %>
                 <% } %>

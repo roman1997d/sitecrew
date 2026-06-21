@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:4000';
+const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
 
 const form = document.getElementById('admin-login-form');
 const alertBox = document.getElementById('admin-auth-alert');
@@ -46,7 +46,7 @@ form?.addEventListener('submit', async (event) => {
     window.location.href = '/admin/dashboard';
   } catch (error) {
     const message = error.message === 'Failed to fetch'
-      ? 'Cannot reach the API server. Start the backend on http://localhost:4000 and try again.'
+      ? `Cannot reach the API server at ${API_BASE_URL}. Check that the backend is running and try again.`
       : error.message;
     showAlert(message);
     button.disabled = false;

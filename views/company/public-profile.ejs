@@ -126,7 +126,7 @@
               <a href="/workers/<%= review.workerId %>/profile" class="company-public-review-worker">
                 <span class="<%= review.workerPhoto ? 'has-photo' : '' %>">
                   <% if (review.workerPhoto) { %>
-                    <img src="http://localhost:4000<%= review.workerPhoto %>" alt="<%= review.workerName %> photo">
+                    <img src="<%= review.workerPhoto %>" alt="<%= review.workerName %> photo">
                   <% } else { %>
                     <%= review.workerInitials %>
                   <% } %>
@@ -170,6 +170,7 @@
     </div>
   </main>
 
+  <%- include('../partials/api-config') %>
   <script src="/js/worker-i18n.js"></script>
   <script src="/js/company-profile.js"></script>
 </body>

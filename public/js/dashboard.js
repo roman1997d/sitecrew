@@ -1,5 +1,5 @@
 (function () {
-  const API_BASE_URL = 'http://localhost:4000';
+  const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
   const sidebar = document.getElementById('dashSidebar');
   const overlay = document.getElementById('dashOverlay');
   const menuBtn = document.getElementById('dashMenuBtn');
@@ -169,8 +169,14 @@
 
   function getMediaUrl(mediaUrl) {
     if (!mediaUrl) return '';
-    if (mediaUrl.startsWith('http')) return mediaUrl;
-    return `${API_BASE_URL}${mediaUrl}`;
+    if (/^https?:\/\//i.test(mediaUrl)) {
+      try {
+        return new URL(mediaUrl).pathname;
+      } catch (error) {
+        return mediaUrl;
+      }
+    }
+    return mediaUrl.startsWith('/') ? mediaUrl : `/${mediaUrl}`;
   }
 
   function translateAvailability(value) {

@@ -43,7 +43,7 @@
     <div class="feed-card-header">
       <a href="/companies/<%= item.companyId %>" class="feed-avatar company-avatar-feed <%= item.logo ? 'has-logo' : (item.theme === 'north' ? 'north' : '') %>" aria-label="<%= item.company %> profile">
         <% if (item.logo) { %>
-          <img src="http://localhost:4000<%= item.logo %>" alt="<%= item.company %> logo">
+          <img src="<%= item.logo %>" alt="<%= item.company %> logo">
         <% } else { %>
           <%= item.initial %>
         <% } %>

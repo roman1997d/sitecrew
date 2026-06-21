@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:4000';
+const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
 
 const heading = document.querySelector('#auth-heading');
 const subtitle = document.querySelector('#auth-subtitle');

@@ -1,5 +1,5 @@
 (function () {
-  const API_BASE_URL = 'http://localhost:4000';
+  const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
   const followBtn = document.getElementById('followCompanyBtn');
   const companyProfile = document.querySelector('[data-company-id]');
   const reviewForm = document.getElementById('companyReviewForm');

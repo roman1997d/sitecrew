@@ -23,7 +23,7 @@
     </button>
     <button type="button" class="company-profile-trigger <%= company.logo ? 'has-logo' : '' %>" aria-label="Profile">
       <% if (company.logo) { %>
-        <img src="http://localhost:4000<%= company.logo %>" alt="<%= company.name %> logo">
+        <img src="<%= company.logo %>" alt="<%= company.name %> logo">
       <% } else { %>
         <strong><%= company.initials %></strong>
       <% } %>

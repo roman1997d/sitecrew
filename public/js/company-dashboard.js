@@ -1,5 +1,5 @@
 (function () {
-  const API_BASE_URL = 'http://localhost:4000';
+  const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
   const logoutBtn = document.getElementById('companyLogoutBtn');
   const postJobModal = document.getElementById('postJobModal');
   const openPostJobModalBtn = document.getElementById('openPostJobModal');

@@ -1,5 +1,5 @@
 (function () {
-  const API_BASE_URL = 'http://localhost:4000';
+  const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
   const SECTION_TITLES = {
     metrics: 'Metrics Tracker',
     users: 'Users',
@@ -112,8 +112,14 @@
 
   function getMediaUrl(path) {
     if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    return `${API_BASE_URL}${path}`;
+    if (/^https?:\/\//i.test(path)) {
+      try {
+        return new URL(path).pathname;
+      } catch (error) {
+        return path;
+      }
+    }
+    return path.startsWith('/') ? path : `/${path}`;
   }
 
   function getInitials(firstName = '', lastName = '', fallback = '?') {

@@ -2,7 +2,7 @@
   <div class="company-card-row">
     <button type="button" class="company-worker-avatar company-worker-profile-trigger <%= worker.profilePhoto ? 'has-photo' : '' %>" data-team-worker-profile>
       <% if (worker.profilePhoto) { %>
-        <img src="http://localhost:4000<%= worker.profilePhoto %>" alt="<%= worker.name %> profile picture">
+        <img src="<%= worker.profilePhoto %>" alt="<%= worker.name %> profile picture">
       <% } else { %>
         <%= worker.initial %>
       <% } %>

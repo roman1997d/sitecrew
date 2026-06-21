@@ -19,7 +19,7 @@
     >
       <div class="story-ring <%= group.type %>">
         <% if (group.logo) { %>
-          <img src="http://localhost:4000<%= group.logo %>" alt="<%= group.label %> logo">
+          <img src="<%= group.logo %>" alt="<%= group.label %> logo">
         <% } else if (group.content) { %>
           <span><%= group.content %></span>
         <% } else { %>
