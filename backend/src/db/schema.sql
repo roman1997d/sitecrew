@@ -658,3 +658,13 @@ ON CONFLICT (plan_key) DO NOTHING;
 
 ALTER TABLE company_profiles DROP CONSTRAINT IF EXISTS company_profiles_plan_check;
 ALTER TABLE company_profiles ADD CONSTRAINT company_profiles_plan_check CHECK (plan IN ('free', 'pro', 'ultra'));
+
+CREATE TABLE IF NOT EXISTS sales_plan_terms_versions (
+  id SERIAL PRIMARY KEY,
+  version INTEGER NOT NULL UNIQUE,
+  content TEXT NOT NULL,
+  updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_sales_plan_terms_versions_created ON sales_plan_terms_versions(created_at DESC);

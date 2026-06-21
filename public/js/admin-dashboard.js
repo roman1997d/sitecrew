@@ -1695,6 +1695,92 @@
     return data;
   }
 
+  const adminSalesTermsBtn = document.getElementById('adminSalesTermsBtn');
+  const adminSalesTermsModal = document.getElementById('adminSalesTermsModal');
+  const adminSalesTermsEditor = document.getElementById('adminSalesTermsEditor');
+  const adminSalesTermsMeta = document.getElementById('adminSalesTermsMeta');
+  const adminSalesTermsSaveBtn = document.getElementById('adminSalesTermsSaveBtn');
+  let cachedSalesTerms = null;
+
+  function formatAdminDate(value) {
+    if (!value) return 'Not published yet';
+    return new Date(value).toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  function renderSalesTermsMeta(terms) {
+    if (!adminSalesTermsMeta) return;
+    if (!terms?.version) {
+      adminSalesTermsMeta.textContent = 'No published version yet. Saving will create version 1.';
+      return;
+    }
+    const byLine = terms.updatedByEmail ? ` · Updated by ${terms.updatedByEmail}` : '';
+    adminSalesTermsMeta.textContent = `Version ${terms.version} · Last updated ${formatAdminDate(terms.updatedAt)}${byLine}`;
+  }
+
+  function openSalesTermsModal() {
+    if (!adminSalesTermsModal || !adminSalesTermsEditor) return;
+    adminSalesTermsEditor.innerHTML = cachedSalesTerms?.content || '';
+    renderSalesTermsMeta(cachedSalesTerms);
+    adminSalesTermsModal.hidden = false;
+    adminSalesTermsEditor.focus();
+  }
+
+  function closeSalesTermsModal() {
+    if (!adminSalesTermsModal) return;
+    adminSalesTermsModal.hidden = true;
+  }
+
+  async function loadSalesTerms() {
+    const data = await apiRequest('/api/admin/market/terms');
+    cachedSalesTerms = data.terms || null;
+    return cachedSalesTerms;
+  }
+
+  function applySalesTermsCommand(command) {
+    if (!adminSalesTermsEditor) return;
+    adminSalesTermsEditor.focus();
+    document.execCommand(command, false, null);
+  }
+
+  function applySalesTermsBlock(tagName) {
+    if (!adminSalesTermsEditor) return;
+    adminSalesTermsEditor.focus();
+    document.execCommand('formatBlock', false, tagName);
+  }
+
+  async function saveSalesTerms() {
+    if (!adminSalesTermsEditor || !adminSalesTermsSaveBtn) return;
+
+    const content = adminSalesTermsEditor.innerHTML.trim();
+    const plainText = adminSalesTermsEditor.textContent.trim();
+    if (!plainText) {
+      showAlert('Write the sales plan terms before saving.');
+      return;
+    }
+
+    adminSalesTermsSaveBtn.disabled = true;
+    try {
+      const data = await apiRequest('/api/admin/market/terms', {
+        method: 'PUT',
+        body: JSON.stringify({ content }),
+      });
+      cachedSalesTerms = data.terms;
+      renderSalesTermsMeta(cachedSalesTerms);
+      showAlert(`Sales plan T&C saved as version ${data.terms.version}.`, 'success');
+      closeSalesTermsModal();
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      adminSalesTermsSaveBtn.disabled = false;
+    }
+  }
+
   async function saveMarketPlan(planKey, button) {
     const card = document.querySelector(`[data-market-plan="${planKey}"]`);
     if (!card) return;
@@ -1858,7 +1944,7 @@
       return;
     }
     if (section === 'market') {
-      await loadMarketSection();
+      await Promise.all([loadMarketSection(), loadSalesTerms()]);
       return;
     }
     if (section === 'posts') {
@@ -3319,6 +3405,31 @@
       updateMarketEffectivePrice(card);
     }
   });
+
+  adminSalesTermsBtn?.addEventListener('click', async () => {
+    try {
+      await loadSalesTerms();
+      openSalesTermsModal();
+    } catch (error) {
+      showAlert(error.message);
+    }
+  });
+
+  adminSalesTermsModal?.querySelectorAll('[data-sales-terms-close]').forEach((button) => {
+    button.addEventListener('click', closeSalesTermsModal);
+  });
+
+  adminSalesTermsModal?.querySelectorAll('[data-terms-cmd]').forEach((button) => {
+    button.addEventListener('mousedown', (event) => event.preventDefault());
+    button.addEventListener('click', () => applySalesTermsCommand(button.dataset.termsCmd));
+  });
+
+  adminSalesTermsModal?.querySelectorAll('[data-terms-block]').forEach((button) => {
+    button.addEventListener('mousedown', (event) => event.preventDefault());
+    button.addEventListener('click', () => applySalesTermsBlock(button.dataset.termsBlock));
+  });
+
+  adminSalesTermsSaveBtn?.addEventListener('click', saveSalesTerms);
 
   adminLogoutBtn?.addEventListener('click', () => {
     localStorage.removeItem('sitecrewAdminToken');

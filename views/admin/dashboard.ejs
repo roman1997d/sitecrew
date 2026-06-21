@@ -231,7 +231,12 @@
       <section class="admin-section" id="adminSection-market" data-section="market" hidden>
         <p class="admin-section-lead">Configure company access plans, monthly pricing, promotional discounts, and plan benefits.</p>
         <div class="admin-market-panel">
-          <p class="admin-results-meta" id="adminMarketMeta">Loading access plans...</p>
+          <div class="admin-market-toolbar">
+            <p class="admin-results-meta" id="adminMarketMeta">Loading access plans...</p>
+            <button type="button" class="admin-secondary-btn" id="adminSalesTermsBtn">
+              <i class="bi bi-file-earmark-text"></i> Sales plan T&amp;C
+            </button>
+          </div>
           <div class="admin-market-grid" id="adminMarketPlansGrid">
             <p class="admin-empty">Loading access plans...</p>
           </div>
@@ -790,6 +795,47 @@
 
       <div class="admin-modal-actions">
         <button type="button" class="admin-secondary-btn" data-text-review-preset-risk-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminSalesTermsModal" hidden>
+    <div class="admin-modal-backdrop" data-sales-terms-close></div>
+    <div class="admin-modal-dialog admin-sales-terms-dialog" role="dialog" aria-modal="true" aria-labelledby="adminSalesTermsModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">Market and Money</p>
+          <h2 id="adminSalesTermsModalTitle">Sales plan Terms &amp; Conditions</h2>
+          <p class="admin-sales-terms-meta" id="adminSalesTermsMeta">Loading version details...</p>
+        </div>
+        <button type="button" class="admin-modal-close" data-sales-terms-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="admin-sales-terms-toolbar" role="toolbar" aria-label="Formatting tools">
+        <button type="button" class="admin-secondary-btn" data-terms-cmd="bold" title="Bold"><i class="bi bi-type-bold"></i></button>
+        <button type="button" class="admin-secondary-btn" data-terms-cmd="italic" title="Italic"><i class="bi bi-type-italic"></i></button>
+        <button type="button" class="admin-secondary-btn" data-terms-block="p" title="Normal text">Normal</button>
+        <button type="button" class="admin-secondary-btn" data-terms-block="h1" title="Heading 1">H1</button>
+        <button type="button" class="admin-secondary-btn" data-terms-block="h2" title="Heading 2">H2</button>
+        <button type="button" class="admin-secondary-btn" data-terms-cmd="insertUnorderedList" title="Bullet list"><i class="bi bi-list-ul"></i></button>
+        <button type="button" class="admin-secondary-btn" data-terms-cmd="insertOrderedList" title="Numbered list"><i class="bi bi-list-ol"></i></button>
+      </div>
+
+      <div
+        id="adminSalesTermsEditor"
+        class="admin-sales-terms-editor"
+        contenteditable="true"
+        role="textbox"
+        aria-multiline="true"
+        aria-labelledby="adminSalesTermsModalTitle"
+        data-placeholder="Write the sales plan terms and conditions here..."
+      ></div>
+
+      <div class="admin-modal-actions">
+        <button type="button" class="admin-secondary-btn" data-sales-terms-close>Cancel</button>
+        <button type="button" class="admin-primary-btn" id="adminSalesTermsSaveBtn">Save new version</button>
       </div>
     </div>
   </div>

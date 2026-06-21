@@ -119,6 +119,12 @@ const updateAccessPlanSchema = z.object({
   }),
 });
 
+const updateSalesPlanTermsSchema = z.object({
+  body: z.object({
+    content: z.string().min(1).max(100000),
+  }),
+});
+
 const companyAccountEventSchema = z.object({
   body: z.object({
     reason: z.string().min(3).max(2000),
@@ -1693,6 +1699,91 @@ router.patch('/market/plans/:planKey', validate(updateAccessPlanSchema), asyncHa
   });
 
   res.json({ plan: mapAccessPlan(result.rows[0]) });
+}));
+
+function sanitizeSalesPlanTermsHtml(html = '') {
+  return String(html)
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, '')
+    .trim();
+}
+
+function mapSalesPlanTerms(row) {
+  if (!row) {
+    return {
+      version: 0,
+      content: '',
+      updatedAt: null,
+      updatedBy: null,
+    };
+  }
+
+  return {
+    version: row.version,
+    content: row.content,
+    updatedAt: row.created_at,
+    updatedBy: row.updated_by,
+    updatedByEmail: row.updated_by_email || null,
+  };
+}
+
+router.get('/market/terms', asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    `SELECT sptv.version,
+            sptv.content,
+            sptv.created_at,
+            sptv.updated_by,
+            u.email AS updated_by_email
+     FROM sales_plan_terms_versions sptv
+     LEFT JOIN users u ON u.id = sptv.updated_by
+     ORDER BY sptv.version DESC
+     LIMIT 1`
+  );
+
+  res.json({ terms: mapSalesPlanTerms(result.rows[0]) });
+}));
+
+router.put('/market/terms', validate(updateSalesPlanTermsSchema), asyncHandler(async (req, res) => {
+  const content = sanitizeSalesPlanTermsHtml(req.validated.body.content);
+  if (!content) {
+    return res.status(400).json({ error: 'Terms content cannot be empty.' });
+  }
+
+  const nextVersionResult = await pool.query(
+    'SELECT COALESCE(MAX(version), 0) + 1 AS next_version FROM sales_plan_terms_versions'
+  );
+  const nextVersion = nextVersionResult.rows[0].next_version;
+
+  const result = await pool.query(
+    `INSERT INTO sales_plan_terms_versions (version, content, updated_by)
+     VALUES ($1, $2, $3)
+     RETURNING version, content, created_at, updated_by`,
+    [nextVersion, content, req.user.id]
+  );
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'market.terms_updated',
+    entityType: 'sales_plan_terms',
+    entityId: nextVersion,
+    metadata: { version: nextVersion },
+  });
+
+  const enriched = await pool.query(
+    `SELECT sptv.version,
+            sptv.content,
+            sptv.created_at,
+            sptv.updated_by,
+            u.email AS updated_by_email
+     FROM sales_plan_terms_versions sptv
+     LEFT JOIN users u ON u.id = sptv.updated_by
+     WHERE sptv.version = $1`,
+    [nextVersion]
+  );
+
+  res.json({ terms: mapSalesPlanTerms(enriched.rows[0]) });
 }));
 
 module.exports = router;
