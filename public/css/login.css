@@ -257,6 +257,15 @@
   pointer-events: none;
 }
 
+.login-field-help {
+  display: block;
+  margin-top: 0.45rem;
+  padding: 0 0.25rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .login-btn {
   width: 100%;
   margin-top: 1.5rem;

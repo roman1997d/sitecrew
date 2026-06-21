@@ -24,11 +24,28 @@ const workerRegisterSchema = z.object({
     password: z.string().min(8),
     fullName: z.string().min(2),
     phone: z.string().optional(),
-    trades: z.array(z.string()).default([]),
+    trade: z.string().min(2),
     city: z.string().optional(),
     postcode: z.string().optional(),
   }),
 });
+
+async function resolveConstructionTrade(client, tradeName) {
+  const result = await client.query(
+    `SELECT name
+     FROM construction_trades
+     WHERE name ILIKE $1
+     ORDER BY
+       CASE WHEN lower(name) = lower($1) THEN 0
+            WHEN name ILIKE $2 THEN 1
+            ELSE 2 END,
+       name ASC
+     LIMIT 1`,
+    [tradeName.trim(), `${tradeName.trim()}%`]
+  );
+
+  return result.rows[0]?.name || null;
+}
 
 const companyRegisterSchema = z.object({
   body: z.object({
@@ -65,16 +82,38 @@ async function createUser(client, { email, password, role }) {
 }
 
 router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(async (req, res) => {
-  const { email, password, fullName, phone, trades, city, postcode } = req.validated.body;
+  const { email, password, fullName, phone, trade, city, postcode } = req.validated.body;
   const client = await pool.connect();
 
   try {
     await client.query('BEGIN');
+    const canonicalTrade = await resolveConstructionTrade(client, trade);
+    if (!canonicalTrade) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Please select a valid trade from the suggestions.' });
+    }
+
     const user = await createUser(client, { email, password, role: 'worker' });
     await client.query(
-      `INSERT INTO worker_profiles (user_id, full_name, phone, trades, city, postcode)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [user.id, fullName, phone || null, trades, city || null, postcode || null]
+      `INSERT INTO worker_profiles (
+         user_id,
+         full_name,
+         phone,
+         trades,
+         trade_interests,
+         city,
+         postcode
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        user.id,
+        fullName,
+        phone || null,
+        [canonicalTrade],
+        [canonicalTrade],
+        city || null,
+        postcode || null,
+      ]
     );
     await client.query('COMMIT');
     res.status(201).json({ user, token: signToken(user) });

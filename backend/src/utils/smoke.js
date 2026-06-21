@@ -31,7 +31,7 @@ async function smoke() {
       email,
       password: 'password123',
       fullName: 'Smoke Worker',
-      trades: ['Carpentry'],
+      trade: 'Carpenter',
       city: 'Manchester',
     }),
   });

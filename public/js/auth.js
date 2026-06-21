@@ -9,7 +9,7 @@ const registerForm = document.querySelector('#register-form');
 const roleInputs = document.querySelectorAll('input[name="role"]');
 const workerFields = document.querySelectorAll('.register-worker-field');
 const companyFields = document.querySelectorAll('.register-company-field');
-const registerTradesInput = document.querySelector('#register-trades');
+const registerTradeInput = document.querySelector('#register-trade');
 const registerTradesOptions = document.querySelector('#register-trades-options');
 const companyPlanModal = document.querySelector('#companyPlanModal');
 const companyPlanGrid = document.querySelector('#companyPlanGrid');
@@ -313,8 +313,8 @@ async function completeCompanyRegistration() {
   });
 }
 
-function getActiveTradeQuery(value = '') {
-  return value.split(',').pop().trim();
+function getRegisterTradeQuery(value = '') {
+  return String(value).trim();
 }
 
 function escapeHtml(value = '') {
@@ -352,9 +352,9 @@ roleInputs.forEach((input) => {
   input.addEventListener('change', () => setRegisterRole(input.value));
 });
 
-registerTradesInput?.addEventListener('input', () => {
+registerTradeInput?.addEventListener('input', () => {
   window.clearTimeout(registerTradeSearchTimer);
-  const query = getActiveTradeQuery(registerTradesInput.value);
+  const query = getRegisterTradeQuery(registerTradeInput.value);
 
   if (query.length < 3) {
     renderRegisterTradeOptions([]);
@@ -369,6 +369,10 @@ registerTradesInput?.addEventListener('input', () => {
       renderRegisterTradeOptions([]);
     }
   }, 250);
+});
+
+registerTradeInput?.addEventListener('change', () => {
+  registerTradeInput.value = getRegisterTradeQuery(registerTradeInput.value);
 });
 
 loginForm.addEventListener('submit', async (event) => {
@@ -413,6 +417,11 @@ registerForm.addEventListener('submit', async (event) => {
       return;
     }
 
+    const trade = getRegisterTradeQuery(formData.get('trade'));
+    if (!trade) {
+      throw new Error('Please select your trade.');
+    }
+
     const sharedPayload = {
       email: formData.get('email').trim(),
       password: formData.get('password'),
@@ -422,10 +431,7 @@ registerForm.addEventListener('submit', async (event) => {
     const payload = {
       ...sharedPayload,
       fullName: formData.get('fullName').trim(),
-      trades: formData.get('trades')
-        .split(',')
-        .map((trade) => trade.trim())
-        .filter(Boolean),
+      trade,
     };
 
     const data = await apiRequest('/api/auth/register-worker', payload);
