@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
@@ -391,7 +392,7 @@ function mapFeedPost(post, index = 0) {
   const postedByName = post.created_by_name || author;
   const postedByRole = post.created_by_role || post.author_role;
   const postedById = post.created_by_id || post.author_id;
-  const mediaUrl = getFirstMediaUrl(post.media_urls);
+  const mediaUrl = getPublicAssetUrl(getFirstMediaUrl(post.media_urls));
   const mediaType = mediaUrl && /\.(mp4|webm|mov|m4v)$/i.test(mediaUrl) ? 'video' : 'image';
   return {
     id: post.id,
@@ -409,7 +410,7 @@ function mapFeedPost(post, index = 0) {
     },
     title: post.title || (isCompany ? 'Company update' : 'Work update'),
     mediaUrl,
-    mediaSrc: getPublicAssetUrl(mediaUrl),
+    mediaSrc: mediaUrl,
     mediaType,
     mediaClass: ['media-site-1', 'media-site-2', 'media-progress', 'media-cert'][index % 4],
     video: false,
@@ -425,7 +426,7 @@ function mapFeedPost(post, index = 0) {
 }
 
 function mapProfilePost(post, index = 0) {
-  const mediaUrl = getFirstMediaUrl(post.media_urls);
+  const mediaUrl = getPublicAssetUrl(getFirstMediaUrl(post.media_urls));
   const mediaType = mediaUrl && /\.(mp4|webm|mov|m4v)$/i.test(mediaUrl) ? 'video' : 'image';
   return {
     id: post.id,
@@ -434,7 +435,7 @@ function mapProfilePost(post, index = 0) {
     date: timeAgo(post.created_at),
     mediaClass: ['media-site-1', 'media-site-2', 'media-progress', 'media-cert'][index % 4],
     mediaUrl,
-    mediaSrc: getPublicAssetUrl(mediaUrl),
+    mediaSrc: mediaUrl,
     mediaType,
     caption: post.posted_for_company ? `${post.caption} · for ${post.posted_for_company}` : post.caption,
     tags: (post.tags || []).map((tag) => (tag.startsWith('#') ? tag : `#${tag}`)),
@@ -442,7 +443,7 @@ function mapProfilePost(post, index = 0) {
 }
 
 function mapSavedPost(post, index = 0) {
-  const mediaUrl = getFirstMediaUrl(post.media_urls);
+  const mediaUrl = getPublicAssetUrl(getFirstMediaUrl(post.media_urls));
   const mediaType = mediaUrl && /\.(mp4|webm|mov|m4v)$/i.test(mediaUrl) ? 'video' : 'image';
   const isCompany = post.author_role === 'company';
   const author = post.author_name || (isCompany ? 'Company' : 'Worker');
@@ -456,7 +457,7 @@ function mapSavedPost(post, index = 0) {
     savedAt: timeAgo(post.saved_at),
     mediaClass: ['media-site-1', 'media-site-2', 'media-progress', 'media-cert'][index % 4],
     mediaUrl,
-    mediaSrc: getPublicAssetUrl(mediaUrl),
+    mediaSrc: mediaUrl,
     mediaType,
     caption: post.caption,
     tags: (post.tags || []).map((tag) => (tag.startsWith('#') ? tag : `#${tag}`)),
@@ -586,7 +587,7 @@ function mapRecommendedWorker(item) {
 }
 
 function mapCompanyFeedPost(post, index = 0) {
-  const mediaUrl = getFirstMediaUrl(post.media_urls);
+  const mediaUrl = getPublicAssetUrl(getFirstMediaUrl(post.media_urls));
   const mediaType = mediaUrl && /\.(mp4|webm|mov|m4v)$/i.test(mediaUrl) ? 'video' : 'image';
   return {
     id: post.id,
@@ -596,7 +597,7 @@ function mapCompanyFeedPost(post, index = 0) {
     time: timeAgo(post.created_at),
     mediaClass: ['company-feed-site', 'company-feed-progress', 'company-feed-crew'][index % 3],
     mediaUrl,
-    mediaSrc: getPublicAssetUrl(mediaUrl),
+    mediaSrc: mediaUrl,
     mediaType,
     tags: post.tags || [],
   };
@@ -1007,6 +1008,24 @@ app.get('/admin/dashboard', requireAdminAuth, (req, res) => {
       email: req.sessionUser.email,
       role: req.sessionUser.role,
     },
+  });
+});
+
+app.get('/__sitecrew/deploy-check', (req, res) => {
+  const uploadsDir = path.join(__dirname, 'backend', 'uploads');
+  let uploadCount = 0;
+  try {
+    uploadCount = fs.readdirSync(uploadsDir).length;
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message, uploadsDir });
+  }
+
+  res.json({
+    ok: true,
+    apiBaseUrl: API_BASE_URL,
+    uploadsDir,
+    uploadCount,
+    servesUploads: true,
   });
 });
 

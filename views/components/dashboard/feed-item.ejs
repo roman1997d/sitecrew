@@ -119,7 +119,7 @@
       <% if (item.mediaUrl && item.mediaType === 'video') { %>
         <video src="<%= item.mediaSrc %>" controls playsinline></video>
       <% } else if (item.mediaUrl) { %>
-        <img src="<%= item.mediaSrc %>" alt="<%= item.title || item.author %>">
+        <img src="<%= item.mediaSrc || item.mediaUrl %>" alt="<%= item.title || item.author %>">
       <% } else if (item.video) { %>
         <span class="video-chip"><i class="bi bi-play-fill"></i> <span data-i18n="feed.siteVideo">Site video</span></span>
       <% } %>
