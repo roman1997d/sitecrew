@@ -1295,7 +1295,7 @@
       const sourceJob = contact.source_job_title || 'Applicants';
       const phone = contact.phone || 'Phone not added';
       const email = contact.worker_email || 'Email not added';
-      const avatarUrl = contact.profile_photo ? `${API_BASE_URL}${contact.profile_photo}` : '';
+      const avatarUrl = contact.profile_photo ? getMediaUrl(contact.profile_photo) : '';
       const avatar = contact.profile_photo
         ? `<img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(name)} profile picture">`
         : escapeHtml(name.charAt(0).toUpperCase());
@@ -1506,7 +1506,7 @@
     const qualifications = Array.isArray(profile.qualifications) && profile.qualifications.length ? profile.qualifications.join(', ') : certificates;
     const posts = data.posts || [];
     const avatar = profile.profile_photo
-      ? `<img src="${API_BASE_URL}${profile.profile_photo}" alt="${escapeHtml(profile.full_name || 'Worker')} profile picture">`
+      ? `<img src="${escapeHtml(getMediaUrl(profile.profile_photo))}" alt="${escapeHtml(profile.full_name || 'Worker')} profile picture">`
       : escapeHtml((profile.full_name || 'W').charAt(0).toUpperCase());
     const permissions = options.permissions || {};
     const teamActions = options.applicationId

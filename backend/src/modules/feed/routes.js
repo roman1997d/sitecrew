@@ -13,8 +13,17 @@ const {
   getRecentCommentTexts,
 } = require('../../utils/contentModeration');
 const { enqueueUploadedFiles } = require('../../utils/mediaReviewQueue');
+const { normalizeMediaList, normalizeMediaPath } = require('../../utils/mediaPaths');
 
 const router = express.Router();
+
+function mapFeedPostRow(row) {
+  return {
+    ...row,
+    media_urls: normalizeMediaList(row.media_urls || []),
+    author_avatar: normalizeMediaPath(row.author_avatar),
+  };
+}
 
 const postSchema = z.object({
   body: z.object({
@@ -121,7 +130,7 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
      LIMIT 50`,
     [type || null, viewerId]
   );
-  res.json({ posts: result.rows });
+  res.json({ posts: result.rows.map(mapFeedPostRow) });
 }));
 
 router.get('/saved', requireAuth, asyncHandler(async (req, res) => {
@@ -142,11 +151,12 @@ router.get('/saved', requireAuth, asyncHandler(async (req, res) => {
      LIMIT 50`,
     [req.user.id]
   );
-  res.json({ posts: result.rows });
+  res.json({ posts: result.rows.map(mapFeedPostRow) });
 }));
 
 router.post('/posts', requireAuth, validate(postSchema), asyncHandler(async (req, res) => {
   const payload = req.validated.body;
+  const mediaUrls = normalizeMediaList(payload.mediaUrls);
   const authorId = await getPostAuthorId(req, payload.companyId);
   const recentTexts = await getRecentFeedTexts(authorId);
   const moderation = await evaluateContent({
@@ -165,7 +175,7 @@ router.post('/posts', requireAuth, validate(postSchema), asyncHandler(async (req
       payload.companyId ? 'company_update' : payload.postType,
       payload.title || null,
       payload.caption,
-      payload.mediaUrls,
+      mediaUrls,
       payload.tags,
       payload.location || null,
       payload.projectSize || null,
@@ -183,7 +193,7 @@ router.post('/posts', requireAuth, validate(postSchema), asyncHandler(async (req
   });
 
   res.status(201).json({
-    post: result.rows[0],
+    post: mapFeedPostRow(result.rows[0]),
     moderation: {
       status: moderation.moderationStatus,
       message: moderation.message,
@@ -251,7 +261,7 @@ router.patch('/posts/:id', requireAuth, validate(z.object({ body: postSchema.sha
       req.user.id,
       payload.title || null,
       payload.caption || null,
-      payload.mediaUrls || null,
+      payload.mediaUrls ? normalizeMediaList(payload.mediaUrls) : null,
       payload.tags || null,
       payload.location || null,
       moderationStatus,
@@ -269,7 +279,7 @@ router.patch('/posts/:id', requireAuth, validate(z.object({ body: postSchema.sha
   }
 
   res.json({
-    post: result.rows[0],
+    post: mapFeedPostRow(result.rows[0]),
     moderation: moderationMeta,
   });
 }));

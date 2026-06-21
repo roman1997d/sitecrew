@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const pool = require('../db/pool');
+const { normalizeMediaPath: stripMediaHost } = require('../utils/mediaPaths');
 
 const uploadDir = path.join(__dirname, '../../uploads');
 
@@ -19,20 +20,8 @@ const seedMediaMap = {
 };
 
 function normalizeMediaPath(value) {
-  if (!value) return null;
-
-  let assetPath = String(value).trim();
-  if (/^https?:\/\//i.test(assetPath)) {
-    try {
-      assetPath = new URL(assetPath).pathname;
-    } catch (error) {
-      return assetPath;
-    }
-  }
-
-  if (!assetPath.startsWith('/')) {
-    assetPath = `/${assetPath}`;
-  }
+  const assetPath = stripMediaHost(value);
+  if (!assetPath) return null;
 
   if (seedMediaMap[assetPath]) {
     return seedMediaMap[assetPath];
