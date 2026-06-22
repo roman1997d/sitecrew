@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> | SiteCrew</title>
+  <%- include('google-analytics', { googleAnalyticsId: googleAnalyticsId || 'G-RQRV1DW5GG' }) %>
+  <%- include('seo-head', { seo: typeof seo !== 'undefined' ? seo : null, title: typeof title !== 'undefined' ? title : null }) %>
   <%- include('favicon') %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,8 +23,8 @@
       <div class="collapse navbar-collapse" id="nav">
         <ul class="navbar-nav ms-auto align-items-lg-center">
           <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="#jobs">Jobs</a></li>
-          <li class="nav-item"><a class="nav-link" href="#companies">Companies</a></li>
+          <li class="nav-item"><a class="nav-link" href="/jobs">Jobs</a></li>
+          <li class="nav-item"><a class="nav-link" href="/#companies">Companies</a></li>
           <li class="nav-item"><a class="nav-link" href="/worker/dashboard#feed">Feed</a></li>
           <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
           <li class="nav-item ms-lg-2 mt-2 mt-lg-0">

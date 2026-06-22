@@ -1,0 +1,36 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section legal-page">
+  <div class="site-container legal-page-inner">
+    <p class="legal-eyebrow">Support</p>
+    <h1>Contact SiteCrew</h1>
+    <p class="legal-lead">Questions about accounts, jobs, privacy, or partnerships? Get in touch and we will respond as soon as possible.</p>
+
+    <div class="contact-grid">
+      <article class="contact-card">
+        <h2>General support</h2>
+        <p>For worker and company account help, verification, or platform issues.</p>
+        <a class="btn-sc btn-sc-blue" href="mailto:<%= contactEmail %>"><i class="bi bi-envelope"></i> <%= contactEmail %></a>
+      </article>
+
+      <article class="contact-card">
+        <h2>Company plans</h2>
+        <p>Questions about company subscriptions, billing, or onboarding your team.</p>
+        <a class="btn-sc btn-sc-outline" href="/login?mode=register&role=company">Register as company</a>
+      </article>
+
+      <article class="contact-card">
+        <h2>Workers</h2>
+        <p>Ready to find your next site role? Create a profile and set your trade interests.</p>
+        <a class="btn-sc btn-sc-outline" href="/login?mode=register&role=worker">Join as worker</a>
+      </article>
+    </div>
+
+    <div class="contact-note">
+      <p><strong>Response times:</strong> We aim to reply within 2 business days.</p>
+      <p>For urgent safety issues on site, always follow your employer's and site procedures first.</p>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

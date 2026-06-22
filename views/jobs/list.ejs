@@ -1,0 +1,50 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section public-jobs-page">
+  <div class="site-container">
+    <div class="section-header">
+      <span class="section-eyebrow">Open roles</span>
+      <h1 class="section-title">Construction jobs in the UK</h1>
+      <p class="section-desc">Browse live site roles posted by verified companies on SiteCrew. Create a free worker account to apply.</p>
+    </div>
+
+    <% if (!jobs.length) { %>
+      <div class="public-jobs-empty">
+        <h2>No open jobs right now</h2>
+        <p>New roles are posted regularly. Register as a worker to get matched when jobs go live.</p>
+        <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-cta">Join as worker</a>
+      </div>
+    <% } else { %>
+      <div class="row g-4">
+        <% jobs.forEach(function(job) { %>
+          <div class="col-md-4">
+            <article class="job-card public-job-card">
+              <div class="job-card-header <%= job.theme %>">
+                <h2><%= job.title %></h2>
+                <div class="job-loc"><i class="bi bi-geo-alt"></i> <%= job.location %></div>
+              </div>
+              <div class="job-card-body">
+                <p class="public-job-trade"><%= job.trade %></p>
+                <p class="public-job-company"><%= job.companyName %></p>
+                <div class="job-rate-big"><%= job.rate %></div>
+                <% if (job.duration) { %>
+                  <span class="badge-live"><%= job.duration %></span>
+                <% } else { %>
+                  <span class="badge-live">Open now</span>
+                <% } %>
+                <a href="<%= job.url %>" class="btn-sc btn-sc-blue btn-sc-sm mt-auto align-self-start">View job</a>
+              </div>
+            </article>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <div class="public-jobs-cta">
+      <p>Hiring on site? Post your role and reach matched tradespeople.</p>
+      <a href="/login?mode=register&role=company" class="btn-sc btn-sc-outline">Join as company</a>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

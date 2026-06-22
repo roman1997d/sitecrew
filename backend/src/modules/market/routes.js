@@ -25,4 +25,25 @@ router.get('/terms', asyncHandler(async (req, res) => {
   res.json({ terms });
 }));
 
+router.get('/platform-stats', asyncHandler(async (req, res) => {
+  const [workers, companies, openJobs] = await Promise.all([
+    pool.query("SELECT COUNT(*)::int AS count FROM users WHERE role = 'worker' AND status = 'active'"),
+    pool.query("SELECT COUNT(*)::int AS count FROM users WHERE role = 'company' AND status = 'active'"),
+    pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM jobs
+       WHERE status = 'open'
+         AND COALESCE(moderation_status, 'visible') = 'visible'`
+    ),
+  ]);
+
+  res.json({
+    stats: {
+      activeWorkers: workers.rows[0]?.count || 0,
+      activeCompanies: companies.rows[0]?.count || 0,
+      openJobs: openJobs.rows[0]?.count || 0,
+    },
+  });
+}));
+
 module.exports = router;

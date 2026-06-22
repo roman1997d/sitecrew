@@ -1,0 +1,32 @@
+<% const seoConfig = typeof seo !== 'undefined' && seo ? seo : null; %>
+<% const pageTitle = seoConfig?.title || `${title || 'SiteCrew'} | SiteCrew`; %>
+<% const pageDescription = seoConfig?.description || 'SiteCrew connects UK construction workers and companies for direct hiring and job applications.'; %>
+<% const canonicalUrl = seoConfig?.canonical || ''; %>
+<% const ogImage = seoConfig?.ogImage || ''; %>
+<% const robots = seoConfig?.robots || 'index, follow'; %>
+<title><%= pageTitle %></title>
+<meta name="description" content="<%= pageDescription %>">
+<meta name="robots" content="<%= robots %>">
+<% if (canonicalUrl) { %>
+<link rel="canonical" href="<%= canonicalUrl %>">
+<% } %>
+<meta property="og:site_name" content="SiteCrew">
+<meta property="og:type" content="<%= seoConfig?.ogType || 'website' %>">
+<meta property="og:title" content="<%= pageTitle %>">
+<meta property="og:description" content="<%= pageDescription %>">
+<% if (canonicalUrl) { %>
+<meta property="og:url" content="<%= canonicalUrl %>">
+<% } %>
+<% if (ogImage) { %>
+<meta property="og:image" content="<%= ogImage %>">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<%= pageTitle %>">
+<meta name="twitter:description" content="<%= pageDescription %>">
+<meta name="twitter:image" content="<%= ogImage %>">
+<% } %>
+<% if (seoConfig?.jsonLd) { %>
+  <% const jsonLdBlocks = Array.isArray(seoConfig.jsonLd) ? seoConfig.jsonLd : [seoConfig.jsonLd]; %>
+  <% jsonLdBlocks.forEach(function(block) { %>
+<script type="application/ld+json"><%- JSON.stringify(block) %></script>
+  <% }); %>
+<% } %>

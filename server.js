@@ -3,14 +3,29 @@ const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const express = require('express');
+const {
+  buildSeo,
+  getHomeFaqItems,
+  getHomePageJsonLd,
+  renderSitemapXml,
+  renderRobotsTxt,
+} = require('./utils/seo');
+const {
+  mapPublicJobCard,
+  mapPublicJobDetail,
+  getJobPostingSchema,
+} = require('./utils/publicJobs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const GOOGLE_ANALYTICS_ID = process.env.GOOGLE_ANALYTICS_ID || 'G-RQRV1DW5GG';
+app.locals.googleAnalyticsId = GOOGLE_ANALYTICS_ID;
 const PUBLIC_URL = process.env.PUBLIC_URL || process.env.API_BASE_URL || 'http://localhost:3000';
 const ADMIN_PUBLIC_URL = process.env.ADMIN_PUBLIC_URL || 'https://admin.sitecrew.uk';
 const ADMIN_HOST = process.env.ADMIN_HOST || 'admin.sitecrew.uk';
 const API_BASE_URL = process.env.API_BASE_URL || PUBLIC_URL;
 const API_INTERNAL_URL = process.env.API_INTERNAL_URL || 'http://127.0.0.1:4000';
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'hello@sitecrew.uk';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -54,6 +69,28 @@ app.use((req, res, next) => {
   }
 
   return next();
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send(renderRobotsTxt());
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+  let extraUrls = [];
+  try {
+    const jobs = await fetchAllPublicOpenJobs();
+    extraUrls = jobs.map((job) => ({
+      path: job.url,
+      changefreq: 'weekly',
+      priority: '0.7',
+    }));
+  } catch (error) {
+    // Keep static sitemap entries when the API is unavailable.
+  }
+
+  res.type('application/xml');
+  res.send(renderSitemapXml(extraUrls));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -933,6 +970,104 @@ async function buildPublicCompanyProfile(token, companyId) {
   };
 }
 
+async function fetchAllPublicOpenJobs() {
+  try {
+    const response = await fetch(`${API_INTERNAL_URL}/api/jobs?status=open`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return (data.jobs || []).map(mapPublicJobCard);
+  } catch (error) {
+    return [];
+  }
+}
+
+async function fetchPublicOpenJobs(limit = 6) {
+  const jobs = await fetchAllPublicOpenJobs();
+  return jobs.slice(0, limit);
+}
+
+async function fetchPlatformStats() {
+  try {
+    const response = await fetch(`${API_INTERNAL_URL}/api/market/platform-stats`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.stats || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function fetchPublicJobById(jobId) {
+  try {
+    const response = await fetch(`${API_INTERNAL_URL}/api/jobs/${jobId}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    const job = data.job;
+    if (!job || job.status !== 'open') return null;
+    if (job.moderation_status && job.moderation_status !== 'visible') return null;
+    return mapPublicJobDetail(job);
+  } catch (error) {
+    return null;
+  }
+}
+
+function buildHeroStats(stats) {
+  if (!stats) {
+    return {
+      badge: 'UK construction recruitment platform',
+      workers: null,
+      companies: null,
+      thirdLabel: 'Direct hiring',
+      thirdValue: 'No agencies',
+    };
+  }
+
+  return {
+    badge: stats.openJobs > 0
+      ? `${stats.openJobs} open job${stats.openJobs === 1 ? '' : 's'} live now`
+      : 'UK construction jobs updated daily',
+    workers: stats.activeWorkers > 0 ? `${stats.activeWorkers.toLocaleString('en-GB')}+` : null,
+    companies: stats.activeCompanies > 0 ? `${stats.activeCompanies.toLocaleString('en-GB')}+` : null,
+    thirdLabel: 'Open roles',
+    thirdValue: stats.openJobs > 0 ? `${stats.openJobs.toLocaleString('en-GB')}+` : 'Updated daily',
+  };
+}
+
+function buildLoginSeo(req) {
+  const mode = req.query.mode === 'register' ? 'register' : 'login';
+  const role = req.query.role === 'company' ? 'company' : req.query.role === 'worker' ? 'worker' : null;
+
+  if (mode === 'register' && role === 'worker') {
+    return buildSeo({
+      path: '/login',
+      title: 'Register as a Construction Worker | SiteCrew',
+      description: 'Create a free SiteCrew worker account, set your trades and availability, and apply to open construction jobs across the UK.',
+    });
+  }
+
+  if (mode === 'register' && role === 'company') {
+    return buildSeo({
+      path: '/login',
+      title: 'Register as a Hiring Company | SiteCrew',
+      description: 'Create a SiteCrew company account to post construction jobs, invite workers, and hire verified tradespeople directly.',
+    });
+  }
+
+  if (mode === 'register') {
+    return buildSeo({
+      path: '/login',
+      title: 'Create Your SiteCrew Account',
+      description: 'Register on SiteCrew as a construction worker or hiring company in the UK.',
+    });
+  }
+
+  return buildSeo({
+    path: '/login',
+    title: 'Sign in to SiteCrew',
+    description: 'Sign in to your SiteCrew worker or company account to manage jobs, applications, and messages.',
+  });
+}
+
 app.get('/', async (req, res) => {
   try {
     const session = await getSessionFromRequest(req);
@@ -952,7 +1087,96 @@ app.get('/', async (req, res) => {
     return res.redirect('/login');
   }
 
-  return res.render('index', { title: 'Home' });
+  const [featuredJobs, platformStats] = await Promise.all([
+    fetchPublicOpenJobs(6),
+    fetchPlatformStats(),
+  ]);
+
+  return res.render('index', {
+    seo: buildSeo({
+      path: '/',
+      title: 'SiteCrew — Find Construction Jobs & Hire Tradespeople in the UK',
+      description: 'Connect with verified construction workers and companies across the UK. Post jobs, apply in minutes, and hire tradespeople directly — no agencies.',
+      jsonLd: getHomePageJsonLd(),
+    }),
+    faqItems: getHomeFaqItems(),
+    featuredJobs,
+    featuredJob: featuredJobs[0] || null,
+    heroStats: buildHeroStats(platformStats),
+  });
+});
+
+app.get('/jobs', async (req, res) => {
+  const jobs = await fetchAllPublicOpenJobs();
+
+  return res.render('jobs/list', {
+    seo: buildSeo({
+      path: '/jobs',
+      title: 'Construction Jobs in the UK | SiteCrew',
+      description: 'Browse open construction jobs posted by verified UK companies on SiteCrew. Apply directly as a worker or post your own roles as a company.',
+    }),
+    jobs,
+  });
+});
+
+app.get('/jobs/:id', async (req, res) => {
+  const job = await fetchPublicJobById(req.params.id);
+  if (!job) {
+    return res.redirect('/jobs');
+  }
+
+  const jobPath = `/jobs/${job.id}`;
+  return res.render('jobs/detail', {
+    seo: buildSeo({
+      path: jobPath,
+      title: `${job.title} in ${job.location} | SiteCrew`,
+      description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
+      jsonLd: getJobPostingSchema(
+        {
+          title: job.title,
+          description: job.description,
+          created_at: job.createdAt,
+          start_date: job.startDate,
+          company_name: job.companyName,
+          city: job.location,
+          rate: job.rate,
+        },
+        buildSeo({ path: jobPath }).canonical
+      ),
+    }),
+    job,
+  });
+});
+
+app.get('/terms', (req, res) => {
+  res.render('legal/terms', {
+    seo: buildSeo({
+      path: '/terms',
+      title: 'Terms of Service | SiteCrew',
+      description: 'Read the SiteCrew Terms of Service for workers and companies using our UK construction recruitment platform.',
+    }),
+  });
+});
+
+app.get('/privacy', (req, res) => {
+  res.render('legal/privacy', {
+    seo: buildSeo({
+      path: '/privacy',
+      title: 'Privacy Policy | SiteCrew',
+      description: 'Learn how SiteCrew collects, uses, and protects personal data under UK GDPR.',
+    }),
+  });
+});
+
+app.get('/contact', (req, res) => {
+  res.render('legal/contact', {
+    seo: buildSeo({
+      path: '/contact',
+      title: 'Contact SiteCrew',
+      description: 'Contact SiteCrew for support with worker accounts, company plans, privacy questions, and platform help.',
+    }),
+    contactEmail: CONTACT_EMAIL,
+  });
 });
 
 app.get('/login', async (req, res) => {
@@ -969,7 +1193,9 @@ app.get('/login', async (req, res) => {
     // Invalid/expired sessions should still allow the user to sign in again.
   }
 
-  return res.render('auth/login', { title: 'Login' });
+  return res.render('auth/login', {
+    seo: buildLoginSeo(req),
+  });
 });
 
 app.get('/worker/dashboard', requireWorkerAuth, async (req, res) => {

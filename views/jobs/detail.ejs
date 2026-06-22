@@ -1,0 +1,35 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section public-job-detail">
+  <div class="site-container public-job-detail-inner">
+    <a href="/jobs" class="public-job-back"><i class="bi bi-arrow-left"></i> Back to jobs</a>
+
+    <article class="public-job-detail-card">
+      <div class="public-job-detail-head <%= job.theme %>">
+        <span class="public-job-detail-trade"><%= job.trade %></span>
+        <h1><%= job.title %></h1>
+        <p><i class="bi bi-geo-alt"></i> <%= job.location %> · <%= job.companyName %></p>
+      </div>
+
+      <div class="public-job-detail-body">
+        <div class="public-job-detail-meta">
+          <div><strong>Rate</strong><span><%= job.rate %></span></div>
+          <% if (job.duration) { %><div><strong>Duration</strong><span><%= job.duration %></span></div><% } %>
+          <% if (job.startDate) { %><div><strong>Start</strong><span><%= new Date(job.startDate).toLocaleDateString('en-GB') %></span></div><% } %>
+          <div><strong>Workers needed</strong><span><%= job.workersRequired %></span></div>
+          <% if (job.experienceRequired) { %><div><strong>Experience</strong><span><%= job.experienceRequired %></span></div><% } %>
+        </div>
+
+        <h2>About this role</h2>
+        <p><%= job.description %></p>
+
+        <div class="public-job-detail-actions">
+          <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-cta">Apply on SiteCrew</a>
+          <a href="/login" class="btn-sc btn-sc-outline">Sign in</a>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>
