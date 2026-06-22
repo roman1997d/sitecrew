@@ -16,6 +16,7 @@ const {
   getJobPostingSchema,
 } = require('./utils/publicJobs');
 const { isWorkerApplyableJob } = require('./backend/src/utils/jobVisibility');
+const { filterJobsByTradeInterests } = require('./backend/src/utils/tradeMatching');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -828,11 +829,10 @@ async function buildWorkerDashboard(token, userId, profile) {
   worker.currentCompany = acceptedApplication?.company_name || null;
   worker.workingAt = worker.currentCompany ? `Working at ${worker.currentCompany}` : 'Self employed';
   const tradeInterests = Array.isArray(profile.trade_interests) ? profile.trade_interests : [];
-  const interestedJobs = tradeInterests.length
-    ? (jobs.jobs || []).filter((job) => tradeInterests.some((trade) =>
-      String(job.trade_required || '').toLowerCase() === String(trade).toLowerCase()
-    ))
-    : (jobs.jobs || []);
+  const interestedJobs = filterJobsByTradeInterests(
+    (jobs.jobs || []).filter(isWorkerApplyableJob),
+    tradeInterests
+  );
   let dailyRateInsight = null;
   if (tradeInterests.length) {
     try {
