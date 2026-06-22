@@ -12,6 +12,11 @@ const {
   logContentScan,
   getRecentJobTexts,
 } = require('../../utils/contentModeration');
+const {
+  WORKER_APPLYABLE_JOB_SQL,
+  WORKER_APPLYABLE_JOB_SQL_J,
+  isWorkerApplyableJob,
+} = require('../../utils/jobVisibility');
 
 const router = express.Router();
 
@@ -164,7 +169,7 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
        AND ($2::text IS NULL OR j.city ILIKE $2)
        AND ($3::text IS NULL OR j.status = $3)
        AND (
-         COALESCE(j.moderation_status, 'visible') = 'visible'
+         ${WORKER_APPLYABLE_JOB_SQL_J}
          OR ($4::int IS NOT NULL AND j.company_id = $4)
        )
      ORDER BY j.created_at DESC`,
@@ -293,7 +298,8 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
 
   const job = result.rows[0];
   const isOwner = req.user?.role === 'company' && Number(req.user.id) === Number(job.company_id);
-  if (job.moderation_status !== 'visible' && !isOwner && req.user?.role !== 'admin' && req.user?.role !== 'superadmin') {
+  const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
+  if (!isWorkerApplyableJob(job) && !isOwner && !isAdmin) {
     return res.status(404).json({ error: 'Job not found' });
   }
 
@@ -407,7 +413,7 @@ router.post('/:id/apply', requireAuth, requireRole('worker'), validate(applySche
      FROM jobs
      WHERE id = $1
        AND status = $2
-       AND COALESCE(moderation_status, 'visible') = 'visible'`,
+       AND ${WORKER_APPLYABLE_JOB_SQL}`,
     [req.params.id, 'open']
   );
   if (job.rowCount === 0) {
@@ -439,7 +445,7 @@ router.post('/:id/invite', requireAuth, requireRole('company'), validate(inviteS
      WHERE j.id = $1
        AND j.company_id = $2
        AND j.status = 'open'
-       AND COALESCE(j.moderation_status, 'visible') = 'visible'`,
+       AND ${WORKER_APPLYABLE_JOB_SQL_J}`,
     [req.params.id, req.user.id]
   );
 

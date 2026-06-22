@@ -15,6 +15,7 @@ const {
   mapPublicJobDetail,
   getJobPostingSchema,
 } = require('./utils/publicJobs');
+const { isWorkerApplyableJob } = require('./backend/src/utils/jobVisibility');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -980,7 +981,7 @@ async function buildPublicCompanyProfile(token, companyId) {
       ratingAverage: ratingAverage || null,
       ratingCount,
     },
-    jobs: (companyData.jobs || []).filter((job) => job.status === 'open').map(mapCompanyJob),
+    jobs: (companyData.jobs || []).filter(isWorkerApplyableJob).map(mapCompanyJob),
     reviews: (companyData.reviews || []).map(mapCompanyReview),
     stories: companyStories,
     isFollowing,
@@ -1020,8 +1021,7 @@ async function fetchPublicJobById(jobId) {
     if (!response.ok) return null;
     const data = await response.json();
     const job = data.job;
-    if (!job || job.status !== 'open') return null;
-    if (job.moderation_status && job.moderation_status !== 'visible') return null;
+    if (!job || !isWorkerApplyableJob(job)) return null;
     return mapPublicJobDetail(job);
   } catch (error) {
     return null;

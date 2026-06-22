@@ -13,9 +13,10 @@ const {
   buildReviewScanText,
   getRecentCompanyReviewTexts,
 } = require('../../utils/contentModeration');
+const { OPEN_WORKER_APPLYABLE_JOB_FILTER, OPEN_WORKER_APPLYABLE_JOB_FILTER_J } = require('../../utils/jobVisibility');
 
 const VISIBLE_REVIEW_FILTER = `COALESCE(moderation_status, 'visible') <> 'hidden'`;
-const VISIBLE_JOB_FILTER = `j.status = 'open' AND COALESCE(j.moderation_status, 'visible') = 'visible'`;
+const VISIBLE_JOB_FILTER = OPEN_WORKER_APPLYABLE_JOB_FILTER_J;
 
 const router = express.Router();
 
@@ -483,6 +484,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     `SELECT *
      FROM jobs
      WHERE company_id = $1
+       AND ${OPEN_WORKER_APPLYABLE_JOB_FILTER}
      ORDER BY created_at DESC`,
     [req.params.id]
   );
