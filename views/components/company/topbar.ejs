@@ -15,6 +15,10 @@
       <span class="company-topbar-bell-dot" id="companyNotificationBadge" <%= notifications.length > 0 ? '' : 'hidden' %>></span>
     </button>
 
+    <button type="button" class="company-topbar-contacts" id="openContactsJournal" aria-label="Contact journal" title="Contact journal">
+      <i class="bi bi-person-lines-fill"></i>
+    </button>
+
     <a href="#profile" class="company-topbar-avatar" id="companyTopbarAvatar" aria-label="Company profile">
       <%= company.initials %>
     </a>
@@ -25,5 +29,4 @@
   </div>
 
   <button type="button" id="openCompanyMessages" hidden aria-hidden="true" tabindex="-1"></button>
-  <button type="button" id="openContactsJournal" hidden aria-hidden="true" tabindex="-1"></button>
 </header>

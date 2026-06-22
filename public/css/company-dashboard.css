@@ -39,6 +39,7 @@
 }
 
 .company-topbar-bell,
+.company-topbar-contacts,
 .company-topbar-logout {
   position: relative;
   width: 42px;
@@ -62,6 +63,16 @@
   border-radius: 999px;
   background: #ef4444;
   border: 2px solid #fff;
+}
+
+.company-topbar-contacts {
+  background: #eff6ff;
+  color: var(--company-blue);
+  border-color: #bfdbfe;
+}
+
+.company-topbar-contacts:hover {
+  background: #dbeafe;
 }
 
 .company-topbar-avatar {
