@@ -1268,6 +1268,7 @@ app.get('/companies/:id', requireWorkerAuth, async (req, res) => {
   try {
     const profile = await buildPublicCompanyProfile(req.authToken, req.params.id);
     profile.workerLanguagePreference = req.sessionProfile?.language_preference || '';
+    profile.workerId = req.sessionUser.id;
     res.render('company/public-profile', {
       title: profile.company.name,
       profile,

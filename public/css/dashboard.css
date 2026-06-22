@@ -7477,6 +7477,40 @@ body.marketplace-ad-preview-open {
   white-space: nowrap;
 }
 
+.company-public-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.company-message-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.company-message-btn:hover {
+  background: #DBEAFE;
+}
+
+.company-message-btn.sent {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #15803D;
+  cursor: default;
+}
+
 .company-follow-btn.following {
   background: #DCFCE7;
   color: #15803D;

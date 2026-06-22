@@ -1,6 +1,7 @@
 (function () {
   const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
   const followBtn = document.getElementById('followCompanyBtn');
+  const messageBtn = document.getElementById('messageCompanyBtn');
   const companyProfile = document.querySelector('[data-company-id]');
   const reviewForm = document.getElementById('companyReviewForm');
   const reviewStatus = document.getElementById('companyReviewStatus');
@@ -70,6 +71,25 @@
     });
   }
 
+  async function sendMessageToCompany(companyId, workerId, message) {
+    if (!workerId) {
+      throw new Error(t('errors.requestFailed'));
+    }
+
+    const conversation = await apiRequest('/api/conversations', {
+      method: 'POST',
+      body: JSON.stringify({
+        workerId: Number(workerId),
+        companyId: Number(companyId),
+      }),
+    });
+
+    await apiRequest(`/api/conversations/${conversation.conversation.id}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ body: message }),
+    });
+  }
+
   followBtn?.addEventListener('click', async () => {
     const companyId = followBtn.dataset.companyId;
     if (!companyId) return;
@@ -84,6 +104,31 @@
     } catch (error) {
       followBtn.disabled = false;
       followBtn.textContent = t('publicCompany.followCompany');
+      alert(error.message);
+    }
+  });
+
+  messageBtn?.addEventListener('click', async () => {
+    const companyId = messageBtn.dataset.companyId;
+    const companyName = messageBtn.dataset.companyName || t('findJob.company');
+    const workerId = companyProfile?.dataset.workerId;
+    if (!companyId || !workerId) return;
+
+    const message = window.prompt(`${t('publicCompany.writeMessage')} ${companyName}`);
+    if (!message || !message.trim()) return;
+
+    const label = messageBtn.querySelector('span');
+    const originalText = label?.textContent || messageBtn.textContent;
+    messageBtn.disabled = true;
+    if (label) label.textContent = t('publicCompany.sending');
+
+    try {
+      await sendMessageToCompany(companyId, workerId, message.trim());
+      if (label) label.textContent = t('publicCompany.messageSent');
+      messageBtn.classList.add('sent');
+    } catch (error) {
+      messageBtn.disabled = false;
+      if (label) label.textContent = originalText;
       alert(error.message);
     }
   });

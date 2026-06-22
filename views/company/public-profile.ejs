@@ -15,7 +15,7 @@
   <link href="/css/dashboard.css" rel="stylesheet">
 </head>
 <body class="dash-body company-public-body" data-worker-language="<%= profile.workerLanguagePreference || '' %>">
-  <main class="company-public-profile" data-company-id="<%= profile.company.id %>">
+  <main class="company-public-profile" data-company-id="<%= profile.company.id %>" data-worker-id="<%= profile.workerId %>">
     <a href="/worker/dashboard#feed" class="company-profile-back"><i class="bi bi-arrow-left"></i> <span data-i18n="publicCompany.backToFeed">Back to feed</span></a>
 
     <section class="company-public-hero">
@@ -31,15 +31,27 @@
               <span class="company-public-badge"><i class="bi bi-patch-check-fill"></i> <span data-i18n="publicCompany.verified">Verified company</span></span>
             <% } %>
           </div>
-          <button
-            type="button"
-            class="company-follow-btn <%= profile.isFollowing ? 'following' : '' %>"
-            id="followCompanyBtn"
-            data-company-id="<%= profile.company.id %>"
-            <%= profile.isFollowing ? 'disabled' : '' %>
-          >
-            <span data-i18n="<%= profile.isFollowing ? 'publicCompany.following' : 'publicCompany.followCompany' %>"><%= profile.isFollowing ? 'Following' : 'Follow company' %></span>
-          </button>
+          <div class="company-public-actions">
+            <button
+              type="button"
+              class="company-follow-btn <%= profile.isFollowing ? 'following' : '' %>"
+              id="followCompanyBtn"
+              data-company-id="<%= profile.company.id %>"
+              <%= profile.isFollowing ? 'disabled' : '' %>
+            >
+              <span data-i18n="<%= profile.isFollowing ? 'publicCompany.following' : 'publicCompany.followCompany' %>"><%= profile.isFollowing ? 'Following' : 'Follow company' %></span>
+            </button>
+            <button
+              type="button"
+              class="company-message-btn"
+              id="messageCompanyBtn"
+              data-company-id="<%= profile.company.id %>"
+              data-company-name="<%= profile.company.name %>"
+            >
+              <i class="bi bi-chat-dots"></i>
+              <span data-i18n="publicCompany.sendMessage">Send message</span>
+            </button>
+          </div>
         </div>
       </div>
     </section>
