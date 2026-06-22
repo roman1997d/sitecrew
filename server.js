@@ -1202,10 +1202,10 @@ app.get('/login', async (req, res) => {
     const session = await getSessionFromRequest(req);
 
     if (session?.user?.role === 'worker') {
-      return res.redirect('/worker/dashboard');
+      return res.redirect(getSafeReturnPath(req.query.return));
     }
     if (session?.user?.role === 'company') {
-      return res.redirect('/company/dashboard');
+      return res.redirect(getSafeReturnPath(req.query.return, '/company/dashboard'));
     }
   } catch (error) {
     // Invalid/expired sessions should still allow the user to sign in again.
