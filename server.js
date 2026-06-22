@@ -159,7 +159,8 @@ async function requireWorkerAuth(req, res, next) {
   try {
     const session = await getSessionFromRequest(req);
     if (!session) {
-      return res.redirect('/login');
+      const returnPath = encodeURIComponent(req.originalUrl || '/worker/dashboard');
+      return res.redirect(`/login?return=${returnPath}`);
     }
     if (session.user.role !== 'worker') {
       return res.redirect('/');
@@ -892,6 +893,8 @@ async function buildWorkerProfile(token, userId, profile) {
   const tradeInterests = Array.isArray(profile.trade_interests) ? profile.trade_interests : [];
 
   return {
+    isPublicProfile: false,
+    topbarWorker: worker,
     worker,
     tradeInterests,
     counts: {
@@ -1207,7 +1210,7 @@ app.get('/worker/dashboard', requireWorkerAuth, async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.redirect('/login');
+    res.redirect('/worker/dashboard');
   }
 });
 
@@ -1220,7 +1223,7 @@ app.get('/worker/profile', requireWorkerAuth, async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.redirect('/login');
+    res.redirect('/worker/dashboard');
   }
 });
 

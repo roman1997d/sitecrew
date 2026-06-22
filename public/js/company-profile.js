@@ -1,5 +1,5 @@
 (function () {
-  const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
+  const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
   const followBtn = document.getElementById('followCompanyBtn');
   const companyProfile = document.querySelector('[data-company-id]');
   const reviewForm = document.getElementById('companyReviewForm');
@@ -38,6 +38,7 @@
   async function apiRequest(path, options = {}) {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
+      credentials: 'include',
       headers: {
         ...(options.body ? { 'Content-Type': 'application/json' } : {}),
         ...(options.headers || {}),

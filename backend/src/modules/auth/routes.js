@@ -8,6 +8,7 @@ const validate = require('../../middleware/validate');
 const requireAuth = require('../../middleware/auth');
 const asyncHandler = require('../../utils/asyncHandler');
 const { getLatestSalesPlanTerms } = require('../../utils/accessPlans');
+const { setAuthSessionCookie, clearAuthSessionCookie } = require('../../utils/requestToken');
 
 const router = express.Router();
 
@@ -82,6 +83,21 @@ function signToken(user) {
   );
 }
 
+function sendAuthResponse(res, statusCode, user) {
+  const token = signToken(user);
+  setAuthSessionCookie(res, token);
+  res.status(statusCode).json({
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      created_at: user.created_at,
+    },
+  });
+}
+
 async function createUser(client, { email, password, role }) {
   const passwordHash = await bcrypt.hash(password, 10);
   const result = await client.query(
@@ -134,7 +150,7 @@ router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(asy
       ]
     );
     await client.query('COMMIT');
-    res.status(201).json({ user, token: signToken(user) });
+    sendAuthResponse(res, 201, user);
   } catch (error) {
     await client.query('ROLLBACK');
     if (error.code === '23505') {
@@ -201,7 +217,7 @@ router.post('/register-company', validate(companyRegisterSchema), asyncHandler(a
       [user.id, companyName, phone || null, website || null, city || null, postcode || null, planKey, termsVersion]
     );
     await client.query('COMMIT');
-    res.status(201).json({ user, token: signToken(user) });
+    sendAuthResponse(res, 201, user);
   } catch (error) {
     await client.query('ROLLBACK');
     if (error.code === '23505') {
@@ -227,17 +243,13 @@ router.post('/login', validate(credentialsSchema), asyncHandler(async (req, res)
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
-  res.json({
-    token: signToken(user),
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      status: user.status,
-      created_at: user.created_at,
-    },
-  });
+  sendAuthResponse(res, 200, user);
 }));
+
+router.post('/logout', (req, res) => {
+  clearAuthSessionCookie(res);
+  res.json({ ok: true });
+});
 
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   let profile = null;

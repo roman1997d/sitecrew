@@ -1,4 +1,4 @@
-const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
+const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
 
 const heading = document.querySelector('#auth-heading');
 const subtitle = document.querySelector('#auth-subtitle');
@@ -61,7 +61,8 @@ function isPlatformRole(role) {
 }
 
 function setCookie(name, value, maxAgeSeconds) {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax`;
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax${secure}`;
 }
 
 function rememberReturningUser(user, email) {
@@ -113,6 +114,7 @@ function setRegisterRole(role) {
 async function apiRequest(path, payload) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
@@ -530,3 +532,32 @@ if (lastEmail && loginForm.email && !loginForm.email.value) {
 
 setAuthMode(params.get('mode') === 'register' ? 'register' : 'login');
 setRegisterRole(params.get('role') === 'company' || (!params.get('role') && lastRole === 'company') ? 'company' : 'worker');
+
+(async function restoreSessionFromStorage() {
+  const token = localStorage.getItem('sitecrewToken');
+  if (!token) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!isPlatformRole(data.user?.role)) return;
+
+    setCookie('sitecrewToken', token, 60 * 60 * 24 * 7);
+
+    const returnPath = params.get('return');
+    if (returnPath && returnPath.startsWith('/')) {
+      window.location.replace(returnPath);
+      return;
+    }
+
+    redirectAfterAuth(data.user);
+  } catch (error) {
+    // Keep the login form available when restore fails.
+  }
+})();

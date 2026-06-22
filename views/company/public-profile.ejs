@@ -14,6 +14,7 @@
   <link href="/css/dashboard.css" rel="stylesheet">
 </head>
 <body class="dash-body company-public-body" data-worker-language="<%= profile.workerLanguagePreference || '' %>">
+  <%- include('../partials/session-sync') %>
   <main class="company-public-profile" data-company-id="<%= profile.company.id %>">
     <a href="/worker/dashboard#feed" class="company-profile-back"><i class="bi bi-arrow-left"></i> <span data-i18n="publicCompany.backToFeed">Back to feed</span></a>
 

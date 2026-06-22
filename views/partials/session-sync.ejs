@@ -1,0 +1,16 @@
+<script>
+  (function () {
+    try {
+      var token = localStorage.getItem('sitecrewToken');
+      if (!token) return;
+      var hasCookie = document.cookie.split(';').some(function (entry) {
+        return entry.trim().indexOf('sitecrewToken=') === 0;
+      });
+      if (hasCookie) return;
+      var secure = window.location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = 'sitecrewToken=' + encodeURIComponent(token) + '; path=/; max-age=604800; SameSite=Lax' + secure;
+    } catch (error) {
+      // Ignore storage access errors in restricted browser modes.
+    }
+  })();
+</script>

@@ -1,5 +1,5 @@
 (function () {
-  const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
+  const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
   const sidebar = document.getElementById('dashSidebar');
   const overlay = document.getElementById('dashOverlay');
   const menuBtn = document.getElementById('dashMenuBtn');
@@ -125,6 +125,19 @@
 
   function getToken() {
     return localStorage.getItem('sitecrewToken') || decodeURIComponent(getCookie('sitecrewToken') || '');
+  }
+
+  function setAuthCookie(token) {
+    if (!token) return;
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `sitecrewToken=${encodeURIComponent(token)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`;
+  }
+
+  function clearAuthSession() {
+    localStorage.removeItem('sitecrewToken');
+    localStorage.removeItem('sitecrewUser');
+    document.cookie = 'sitecrewToken=; path=/; max-age=0; SameSite=Lax';
+    fetch(`${API_BASE_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
   }
 
   function getWorkerFindJobTradeInterests() {
@@ -536,6 +549,7 @@
   async function apiRequest(path, options = {}) {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
+      credentials: 'include',
       headers: {
         ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
         ...(options.headers || {}),
@@ -1257,7 +1271,7 @@
   }
 
   async function guardWorkerSession() {
-    const token = localStorage.getItem('sitecrewToken') || decodeURIComponent(getCookie('sitecrewToken') || '');
+    const token = getToken();
 
     if (!token) {
       window.location.replace('/login');
@@ -1266,11 +1280,19 @@
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        credentials: 'include',
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      if (response.status === 401 || response.status === 403) {
+        clearAuthSession();
+        window.location.replace('/login');
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Invalid session');
+        setAuthCookie(token);
+        return;
       }
 
       const session = await response.json();
@@ -1279,6 +1301,9 @@
         window.location.replace('/');
         return;
       }
+
+      localStorage.setItem('sitecrewToken', token);
+      setAuthCookie(token);
 
       if (session.profile?.language_preference) {
         i18n?.setLanguage(session.profile.language_preference);
@@ -1292,10 +1317,7 @@
       hydrateWorkerProfile(session);
       await loadWorkerApplications();
     } catch (error) {
-      localStorage.removeItem('sitecrewToken');
-      localStorage.removeItem('sitecrewUser');
-      document.cookie = 'sitecrewToken=; path=/; max-age=0; SameSite=Lax';
-      window.location.replace('/login');
+      setAuthCookie(token);
     }
   }
 
@@ -1318,9 +1340,7 @@
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('sitecrewToken');
-      localStorage.removeItem('sitecrewUser');
-      document.cookie = 'sitecrewToken=; path=/; max-age=0; SameSite=Lax';
+      clearAuthSession();
       window.location.href = '/login';
     });
   }
