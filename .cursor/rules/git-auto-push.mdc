@@ -1,0 +1,18 @@
+---
+description: Commit and push to origin after every code change in this project
+alwaysApply: true
+---
+
+# Git workflow — SiteCrew
+
+After completing any code change in this repository:
+
+1. Run `git status` and `git diff` to review what changed.
+2. Stage only relevant files (never `.env`, credentials, or unrelated untracked files unless the user asked).
+3. Create a concise commit with a HEREDOC message focused on **why**.
+4. Push to `origin` on the current branch (`git push origin HEAD` or `git push -u origin HEAD` if needed).
+5. Confirm the commit hash and push result to the user.
+
+Do this automatically at the end of the task — the user does not need to ask each time.
+
+Do **not** force-push to `main`/`master`. Do **not** skip hooks unless explicitly requested.
