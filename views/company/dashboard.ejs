@@ -29,42 +29,58 @@
         insights: dashboard.insights
       }) %>
 
-      <%- include('../components/company/stats-cards', { insights: dashboard.insights }) %>
+      <div class="company-spa-main">
+        <section class="company-spa-view is-active" data-company-view="dashboard" id="companyViewDashboard">
+          <%- include('../components/company/stats-cards', { insights: dashboard.insights }) %>
 
-      <div class="company-workspace">
-        <div class="company-dashboard-grid">
-          <div class="company-grid-area company-grid-jobs">
-            <%- include('../components/company/active-jobs', { jobs: dashboard.jobs }) %>
+          <div class="company-workspace">
+            <div class="company-dashboard-grid">
+              <div class="company-grid-area company-grid-jobs">
+                <%- include('../components/company/active-jobs', { jobs: dashboard.jobs }) %>
+              </div>
+
+              <div class="company-grid-area company-grid-messages">
+                <%- include('../components/company/panel-messages', { conversations: dashboard.conversations }) %>
+              </div>
+
+              <div class="company-grid-area company-grid-applicants">
+                <%- include('../components/company/applicants', { applicants: dashboard.applicants }) %>
+              </div>
+
+              <div class="company-grid-area company-grid-actions">
+                <%- include('../components/company/quick-actions') %>
+              </div>
+
+              <div class="company-grid-area company-grid-recommended">
+                <%- include('../components/company/panel-recommended', { workers: dashboard.recommendedWorkers }) %>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <div class="company-grid-area company-grid-notify">
-            <%- include('../components/company/panel-notifications', { notifications: dashboard.notifications }) %>
+        <section class="company-spa-view" data-company-view="my-team" id="companyViewMyTeam" hidden>
+          <div class="company-workspace company-workspace-page">
+            <%- include('../components/company/my-team', { teamMembers: dashboard.teamMembers }) %>
           </div>
+        </section>
 
-          <div class="company-grid-area company-grid-messages">
-            <%- include('../components/company/panel-messages', { conversations: dashboard.conversations }) %>
+        <section class="company-spa-view" data-company-view="search-workers" id="companyViewSearchWorkers" hidden>
+          <div class="company-workspace company-workspace-page">
+            <%- include('../components/company/recommended-workers', { workers: dashboard.recommendedWorkers }) %>
           </div>
+        </section>
 
-          <div class="company-grid-area company-grid-applicants">
-            <%- include('../components/company/applicants', { applicants: dashboard.applicants }) %>
+        <section class="company-spa-view" data-company-view="social-posts" id="companyViewSocialPosts" hidden>
+          <div class="company-workspace company-workspace-page">
+            <%- include('../components/company/company-feed', { posts: dashboard.companyPosts }) %>
           </div>
+        </section>
 
-          <div class="company-grid-area company-grid-actions">
-            <%- include('../components/company/quick-actions') %>
+        <section class="company-spa-view" data-company-view="settings" id="companyViewSettings" hidden>
+          <div class="company-workspace company-workspace-page">
+            <%- include('../components/company/settings', { company: dashboard.company }) %>
           </div>
-
-          <div class="company-grid-area company-grid-recommended">
-            <%- include('../components/company/panel-recommended', { workers: dashboard.recommendedWorkers }) %>
-          </div>
-        </div>
-
-        <div class="company-extra-panels">
-          <%- include('../components/company/profile-panel', { company: dashboard.company }) %>
-          <%- include('../components/company/my-team', { teamMembers: dashboard.teamMembers }) %>
-          <%- include('../components/company/recommended-workers', { workers: dashboard.recommendedWorkers }) %>
-          <%- include('../components/company/company-feed', { posts: dashboard.companyPosts }) %>
-          <%- include('../components/company/settings', { company: dashboard.company }) %>
-        </div>
+        </section>
       </div>
     </div>
   </div>

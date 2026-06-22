@@ -2633,28 +2633,143 @@
     }
   });
 
+  const COMPANY_VIEW_IDS = ['dashboard', 'my-team', 'search-workers', 'social-posts', 'settings'];
+  const COMPANY_VIEW_TITLES = {
+    dashboard: 'Dashboard',
+    'my-team': 'My Team',
+    'search-workers': 'Search Workers',
+    'social-posts': 'Social Posts',
+    settings: 'Settings',
+  };
+  const COMPANY_LEGACY_ROUTES = {
+    'active-jobs': { view: 'dashboard', focus: 'active-jobs' },
+    applicants: { view: 'dashboard', focus: 'applicants' },
+    messages: { view: 'dashboard', focus: 'messages' },
+    'recommended-workers': { view: 'search-workers', focus: null },
+    'company-feed': { view: 'social-posts', focus: null },
+    settings: { view: 'settings', focus: null },
+    'my-team': { view: 'my-team', focus: null },
+  };
+  const companySpaViews = document.querySelectorAll('[data-company-view]');
+  const companyNavLinks = document.querySelectorAll('[data-company-nav]');
+  const companyGotoLinks = document.querySelectorAll('[data-company-goto]');
+
+  function parseCompanyRoute() {
+    const rawHash = (window.location.hash || '#dashboard').replace(/^#/, '');
+    const [viewKey, focusKey] = rawHash.split('/').filter(Boolean);
+
+    if (!viewKey) {
+      return { view: 'dashboard', focus: null };
+    }
+
+    if (COMPANY_VIEW_IDS.includes(viewKey)) {
+      return { view: viewKey, focus: focusKey || null };
+    }
+
+    if (COMPANY_LEGACY_ROUTES[viewKey]) {
+      return COMPANY_LEGACY_ROUTES[viewKey];
+    }
+
+    return { view: 'dashboard', focus: null };
+  }
+
+  function updateCompanyNavState(viewId, focusId) {
+    companyNavLinks.forEach((link) => {
+      const navView = link.dataset.companyNav;
+      const navFocus = link.dataset.companyFocus || null;
+      const isMainDashboard = navView === 'dashboard' && !navFocus && viewId === 'dashboard' && !focusId;
+      const isFocusedDashboard = navView === 'dashboard' && navFocus && viewId === 'dashboard' && navFocus === focusId;
+      const isSectionView = navView === viewId && !navFocus;
+      link.classList.toggle('active', isMainDashboard || isFocusedDashboard || isSectionView);
+    });
+  }
+
+  function focusCompanySection(focusId) {
+    if (!focusId) return;
+    requestAnimationFrame(() => {
+      const target = document.getElementById(focusId);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function setCompanyView(viewId, { focus = null, replaceHash = true, pushHash = false } = {}) {
+    const targetView = COMPANY_VIEW_IDS.includes(viewId) ? viewId : 'dashboard';
+
+    companySpaViews.forEach((section) => {
+      const isActive = section.dataset.companyView === targetView;
+      section.classList.toggle('is-active', isActive);
+      section.hidden = !isActive;
+    });
+
+    updateCompanyNavState(targetView, focus);
+    document.title = `${COMPANY_VIEW_TITLES[targetView] || 'Dashboard'} | SiteCrew`;
+
+    const nextHash = focus ? `#${targetView}/${focus}` : `#${targetView}`;
+    if (replaceHash || pushHash) {
+      const hashMethod = pushHash ? 'pushState' : 'replaceState';
+      if (window.location.hash !== nextHash) {
+        window.history[hashMethod](null, '', nextHash);
+      }
+    }
+
+    if (targetView === 'dashboard' && focus) {
+      focusCompanySection(focus);
+      return;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function initCompanySpaRouter() {
+    companyNavLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const navView = link.dataset.companyNav;
+        if (!navView) return;
+        event.preventDefault();
+        setCompanyView(navView, {
+          focus: link.dataset.companyFocus || null,
+          replaceHash: false,
+          pushHash: true,
+        });
+      });
+    });
+
+    companyGotoLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        setCompanyView(link.dataset.companyGoto, {
+          focus: link.dataset.companyFocus || null,
+          replaceHash: false,
+          pushHash: true,
+        });
+      });
+    });
+
+    window.addEventListener('hashchange', () => {
+      const route = parseCompanyRoute();
+      setCompanyView(route.view, { focus: route.focus, replaceHash: false });
+    });
+
+    const route = parseCompanyRoute();
+    setCompanyView(route.view, { focus: route.focus, replaceHash: false });
+  }
+
   const companyTopbarSearch = document.getElementById('companyTopbarSearch');
   const openCompanyNotificationsSide = document.getElementById('openCompanyNotificationsSide');
   const openCompanyMessagesSide = document.getElementById('openCompanyMessagesSide');
-  const sidebarMessagesLink = document.getElementById('sidebarMessagesLink');
 
   companyTopbarSearch?.addEventListener('focus', () => {
-    const section = document.getElementById('recommended-workers');
-    if (!section) return;
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setCompanyView('search-workers', { replaceHash: false, pushHash: true });
     workerSearchForm?.querySelector('input[name="trade"]')?.focus();
   });
 
   openCompanyNotificationsSide?.addEventListener('click', openCompanyNotifications);
   openCompanyMessagesSide?.addEventListener('click', openCompanyMessages);
-  sidebarMessagesLink?.addEventListener('click', (event) => {
-    event.preventDefault();
-    openCompanyMessages();
-  });
 
   document.querySelectorAll('[data-open-company-messages]').forEach((button) => {
     button.addEventListener('click', openCompanyMessages);
   });
 
+  initCompanySpaRouter();
   guardCompanySession();
 })();

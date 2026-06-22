@@ -1,7 +1,7 @@
 <section class="company-section company-jobs-section" id="active-jobs">
   <div class="company-panel-head">
     <h2>Active Jobs</h2>
-    <a href="#active-jobs" class="company-panel-link">View all jobs</a>
+    <a href="#dashboard/active-jobs" class="company-panel-link" data-company-goto="dashboard" data-company-focus="active-jobs">View all jobs</a>
   </div>
 
   <% if (!jobs.length) { %>
@@ -63,7 +63,7 @@
                 <details class="company-row-menu">
                   <summary aria-label="Job actions"><i class="bi bi-three-dots"></i></summary>
                   <div class="company-row-menu-panel">
-                    <a href="#applicants">View applicants</a>
+                    <a href="#dashboard/applicants" data-company-goto="dashboard" data-company-focus="applicants">View applicants</a>
                     <button type="button" data-edit-company-job>Edit job</button>
                     <button type="button" data-toggle-company-job><%= job.status === 'Open' ? 'Close request' : 'Reopen request' %></button>
                     <button type="button" class="danger" data-delete-company-job>Delete</button>

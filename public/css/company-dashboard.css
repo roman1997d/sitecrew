@@ -127,7 +127,6 @@
   overflow-y: auto;
 }
 
-.company-grid-notify .company-panel-list,
 .company-grid-messages .company-panel-list {
   max-height: 220px;
   overflow-y: auto;
@@ -154,6 +153,27 @@
 .company-stat-hired .company-stat-chart polyline { stroke: rgba(5, 150, 105, 0.45); }
 .company-stat-messages .company-stat-chart polyline { stroke: rgba(234, 88, 12, 0.45); }
 
+/* ---- SPA views ---- */
+.company-spa-main {
+  min-width: 0;
+}
+
+.company-spa-view {
+  display: none;
+}
+
+.company-spa-view.is-active {
+  display: block;
+}
+
+.company-workspace-page {
+  padding-top: 4px;
+}
+
+.company-workspace-page .company-section {
+  margin: 0;
+}
+
 /* ---- Main workspace grid ---- */
 .company-workspace {
   padding: 0 28px 32px;
@@ -164,16 +184,14 @@
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
   grid-template-areas:
-    "jobs notify"
     "jobs messages"
-    "applicants actions"
+    "jobs actions"
     "applicants recommended";
   gap: 18px;
   align-items: start;
 }
 
 .company-grid-jobs { grid-area: jobs; }
-.company-grid-notify { grid-area: notify; }
 .company-grid-messages { grid-area: messages; }
 .company-grid-applicants { grid-area: applicants; }
 .company-grid-actions { grid-area: actions; }
@@ -660,7 +678,7 @@
   margin-bottom: 4px;
 }
 
-/* ---- Extra panels (below grid, sidebar targets) ---- */
+/* ---- Secondary pages (below grid, sidebar targets) ---- */
 .company-extra-panels {
   margin-top: 28px;
   display: grid;
@@ -671,75 +689,12 @@
   scroll-margin-top: 96px;
 }
 
-.company-profile-panel {
-  background: #fff;
-  border: 1px solid var(--company-border);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.045);
-}
-
-.company-profile-panel-head {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.company-profile-panel-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.company-profile-panel-head h2 {
-  margin: 0 0 4px;
-  font-size: 20px;
-}
-
-.company-profile-panel-head p {
-  margin: 0 0 4px;
-  color: var(--company-muted);
-  font-size: 13px;
-}
-
-.company-profile-panel-badges {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.company-profile-panel-badges span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.company-profile-panel-link {
-  display: inline-block;
-  margin-top: 14px;
-  color: var(--company-blue);
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-}
-
 /* ---- Responsive: keep desktop grid longer ---- */
 @media (max-width: 1100px) {
   .company-dashboard-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
       "jobs"
-      "notify"
       "messages"
       "applicants"
       "actions"
