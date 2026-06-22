@@ -1271,6 +1271,10 @@
   }
 
   async function guardWorkerSession() {
+    if (window.SiteCrewSyncAuthCookie) {
+      window.SiteCrewSyncAuthCookie();
+    }
+
     const token = getToken();
 
     if (!token) {

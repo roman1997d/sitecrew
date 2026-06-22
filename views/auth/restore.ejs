@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>SiteCrew</title>
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #f8fafc; }
+  </style>
+  <script>
+    (function () {
+      var next = <%- JSON.stringify(returnPath) %>;
+
+      try {
+        var token = localStorage.getItem('sitecrewToken');
+        if (!token) {
+          window.location.replace('/login?return=' + encodeURIComponent(next));
+          return;
+        }
+
+        var secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = 'sitecrewToken=' + encodeURIComponent(token) + '; path=/; max-age=604800; SameSite=Lax' + secure;
+        window.location.replace(next);
+      } catch (error) {
+        window.location.replace('/login?return=' + encodeURIComponent(next));
+      }
+    })();
+  </script>
+</head>
+<body></body>
+</html>

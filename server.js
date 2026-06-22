@@ -107,6 +107,14 @@ function parseCookies(cookieHeader = '') {
     }, {});
 }
 
+function getSafeReturnPath(value, fallback = '/worker/dashboard') {
+  const path = String(value || '').trim();
+  if (!path.startsWith('/') || path.startsWith('//')) {
+    return fallback;
+  }
+  return path;
+}
+
 async function getSessionFromRequest(req) {
   const cookies = parseCookies(req.headers.cookie);
   const token = cookies.sitecrewToken;
@@ -159,8 +167,8 @@ async function requireWorkerAuth(req, res, next) {
   try {
     const session = await getSessionFromRequest(req);
     if (!session) {
-      const returnPath = encodeURIComponent(req.originalUrl || '/worker/dashboard');
-      return res.redirect(`/login?return=${returnPath}`);
+      const returnPath = encodeURIComponent(getSafeReturnPath(req.originalUrl));
+      return res.redirect(`/auth/restore?return=${returnPath}`);
     }
     if (session.user.role !== 'worker') {
       return res.redirect('/');
@@ -171,7 +179,7 @@ async function requireWorkerAuth(req, res, next) {
     req.authToken = session.token;
     return next();
   } catch (error) {
-    return res.redirect('/login');
+    return res.redirect('/auth/restore');
   }
 }
 
@@ -179,7 +187,8 @@ async function requireCompanyAuth(req, res, next) {
   try {
     const session = await getSessionFromRequest(req);
     if (!session) {
-      return res.redirect('/login');
+      const returnPath = encodeURIComponent(getSafeReturnPath(req.originalUrl, '/company/dashboard'));
+      return res.redirect(`/auth/restore?return=${returnPath}`);
     }
     if (session.user.role !== 'company') {
       return res.redirect('/');
@@ -190,7 +199,7 @@ async function requireCompanyAuth(req, res, next) {
     req.authToken = session.token;
     return next();
   } catch (error) {
-    return res.redirect('/login');
+    return res.redirect('/auth/restore?return=%2Fcompany%2Fdashboard');
   }
 }
 
@@ -1179,6 +1188,12 @@ app.get('/contact', (req, res) => {
       description: 'Contact SiteCrew for support with worker accounts, company plans, privacy questions, and platform help.',
     }),
     contactEmail: CONTACT_EMAIL,
+  });
+});
+
+app.get('/auth/restore', (req, res) => {
+  res.render('auth/restore', {
+    returnPath: getSafeReturnPath(req.query.return),
   });
 });
 

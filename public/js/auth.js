@@ -534,6 +534,9 @@ setAuthMode(params.get('mode') === 'register' ? 'register' : 'login');
 setRegisterRole(params.get('role') === 'company' || (!params.get('role') && lastRole === 'company') ? 'company' : 'worker');
 
 (async function restoreSessionFromStorage() {
+  const returnPath = params.get('return');
+  if (returnPath) return;
+
   const token = localStorage.getItem('sitecrewToken');
   if (!token) return;
 
@@ -549,13 +552,6 @@ setRegisterRole(params.get('role') === 'company' || (!params.get('role') && last
     if (!isPlatformRole(data.user?.role)) return;
 
     setCookie('sitecrewToken', token, 60 * 60 * 24 * 7);
-
-    const returnPath = params.get('return');
-    if (returnPath && returnPath.startsWith('/')) {
-      window.location.replace(returnPath);
-      return;
-    }
-
     redirectAfterAuth(data.user);
   } catch (error) {
     // Keep the login form available when restore fails.

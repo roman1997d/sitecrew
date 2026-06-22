@@ -1,16 +1,35 @@
 <script>
   (function () {
-    try {
-      var token = localStorage.getItem('sitecrewToken');
-      if (!token) return;
-      var hasCookie = document.cookie.split(';').some(function (entry) {
-        return entry.trim().indexOf('sitecrewToken=') === 0;
-      });
-      if (hasCookie) return;
-      var secure = window.location.protocol === 'https:' ? '; Secure' : '';
-      document.cookie = 'sitecrewToken=' + encodeURIComponent(token) + '; path=/; max-age=604800; SameSite=Lax' + secure;
-    } catch (error) {
-      // Ignore storage access errors in restricted browser modes.
+    function syncAuthCookieFromStorage() {
+      try {
+        var token = localStorage.getItem('sitecrewToken');
+        if (!token) return false;
+        var secure = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = 'sitecrewToken=' + encodeURIComponent(token) + '; path=/; max-age=604800; SameSite=Lax' + secure;
+        return true;
+      } catch (error) {
+        return false;
+      }
     }
+
+    function isProtectedAppPath(path) {
+      return /^\/(worker|workers|companies|company)(\/|$)/.test(path);
+    }
+
+    window.SiteCrewSyncAuthCookie = syncAuthCookieFromStorage;
+    syncAuthCookieFromStorage();
+
+    document.addEventListener('click', function (event) {
+      var link = event.target.closest('a[href]');
+      if (!link || link.target === '_blank' || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey) {
+        return;
+      }
+
+      var href = link.getAttribute('href');
+      if (!href || href.charAt(0) !== '/' || href.indexOf('//') === 0) return;
+      if (!isProtectedAppPath(href)) return;
+
+      syncAuthCookieFromStorage();
+    }, true);
   })();
 </script>
