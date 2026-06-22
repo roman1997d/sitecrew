@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <%- include('google-analytics', { googleAnalyticsId: googleAnalyticsId || 'G-RQRV1DW5GG' }) %>
+  <%- include('cookie-script') %>
   <%- include('seo-head', { seo: typeof seo !== 'undefined' ? seo : null, title: typeof title !== 'undefined' ? title : null }) %>
   <%- include('favicon') %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
