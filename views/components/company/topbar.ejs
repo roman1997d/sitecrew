@@ -1,14 +1,14 @@
 <header class="company-topbar">
-  <div>
-    <p>Company workspace</p>
+  <div class="company-topbar-intro">
+    <p class="company-topbar-eyebrow">Welcome back,</p>
     <h1><%= company.name %></h1>
+    <p class="company-topbar-subtitle">Here's what's happening with your projects today.</p>
   </div>
 
-  <div class="company-topbar-metrics" aria-label="Company summary">
-    <span><strong><%= insights.activeJobs %></strong> active jobs</span>
-    <span><strong><%= insights.workersNeeded %></strong> positions</span>
-    <span><strong id="companyAlertsCount"><%= notifications.length %></strong> alerts</span>
-  </div>
+  <label class="company-topbar-search" aria-label="Search dashboard">
+    <i class="bi bi-search"></i>
+    <input type="search" id="companyTopbarSearch" placeholder="Search anything..." autocomplete="off">
+  </label>
 
   <div class="company-topbar-actions">
     <button type="button" id="openCompanyNotifications" aria-label="Notifications" title="Notifications">
@@ -18,16 +18,16 @@
     <button type="button" id="openCompanyMessages" aria-label="Messages" title="Messages">
       <i class="bi bi-chat-text"></i>
     </button>
-    <button type="button" id="openContactsJournal" aria-label="Contacts" title="Contacts">
+    <button type="button" id="openContactsJournal" class="company-topbar-contacts" aria-label="Contacts" title="Contacts">
       <i class="bi bi-person-lines-fill"></i>
     </button>
-    <button type="button" class="company-profile-trigger <%= company.logo ? 'has-logo' : '' %>" aria-label="Profile">
+    <a href="#profile" class="company-profile-trigger <%= company.logo ? 'has-logo' : '' %>" aria-label="Company profile">
       <% if (company.logo) { %>
         <img src="<%= assetPath(company.logo) %>" alt="<%= company.name %> logo">
       <% } else { %>
         <strong><%= company.initials %></strong>
       <% } %>
-    </button>
+    </a>
     <button type="button" class="company-logout-btn" id="companyLogoutBtn" aria-label="Log out" title="Log out">
       <i class="bi bi-box-arrow-right"></i>
     </button>

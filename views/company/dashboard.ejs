@@ -16,7 +16,10 @@
 </head>
 <body class="dash-body company-dash-body">
   <div class="company-dashboard">
-    <%- include('../components/company/sidebar') %>
+    <%- include('../components/company/sidebar', {
+      company: dashboard.company,
+      messageCount: dashboard.insights.messageCount
+    }) %>
 
     <div class="company-shell">
       <%- include('../components/company/topbar', {
@@ -25,9 +28,10 @@
         insights: dashboard.insights
       }) %>
 
+      <%- include('../components/company/stats-cards', { insights: dashboard.insights }) %>
+
       <div class="company-layout">
         <main class="company-main">
-          <%- include('../components/company/quick-actions') %>
           <%- include('../components/company/active-jobs', { jobs: dashboard.jobs }) %>
           <%- include('../components/company/applicants', { applicants: dashboard.applicants }) %>
           <%- include('../components/company/my-team', { teamMembers: dashboard.teamMembers }) %>
@@ -41,7 +45,8 @@
           notifications: dashboard.notifications,
           insights: dashboard.insights,
           conversations: dashboard.conversations,
-          companyReviews: dashboard.companyReviews
+          companyReviews: dashboard.companyReviews,
+          recommendedWorkers: dashboard.recommendedWorkers
         }) %>
       </div>
     </div>

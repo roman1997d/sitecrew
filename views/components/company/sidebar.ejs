@@ -1,16 +1,33 @@
 <aside class="company-sidebar">
-  <a href="/" class="company-sidebar-logo">Site<span>Crew</span></a>
+  <a href="/company/dashboard" class="company-sidebar-logo">
+    <span class="company-sidebar-logo-mark" aria-hidden="true"><i class="bi bi-hammer"></i></span>
+    Site<span>Crew</span>
+  </a>
 
   <nav class="company-nav" aria-label="Company navigation">
-    <a href="/company/dashboard" class="active"><i class="bi bi-grid-1x2"></i> Dashboard</a>
-    <a href="#post-job"><i class="bi bi-plus-circle"></i> Post Job</a>
-    <a href="#active-jobs"><i class="bi bi-briefcase"></i> My Jobs</a>
+    <a href="/company/dashboard" class="active"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+    <a href="#active-jobs"><i class="bi bi-briefcase"></i> Jobs</a>
     <a href="#applicants"><i class="bi bi-people"></i> Applicants</a>
-    <a href="#my-team"><i class="bi bi-person-lines-fill"></i> My Team</a>
-    <a href="#recommended-workers"><i class="bi bi-person-check"></i> Find Workers</a>
-    <a href="#company-feed"><i class="bi bi-building-up"></i> Company Feed</a>
-    <a href="#messages"><i class="bi bi-chat-dots"></i> Messages</a>
+    <a href="#my-team"><i class="bi bi-person-badge"></i> Workers</a>
+    <a href="#messages" id="sidebarMessagesLink"><i class="bi bi-chat-dots"></i> Messages<% if (messageCount > 0) { %><span class="company-nav-badge"><%= messageCount %></span><% } %></a>
+    <a href="#company-feed"><i class="bi bi-rss"></i> Company Feed</a>
     <a href="#profile"><i class="bi bi-building"></i> Company Profile</a>
     <a href="#settings"><i class="bi bi-gear"></i> Settings</a>
   </nav>
+
+  <div class="company-sidebar-profile">
+    <div class="company-sidebar-profile-logo <%= company.logo ? 'has-logo' : '' %>">
+      <% if (company.logo) { %>
+        <img src="<%= assetPath(company.logo) %>" alt="<%= company.name %> logo">
+      <% } else { %>
+        <%= company.initials %>
+      <% } %>
+    </div>
+    <div class="company-sidebar-profile-copy">
+      <strong><%= company.name %></strong>
+      <span><%= company.businessType || 'Construction company' %><% if (company.location) { %> · <%= company.location %><% } %></span>
+      <span class="company-sidebar-profile-rating"><i class="bi bi-star-fill"></i> <%= company.rating %></span>
+    </div>
+    <a href="#profile" class="company-sidebar-profile-link">View Company Profile <i class="bi bi-arrow-right"></i></a>
+  </div>
 </aside>

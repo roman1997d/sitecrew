@@ -2633,5 +2633,28 @@
     }
   });
 
+  const companyTopbarSearch = document.getElementById('companyTopbarSearch');
+  const openCompanyNotificationsSide = document.getElementById('openCompanyNotificationsSide');
+  const openCompanyMessagesSide = document.getElementById('openCompanyMessagesSide');
+  const sidebarMessagesLink = document.getElementById('sidebarMessagesLink');
+
+  companyTopbarSearch?.addEventListener('focus', () => {
+    const section = document.getElementById('recommended-workers');
+    if (!section) return;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    workerSearchForm?.querySelector('input[name="trade"]')?.focus();
+  });
+
+  openCompanyNotificationsSide?.addEventListener('click', openCompanyNotifications);
+  openCompanyMessagesSide?.addEventListener('click', openCompanyMessages);
+  sidebarMessagesLink?.addEventListener('click', (event) => {
+    event.preventDefault();
+    openCompanyMessages();
+  });
+
+  document.querySelectorAll('[data-open-company-messages]').forEach((button) => {
+    button.addEventListener('click', openCompanyMessages);
+  });
+
   guardCompanySession();
 })();

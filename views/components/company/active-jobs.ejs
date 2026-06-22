@@ -1,57 +1,78 @@
-<section class="company-section" id="active-jobs">
+<section class="company-section company-jobs-section" id="active-jobs">
   <div class="company-section-header">
     <div>
-      <span>Active Jobs</span>
-      <h2>Open hiring needs</h2>
+      <h2>Active Jobs</h2>
     </div>
-    <a href="#" class="company-link-btn">View all jobs</a>
+    <a href="#active-jobs" class="company-link-btn">View all jobs</a>
   </div>
 
-  <div class="company-job-grid">
-    <% if (!jobs.length) { %>
-      <article class="company-empty-card">
-        <strong>No jobs posted yet</strong>
-        <p>Use Post Job to create your first hiring request.</p>
-      </article>
-    <% } %>
-
-    <% jobs.forEach(function(job) { %>
-      <article
-        class="company-job-card"
-        data-company-job-card
-        data-job-id="<%= job.id %>"
-        data-title="<%= job.title %>"
-        data-trade-required="<%= job.trade %>"
-        data-city="<%= job.city %>"
-        data-postcode="<%= job.postcode %>"
-        data-rate="<%= job.rate || '' %>"
-        data-start-date="<%= job.startDate || '' %>"
-        data-duration="<%= job.duration || '' %>"
-        data-workers-required="<%= job.workersRequired %>"
-        data-description="<%= job.description %>"
-        data-certificates-required="<%= job.certificatesRequired %>"
-        data-job-status="<%= job.status === 'Open' ? 'open' : 'closed' %>"
-      >
-        <div class="company-card-row">
-          <div>
-            <h3><%= job.title %></h3>
-            <p><%= job.location %> · <%= job.trade %></p>
-          </div>
-          <span class="company-status <%= job.status === 'Open' ? 'open' : 'closed' %>"><%= job.status %></span>
-        </div>
-        <div class="company-job-meta">
-          <span><i class="bi bi-people"></i> <%= job.applicants %> applicants</span>
-          <% if (job.rate) { %><span><i class="bi bi-cash-stack"></i> <%= job.rate %></span><% } %>
-        </div>
-        <div class="company-job-card-actions">
-          <a href="#applicants" class="company-primary-small">View Applicants</a>
-          <button type="button" class="company-secondary-small" data-edit-company-job>Edit this post</button>
-          <button type="button" class="company-secondary-small company-job-toggle-btn" data-toggle-company-job>
-            <%= job.status === 'Open' ? 'Close this request' : 'Open this request' %>
-          </button>
-          <button type="button" class="company-danger-small" data-delete-company-job>Delete</button>
-        </div>
-      </article>
-    <% }); %>
-  </div>
+  <% if (!jobs.length) { %>
+    <article class="company-empty-card">
+      <strong>No jobs posted yet</strong>
+      <p>Use Post a Job to create your first hiring request.</p>
+    </article>
+  <% } else { %>
+    <div class="company-jobs-table-wrap">
+      <table class="company-jobs-table">
+        <thead>
+          <tr>
+            <th>Job Title</th>
+            <th>Location</th>
+            <th>Applicants</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% jobs.forEach(function(job) { %>
+            <tr
+              class="company-job-row"
+              data-company-job-card
+              data-job-id="<%= job.id %>"
+              data-title="<%= job.title %>"
+              data-trade-required="<%= job.trade %>"
+              data-city="<%= job.city %>"
+              data-postcode="<%= job.postcode %>"
+              data-rate="<%= job.rate || '' %>"
+              data-start-date="<%= job.startDate || '' %>"
+              data-duration="<%= job.duration || '' %>"
+              data-workers-required="<%= job.workersRequired %>"
+              data-description="<%= job.description %>"
+              data-certificates-required="<%= job.certificatesRequired %>"
+              data-job-status="<%= job.status === 'Open' ? 'open' : 'closed' %>"
+            >
+              <td>
+                <strong class="company-job-title"><%= job.title %></strong>
+                <span class="company-job-trade"><%= job.trade %></span>
+              </td>
+              <td><%= job.location %></td>
+              <td>
+                <div class="company-job-applicants">
+                  <span class="company-job-applicant-count"><%= job.applicants %></span>
+                  <% if (job.applicants > 0) { %>
+                    <span class="company-job-applicant-stack" aria-hidden="true">
+                      <span></span><span></span><span></span>
+                    </span>
+                  <% } %>
+                </div>
+              </td>
+              <td>
+                <span class="company-status-pill <%= job.status === 'Open' ? 'open' : 'closed' %>"><%= job.status %></span>
+              </td>
+              <td>
+                <div class="company-job-row-actions">
+                  <a href="#applicants" class="company-table-link">Applicants</a>
+                  <button type="button" class="company-table-link" data-edit-company-job>Edit</button>
+                  <button type="button" class="company-table-link muted" data-toggle-company-job>
+                    <%= job.status === 'Open' ? 'Close' : 'Reopen' %>
+                  </button>
+                  <button type="button" class="company-table-link danger" data-delete-company-job>Delete</button>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
 </section>

@@ -640,6 +640,8 @@ function mapApplicant(application) {
     rating: '4.8',
     match: application.match?.score || 0,
     savedContact: Boolean(application.saved_contact),
+    appliedAt: application.created_at,
+    appliedAgo: application.created_at ? timeAgo(application.created_at) : '',
   };
 }
 
@@ -782,6 +784,9 @@ async function buildCompanyDashboard(token, companyId, profile) {
       activeJobs: openJobs.length,
       workersNeeded,
       responseRate: '85%',
+      applicantCount: applicants.length,
+      hiredCount: teamMembers.length,
+      messageCount: getUnreadMessageCount(conversations.conversations || []),
     },
   };
 }
