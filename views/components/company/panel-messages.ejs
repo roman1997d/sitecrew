@@ -1,0 +1,20 @@
+<section class="company-panel" id="messages">
+  <div class="company-panel-head">
+    <h2>Messages</h2>
+    <button type="button" class="company-panel-link" id="openCompanyMessagesSide">View all</button>
+  </div>
+  <% if (!conversations.length) { %>
+    <p class="company-panel-empty">No worker chats yet.</p>
+  <% } %>
+  <div class="company-panel-list">
+    <% conversations.forEach(function(conversation) { %>
+      <button type="button" class="company-msg-item" data-open-company-messages>
+        <span class="company-msg-avatar"><%= (conversation.worker_name || 'W').charAt(0) %></span>
+        <span class="company-msg-copy">
+          <strong><%= conversation.worker_name %></strong>
+          <span><%= conversation.job_title || 'General conversation' %></span>
+        </span>
+      </button>
+    <% }); %>
+  </div>
+</section>

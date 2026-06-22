@@ -1,0 +1,22 @@
+<section class="company-panel" id="recommended-workers-side">
+  <div class="company-panel-head">
+    <h2>Recommended Workers</h2>
+    <a href="#recommended-workers" class="company-panel-link">View all</a>
+  </div>
+  <% if (!workers.length) { %>
+    <p class="company-panel-empty">Post an open job to see matches.</p>
+  <% } %>
+  <div class="company-panel-list">
+    <% workers.slice(0, 3).forEach(function(worker) { %>
+      <article class="company-reco-item">
+        <span class="company-reco-avatar"><%= worker.name.charAt(0) %></span>
+        <div class="company-reco-copy">
+          <strong><%= worker.name %></strong>
+          <span><%= worker.trade %> · <%= worker.location %></span>
+          <small><i class="bi bi-circle-fill"></i> <%= worker.availability %></small>
+        </div>
+        <span class="company-reco-match"><%= worker.score %>% Match</span>
+      </article>
+    <% }); %>
+  </div>
+</section>

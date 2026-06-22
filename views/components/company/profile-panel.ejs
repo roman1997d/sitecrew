@@ -1,0 +1,15 @@
+<section class="company-profile-panel" id="profile">
+  <div class="company-profile-panel-head">
+    <div class="company-profile-panel-logo"><%= company.initials %></div>
+    <div>
+      <h2><%= company.name %></h2>
+      <p><%= company.location %></p>
+      <% if (company.businessType) { %><p><%= company.businessType %></p><% } %>
+      <div class="company-profile-panel-badges">
+        <% if (company.verified) { %><span><i class="bi bi-patch-check-fill"></i> Verified</span><% } %>
+        <span><i class="bi bi-star-fill"></i> <%= company.rating %></span>
+      </div>
+    </div>
+  </div>
+  <a href="#settings" class="company-profile-panel-link">Edit company profile</a>
+</section>

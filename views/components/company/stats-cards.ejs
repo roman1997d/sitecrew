@@ -2,40 +2,40 @@
   <article class="company-stat-card company-stat-jobs">
     <div class="company-stat-head">
       <span class="company-stat-icon"><i class="bi bi-briefcase"></i></span>
-      <span class="company-stat-spark" aria-hidden="true"></span>
+      <svg class="company-stat-chart" viewBox="0 0 80 28" aria-hidden="true"><polyline points="0,22 16,18 28,20 42,12 56,14 80,6"></polyline></svg>
     </div>
     <strong class="company-stat-value"><%= insights.activeJobs %></strong>
     <span class="company-stat-label">Active Jobs</span>
-    <small><%= insights.workersNeeded %> open positions</small>
+    <small class="company-stat-trend up"><i class="bi bi-arrow-up-short"></i> <%= insights.workersNeeded %> open positions</small>
   </article>
 
   <article class="company-stat-card company-stat-applicants">
     <div class="company-stat-head">
       <span class="company-stat-icon"><i class="bi bi-people"></i></span>
-      <span class="company-stat-spark" aria-hidden="true"></span>
+      <svg class="company-stat-chart" viewBox="0 0 80 28" aria-hidden="true"><polyline points="0,24 18,20 30,16 44,18 58,10 80,8"></polyline></svg>
     </div>
     <strong class="company-stat-value"><%= insights.applicantCount %></strong>
     <span class="company-stat-label">Applicants</span>
-    <small>Awaiting your review</small>
+    <small class="company-stat-trend up"><i class="bi bi-arrow-up-short"></i> Awaiting review</small>
   </article>
 
   <article class="company-stat-card company-stat-hired">
     <div class="company-stat-head">
       <span class="company-stat-icon"><i class="bi bi-person-check"></i></span>
-      <span class="company-stat-spark" aria-hidden="true"></span>
+      <svg class="company-stat-chart" viewBox="0 0 80 28" aria-hidden="true"><polyline points="0,20 20,18 34,14 48,16 62,10 80,4"></polyline></svg>
     </div>
     <strong class="company-stat-value"><%= insights.hiredCount %></strong>
     <span class="company-stat-label">Hired Workers</span>
-    <small>On your active team</small>
+    <small class="company-stat-trend up"><i class="bi bi-arrow-up-short"></i> On your team</small>
   </article>
 
   <article class="company-stat-card company-stat-messages">
     <div class="company-stat-head">
       <span class="company-stat-icon"><i class="bi bi-chat-dots"></i></span>
-      <span class="company-stat-spark" aria-hidden="true"></span>
+      <svg class="company-stat-chart" viewBox="0 0 80 28" aria-hidden="true"><polyline points="0,18 16,16 28,20 40,12 54,14 80,10"></polyline></svg>
     </div>
     <strong class="company-stat-value"><%= insights.messageCount %></strong>
     <span class="company-stat-label">Messages</span>
-    <small><%= insights.messageCount === 1 ? 'Unread conversation' : 'Unread conversations' %></small>
+    <small class="company-stat-trend"><i class="bi bi-chat-dots"></i> Unread conversations</small>
   </article>
 </section>

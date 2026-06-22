@@ -13,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/css/dashboard.css" rel="stylesheet">
+  <link href="/css/company-dashboard.css" rel="stylesheet">
 </head>
 <body class="dash-body company-dash-body">
   <div class="company-dashboard">
@@ -30,24 +31,40 @@
 
       <%- include('../components/company/stats-cards', { insights: dashboard.insights }) %>
 
-      <div class="company-layout">
-        <main class="company-main">
-          <%- include('../components/company/active-jobs', { jobs: dashboard.jobs }) %>
-          <%- include('../components/company/applicants', { applicants: dashboard.applicants }) %>
+      <div class="company-workspace">
+        <div class="company-dashboard-grid">
+          <div class="company-grid-area company-grid-jobs">
+            <%- include('../components/company/active-jobs', { jobs: dashboard.jobs }) %>
+          </div>
+
+          <div class="company-grid-area company-grid-notify">
+            <%- include('../components/company/panel-notifications', { notifications: dashboard.notifications }) %>
+          </div>
+
+          <div class="company-grid-area company-grid-messages">
+            <%- include('../components/company/panel-messages', { conversations: dashboard.conversations }) %>
+          </div>
+
+          <div class="company-grid-area company-grid-applicants">
+            <%- include('../components/company/applicants', { applicants: dashboard.applicants }) %>
+          </div>
+
+          <div class="company-grid-area company-grid-actions">
+            <%- include('../components/company/quick-actions') %>
+          </div>
+
+          <div class="company-grid-area company-grid-recommended">
+            <%- include('../components/company/panel-recommended', { workers: dashboard.recommendedWorkers }) %>
+          </div>
+        </div>
+
+        <div class="company-extra-panels">
+          <%- include('../components/company/profile-panel', { company: dashboard.company }) %>
           <%- include('../components/company/my-team', { teamMembers: dashboard.teamMembers }) %>
           <%- include('../components/company/recommended-workers', { workers: dashboard.recommendedWorkers }) %>
           <%- include('../components/company/company-feed', { posts: dashboard.companyPosts }) %>
           <%- include('../components/company/settings', { company: dashboard.company }) %>
-        </main>
-
-        <%- include('../components/company/right-panel', {
-          company: dashboard.company,
-          notifications: dashboard.notifications,
-          insights: dashboard.insights,
-          conversations: dashboard.conversations,
-          companyReviews: dashboard.companyReviews,
-          recommendedWorkers: dashboard.recommendedWorkers
-        }) %>
+        </div>
       </div>
     </div>
   </div>

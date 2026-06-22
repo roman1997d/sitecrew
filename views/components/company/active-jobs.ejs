@@ -1,9 +1,7 @@
 <section class="company-section company-jobs-section" id="active-jobs">
-  <div class="company-section-header">
-    <div>
-      <h2>Active Jobs</h2>
-    </div>
-    <a href="#active-jobs" class="company-link-btn">View all jobs</a>
+  <div class="company-panel-head">
+    <h2>Active Jobs</h2>
+    <a href="#active-jobs" class="company-panel-link">View all jobs</a>
   </div>
 
   <% if (!jobs.length) { %>
@@ -20,7 +18,7 @@
             <th>Location</th>
             <th>Applicants</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th aria-label="Actions"></th>
           </tr>
         </thead>
         <tbody>
@@ -48,26 +46,29 @@
               <td><%= job.location %></td>
               <td>
                 <div class="company-job-applicants">
-                  <span class="company-job-applicant-count"><%= job.applicants %></span>
                   <% if (job.applicants > 0) { %>
                     <span class="company-job-applicant-stack" aria-hidden="true">
                       <span></span><span></span><span></span>
                     </span>
+                    <span class="company-job-applicant-count"><%= job.applicants %></span>
+                  <% } else { %>
+                    <span class="company-job-applicant-empty">0</span>
                   <% } %>
                 </div>
               </td>
               <td>
-                <span class="company-status-pill <%= job.status === 'Open' ? 'open' : 'closed' %>"><%= job.status %></span>
+                <span class="company-status-pill <%= job.status === 'Open' ? 'open' : 'closed' %>"><%= job.status === 'Open' ? 'Open' : 'In Progress' %></span>
               </td>
-              <td>
-                <div class="company-job-row-actions">
-                  <a href="#applicants" class="company-table-link">Applicants</a>
-                  <button type="button" class="company-table-link" data-edit-company-job>Edit</button>
-                  <button type="button" class="company-table-link muted" data-toggle-company-job>
-                    <%= job.status === 'Open' ? 'Close' : 'Reopen' %>
-                  </button>
-                  <button type="button" class="company-table-link danger" data-delete-company-job>Delete</button>
-                </div>
+              <td class="company-job-menu-cell">
+                <details class="company-row-menu">
+                  <summary aria-label="Job actions"><i class="bi bi-three-dots"></i></summary>
+                  <div class="company-row-menu-panel">
+                    <a href="#applicants">View applicants</a>
+                    <button type="button" data-edit-company-job>Edit job</button>
+                    <button type="button" data-toggle-company-job><%= job.status === 'Open' ? 'Close request' : 'Reopen request' %></button>
+                    <button type="button" class="danger" data-delete-company-job>Delete</button>
+                  </div>
+                </details>
               </td>
             </tr>
           <% }); %>

@@ -1,0 +1,20 @@
+<section class="company-panel" id="companySideNotifications">
+  <div class="company-panel-head">
+    <h2>Notifications</h2>
+    <button type="button" class="company-panel-link" id="openCompanyNotificationsSide">View all</button>
+  </div>
+  <div id="companySideNotificationsList" class="company-panel-list">
+    <% if (!notifications.length) { %>
+      <p class="company-panel-empty">No new notifications.</p>
+    <% } %>
+    <% notifications.forEach(function(notification) { %>
+      <article class="company-notify-item">
+        <span class="company-notify-icon"><i class="bi bi-bell"></i></span>
+        <div>
+          <strong><%= notification.title %></strong>
+          <span><%= notification.body || notification.type %></span>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+</section>

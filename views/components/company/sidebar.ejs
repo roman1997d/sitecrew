@@ -1,7 +1,7 @@
 <aside class="company-sidebar">
   <a href="/company/dashboard" class="company-sidebar-logo">
-    <span class="company-sidebar-logo-mark" aria-hidden="true"><i class="bi bi-hammer"></i></span>
-    Site<span>Crew</span>
+    <span class="company-brand-mark" aria-hidden="true">S</span>
+    <span class="company-brand-text">Site<span>Crew</span></span>
   </a>
 
   <nav class="company-nav" aria-label="Company navigation">
@@ -16,16 +16,11 @@
   </nav>
 
   <div class="company-sidebar-profile">
-    <div class="company-sidebar-profile-logo <%= company.logo ? 'has-logo' : '' %>">
-      <% if (company.logo) { %>
-        <img src="<%= assetPath(company.logo) %>" alt="<%= company.name %> logo">
-      <% } else { %>
-        <%= company.initials %>
-      <% } %>
-    </div>
+    <div class="company-sidebar-profile-logo"><%= company.initials %></div>
     <div class="company-sidebar-profile-copy">
       <strong><%= company.name %></strong>
-      <span><%= company.businessType || 'Construction company' %><% if (company.location) { %> · <%= company.location %><% } %></span>
+      <span><%= company.businessType || 'Construction company' %></span>
+      <% if (company.location) { %><span><%= company.location %></span><% } %>
       <span class="company-sidebar-profile-rating"><i class="bi bi-star-fill"></i> <%= company.rating %></span>
     </div>
     <a href="#profile" class="company-sidebar-profile-link">View Company Profile <i class="bi bi-arrow-right"></i></a>

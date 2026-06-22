@@ -2,13 +2,10 @@
   const applicantJobTitles = Array.from(new Set(applicants.map((applicant) => applicant.jobTitle))).sort((a, b) => a.localeCompare(b));
 %>
 <section class="company-section company-applicants-section" id="applicants">
-  <div class="company-section-header">
-    <div>
-      <h2>Recent Applicants</h2>
-    </div>
+  <div class="company-panel-head">
+    <h2>Recent Applicants</h2>
     <% if (applicantJobTitles.length) { %>
-      <label class="company-applicant-sort">
-        <span class="visually-hidden">Sort by applied job</span>
+      <label class="company-applicant-filter">
         <select id="applicantJobFilter">
           <option value="">All jobs</option>
           <% applicantJobTitles.forEach(function(jobTitle) { %>
@@ -16,6 +13,8 @@
           <% }); %>
         </select>
       </label>
+    <% } else { %>
+      <a href="#applicants" class="company-panel-link">View all applicants</a>
     <% } %>
   </div>
 
@@ -29,43 +28,27 @@
 
     <% applicants.forEach(function(applicant) { %>
       <article class="company-applicant-card" data-application-row data-application-id="<%= applicant.id %>" data-worker-id="<%= applicant.workerId %>" data-job-title="<%= applicant.jobTitle %>">
-        <button
-          type="button"
-          class="company-applicant-delete-btn"
-          data-delete-application
-          aria-label="Delete applicant"
-        ><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="company-applicant-delete-btn" data-delete-application aria-label="Delete applicant"><i class="bi bi-x-lg"></i></button>
 
         <div class="company-applicant-card-main">
-          <div class="company-worker-avatar <%= applicant.profilePhoto ? 'has-photo' : '' %>">
-            <% if (applicant.profilePhoto) { %>
-              <img src="<%= assetPath(applicant.profilePhoto) %>" alt="<%= applicant.name %> profile picture">
-            <% } else { %>
-              <%= applicant.name.charAt(0) %>
-            <% } %>
-          </div>
+          <div class="company-worker-avatar"><%= applicant.name.charAt(0) %></div>
           <div class="company-worker-info">
             <strong><%= applicant.name %></strong>
             <span><%= applicant.trade %> · <%= applicant.experience %></span>
-            <small class="company-applied-job">Applied for <strong><%= applicant.jobTitle %></strong><% if (applicant.appliedAgo) { %> · <%= applicant.appliedAgo %><% } %></small>
+            <small>Applied for <strong><%= applicant.jobTitle %></strong><% if (applicant.appliedAgo) { %> · <%= applicant.appliedAgo %><% } %></small>
           </div>
         </div>
 
-        <div class="company-applicant-card-side">
-          <div class="company-rating"><i class="bi bi-star-fill"></i> <%= applicant.rating %></div>
-          <span class="company-application-status <%= applicant.status %>" data-application-status><%= applicant.status %></span>
+        <div class="company-applicant-card-end">
+          <span class="company-applicant-rating"><%= applicant.rating %> <i class="bi bi-star-fill"></i></span>
+          <button type="button" class="company-review-btn" data-view-worker-profile>Review</button>
         </div>
 
-        <div class="company-row-actions company-applicant-card-actions">
+        <div class="company-row-actions company-applicant-more-actions">
           <button type="button" data-application-action="accepted">Invite</button>
           <button type="button" class="muted" data-application-action="rejected">Reject</button>
-          <button
-            type="button"
-            class="contact <%= applicant.savedContact ? 'saved' : '' %>"
-            data-save-applicant-contact
-            <%= applicant.savedContact ? 'disabled' : '' %>
-          ><%= applicant.savedContact ? 'Saved' : 'Save contact' %></button>
-          <button type="button" class="ghost" data-view-worker-profile>Review</button>
+          <button type="button" class="contact <%= applicant.savedContact ? 'saved' : '' %>" data-save-applicant-contact <%= applicant.savedContact ? 'disabled' : '' %>><%= applicant.savedContact ? 'Saved' : 'Save' %></button>
+          <span class="company-application-status <%= applicant.status %>" data-application-status><%= applicant.status %></span>
         </div>
       </article>
     <% }); %>
