@@ -45,6 +45,10 @@
             <textarea id="contact-message" name="message" rows="6" required minlength="10" maxlength="5000" placeholder="Tell us how we can help"></textarea>
           </label>
 
+          <div class="contact-recaptcha-wrap">
+            <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
+          </div>
+
           <button type="submit" class="btn-sc btn-sc-blue contact-form-submit" id="contact-form-submit">Send message</button>
 
           <p class="contact-recaptcha-note">
@@ -87,10 +91,8 @@
 
 <script>
   window.SITECREW_API_BASE_URL = window.location.origin;
-  window.SITECREW_RECAPTCHA_SITE_KEY = '<%= recaptchaSiteKey %>';
-  window.SITECREW_RECAPTCHA_ENTERPRISE = <%= recaptchaEnterprise ? 'true' : 'false' %>;
 </script>
-<script src="https://www.google.com/recaptcha/enterprise.js?render=<%= recaptchaSiteKey %>" async defer></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script src="/js/contact.js"></script>
 
 <%- include('../partials/footer') %>

@@ -1,8 +1,5 @@
 (function () {
   const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
-  const RECAPTCHA_SITE_KEY = window.SITECREW_RECAPTCHA_SITE_KEY || '';
-  const RECAPTCHA_ENTERPRISE = window.SITECREW_RECAPTCHA_ENTERPRISE === true;
-  const RECAPTCHA_ACTION = 'contact';
   const form = document.getElementById('contact-form');
   const alertBox = document.getElementById('contact-form-alert');
   const submitBtn = document.getElementById('contact-form-submit');
@@ -43,56 +40,17 @@
     return '';
   }
 
-  function getRecaptchaClient() {
-    if (RECAPTCHA_ENTERPRISE && window.grecaptcha?.enterprise) {
-      return window.grecaptcha.enterprise;
+  function getRecaptchaResponse() {
+    if (typeof window.grecaptcha === 'undefined') {
+      return '';
     }
-    return window.grecaptcha;
+    return window.grecaptcha.getResponse();
   }
 
-  function waitForRecaptchaReady() {
-    return new Promise((resolve, reject) => {
-      if (!RECAPTCHA_SITE_KEY) {
-        reject(new Error('Security verification is not configured. Please try again later.'));
-        return;
-      }
-
-      const tryReady = () => {
-        const client = getRecaptchaClient();
-        if (client?.ready) {
-          client.ready(resolve);
-          return true;
-        }
-        return false;
-      };
-
-      if (tryReady()) {
-        return;
-      }
-
-      let attempts = 0;
-      const timer = window.setInterval(() => {
-        attempts += 1;
-        if (tryReady()) {
-          window.clearInterval(timer);
-          return;
-        }
-        if (attempts >= 50) {
-          window.clearInterval(timer);
-          reject(new Error('Security verification failed to load. Please refresh the page.'));
-        }
-      }, 100);
-    });
-  }
-
-  async function getRecaptchaToken() {
-    await waitForRecaptchaReady();
-    const client = getRecaptchaClient();
-    const token = await client.execute(RECAPTCHA_SITE_KEY, { action: RECAPTCHA_ACTION });
-    if (!token) {
-      throw new Error('Security verification failed. Please refresh the page and try again.');
+  function resetRecaptcha() {
+    if (typeof window.grecaptcha !== 'undefined') {
+      window.grecaptcha.reset();
     }
-    return token;
   }
 
   form?.addEventListener('submit', async (event) => {
@@ -112,16 +70,20 @@
       return;
     }
 
+    const recaptchaToken = getRecaptchaResponse();
+    if (!recaptchaToken) {
+      showAlert('Please tick the reCAPTCHA box before sending.');
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
     try {
-      payload.recaptchaToken = await getRecaptchaToken();
-
       const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, recaptchaToken }),
       });
       const data = await response.json().catch(() => ({}));
 
@@ -131,8 +93,10 @@
 
       showAlert(data.message || 'Thanks for contacting SiteCrew.', 'success');
       form.reset();
+      resetRecaptcha();
     } catch (error) {
       showAlert(error.message);
+      resetRecaptcha();
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Send message';

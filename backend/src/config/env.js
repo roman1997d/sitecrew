@@ -29,9 +29,7 @@ const env = {
   passwordResetTtlMinutes: Number(process.env.PASSWORD_RESET_TTL_MINUTES || 60),
   contactEmail: process.env.CONTACT_EMAIL || 'info@sitecrew.uk',
   recaptchaSiteKey: (process.env.RECAPTCHA_SITE_KEY || '').trim(),
-  recaptchaProjectId: (process.env.RECAPTCHA_PROJECT_ID || '').trim(),
   recaptchaSecretKey: (process.env.RECAPTCHA_SECRET_KEY || '').trim(),
-  recaptchaMinScore: Number(process.env.RECAPTCHA_MIN_SCORE || 0.5),
 };
 
 module.exports = env;

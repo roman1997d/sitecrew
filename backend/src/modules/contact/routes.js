@@ -14,7 +14,7 @@ const contactSchema = z.object({
     email: z.string().email('Please enter a valid email address.'),
     subject: z.string().trim().min(3, 'Please enter a subject.').max(120),
     message: z.string().trim().min(10, 'Please enter a message with at least 10 characters.').max(5000),
-    recaptchaToken: z.string().min(1, 'Security verification failed. Please refresh the page and try again.'),
+    recaptchaToken: z.string().min(1, 'Please tick the reCAPTCHA box before sending.'),
   }),
 });
 
@@ -24,8 +24,7 @@ router.post('/', validate(contactSchema), asyncHandler(async (req, res) => {
   }
 
   const { name, email, subject, message, recaptchaToken } = req.validated.body;
-  const remoteIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
-  const recaptcha = await verifyRecaptchaToken(recaptchaToken, remoteIp, 'contact');
+  const recaptcha = await verifyRecaptchaToken(recaptchaToken);
 
   if (!recaptcha.success) {
     return res.status(400).json({ error: recaptcha.error });
