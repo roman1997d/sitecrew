@@ -21,7 +21,7 @@ const contactRoutes = require('./modules/contact/routes');
 const apiLogger = require('./middleware/apiLogger');
 const adminRoutes = require('./modules/admin/routes');
 const { isEmailConfigured } = require('./utils/email');
-const { isRecaptchaConfigured } = require('./utils/recaptcha');
+const { isRecaptchaConfigured, getRecaptchaPublicConfig } = require('./utils/recaptcha');
 
 const app = express();
 
@@ -47,7 +47,7 @@ app.get('/api/health', (req, res) => {
     ok: true,
     service: 'sitecrew-backend',
     emailConfigured: isEmailConfigured(),
-    recaptchaConfigured: isRecaptchaConfigured(),
+    recaptcha: getRecaptchaPublicConfig(),
     publicUrl: env.publicUrl,
   });
 });
