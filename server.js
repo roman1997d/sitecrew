@@ -28,6 +28,7 @@ const ADMIN_HOST = process.env.ADMIN_HOST || 'admin.sitecrew.uk';
 const API_BASE_URL = process.env.API_BASE_URL || PUBLIC_URL;
 const API_INTERNAL_URL = process.env.API_INTERNAL_URL || 'http://127.0.0.1:4000';
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'hello@sitecrew.uk';
+const RECAPTCHA_SITE_KEY = process.env.RECAPTCHA_SITE_KEY || '6LdayjwtAAAAAHJw0o_5LRlhcX7gF3yd_9R9YfCf';
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -1193,6 +1194,7 @@ app.get('/contact', (req, res) => {
       description: 'Contact SiteCrew for support with worker accounts, company plans, privacy questions, and platform help.',
     }),
     contactEmail: CONTACT_EMAIL,
+    recaptchaSiteKey: RECAPTCHA_SITE_KEY,
   });
 });
 

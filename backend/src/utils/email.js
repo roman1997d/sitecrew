@@ -315,9 +315,70 @@ async function sendNewJobAlertEmail({
   });
 }
 
+async function sendContactFormEmail({ to, name, email, subject, message }) {
+  const from = `"${env.emailFromName}" <${env.emailFrom}>`;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeSubject = escapeHtml(subject);
+  const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
+
+  const mailSubject = `[SiteCrew Contact] ${subject}`;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f4f7fb;font-family:Inter,Arial,sans-serif;color:#0f172a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="padding:28px 28px 8px;background:linear-gradient(135deg,#0b1f3b,#2563eb);color:#ffffff;">
+                <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">SiteCrew</div>
+                <h1 style="margin:10px 0 0;font-size:26px;line-height:1.25;">New contact form message</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px;">
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#334155;"><strong>Name:</strong> ${safeName}</p>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#334155;"><strong>Email:</strong> ${safeEmail}</p>
+                <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#334155;"><strong>Subject:</strong> ${safeSubject}</p>
+                <div style="padding:16px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;">
+                  <p style="margin:0;font-size:15px;line-height:1.7;color:#334155;">${safeMessage}</p>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const text = [
+    mailSubject,
+    '',
+    `Name: ${name}`,
+    `Email: ${email}`,
+    `Subject: ${subject}`,
+    '',
+    message,
+  ].join('\n');
+
+  await getTransporter().sendMail({
+    from,
+    to,
+    replyTo: email,
+    subject: mailSubject,
+    text,
+    html,
+  });
+}
+
 module.exports = {
   isEmailConfigured,
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendNewJobAlertEmail,
+  sendContactFormEmail,
 };

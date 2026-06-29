@@ -17,9 +17,11 @@ const messageRoutes = require('./modules/messages/routes');
 const notificationRoutes = require('./modules/notifications/routes');
 const marketRoutes = require('./modules/market/routes');
 const marketplaceRoutes = require('./modules/marketplace/routes');
+const contactRoutes = require('./modules/contact/routes');
 const apiLogger = require('./middleware/apiLogger');
 const adminRoutes = require('./modules/admin/routes');
 const { isEmailConfigured } = require('./utils/email');
+const { isRecaptchaConfigured } = require('./utils/recaptcha');
 
 const app = express();
 
@@ -45,6 +47,7 @@ app.get('/api/health', (req, res) => {
     ok: true,
     service: 'sitecrew-backend',
     emailConfigured: isEmailConfigured(),
+    recaptchaConfigured: isRecaptchaConfigured(),
     publicUrl: env.publicUrl,
   });
 });
@@ -62,6 +65,7 @@ app.use('/api/conversations', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
+app.use('/api/contact', contactRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {

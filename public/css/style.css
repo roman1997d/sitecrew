@@ -921,6 +921,112 @@ main { flex: 1; }
   margin-bottom: 28px;
 }
 
+.contact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.contact-form-card,
+.contact-side {
+  display: grid;
+  gap: 18px;
+}
+
+.contact-form-card {
+  background: var(--surface);
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.contact-form-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.contact-form-card > p {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+}
+
+.contact-form {
+  display: grid;
+  gap: 16px;
+}
+
+.contact-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.contact-form-field {
+  display: grid;
+  gap: 8px;
+}
+
+.contact-form-field span {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.contact-form-field input,
+.contact-form-field select,
+.contact-form-field textarea {
+  width: 100%;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  color: var(--text);
+  background: #fff;
+}
+
+.contact-form-field textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.contact-form-field input:focus,
+.contact-form-field select:focus,
+.contact-form-field textarea:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.contact-recaptcha-wrap {
+  overflow: hidden;
+}
+
+.contact-form-submit {
+  justify-self: start;
+  border: none;
+}
+
+.contact-form-alert {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.contact-form-alert[data-type='error'] {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+}
+
+.contact-form-alert[data-type='success'] {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
 .contact-card {
   background: var(--surface);
   border: 1px solid #E2E8F0;
@@ -981,7 +1087,9 @@ main { flex: 1; }
 }
 
 @media (max-width: 767px) {
-  .contact-grid {
+  .contact-grid,
+  .contact-layout,
+  .contact-form-grid {
     grid-template-columns: 1fr;
   }
 }
