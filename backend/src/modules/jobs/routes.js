@@ -17,6 +17,7 @@ const {
   WORKER_APPLYABLE_JOB_SQL_J,
   isWorkerApplyableJob,
 } = require('../../utils/jobVisibility');
+const { queueJobAlertEmails } = require('../../utils/jobAlertEmails');
 
 const router = express.Router();
 
@@ -138,8 +139,17 @@ router.post('/', requireAuth, validate(jobSchema), asyncHandler(async (req, res)
     scan: moderation.scan,
   });
 
+  const createdJob = result.rows[0];
+  if (createdJob.status === 'open') {
+    queueJobAlertEmails({
+      job: createdJob,
+      companyId,
+      excludeUserId: req.user.role === 'worker' ? req.user.id : null,
+    });
+  }
+
   res.status(201).json({
-    job: result.rows[0],
+    job: createdJob,
     moderation: {
       status: moderation.moderationStatus,
       message: moderation.message,
