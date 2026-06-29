@@ -19,6 +19,7 @@ const marketRoutes = require('./modules/market/routes');
 const marketplaceRoutes = require('./modules/marketplace/routes');
 const apiLogger = require('./middleware/apiLogger');
 const adminRoutes = require('./modules/admin/routes');
+const { isEmailConfigured } = require('./utils/email');
 
 const app = express();
 
@@ -40,7 +41,12 @@ app.use(apiLogger);
 app.use('/uploads', express.static(path.join(__dirname, '..', env.uploadDir)));
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, service: 'sitecrew-backend' });
+  res.json({
+    ok: true,
+    service: 'sitecrew-backend',
+    emailConfigured: isEmailConfigured(),
+    publicUrl: env.publicUrl,
+  });
 });
 
 app.use('/api/auth', authRoutes);
