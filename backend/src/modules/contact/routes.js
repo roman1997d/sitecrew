@@ -25,7 +25,7 @@ router.post('/', validate(contactSchema), asyncHandler(async (req, res) => {
 
   const { name, email, subject, message, recaptchaToken } = req.validated.body;
   const remoteIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip;
-  const recaptcha = await verifyRecaptchaToken(recaptchaToken, remoteIp);
+  const recaptcha = await verifyRecaptchaToken(recaptchaToken, remoteIp, 'contact');
 
   if (!recaptcha.success) {
     return res.status(400).json({ error: recaptcha.error });

@@ -1003,6 +1003,18 @@ main { flex: 1; }
   overflow: hidden;
 }
 
+.contact-recaptcha-note {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.contact-recaptcha-note a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .contact-form-submit {
   justify-self: start;
   border: none;

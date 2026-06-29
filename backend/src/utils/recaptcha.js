@@ -4,9 +4,9 @@ function isRecaptchaConfigured() {
   return Boolean(env.recaptchaSecretKey);
 }
 
-async function verifyRecaptchaToken(token, remoteIp) {
+async function verifyRecaptchaToken(token, remoteIp, expectedAction = 'contact') {
   if (!token) {
-    return { success: false, error: 'Please complete the reCAPTCHA challenge.' };
+    return { success: false, error: 'Security verification failed. Please try again.' };
   }
 
   if (!isRecaptchaConfigured()) {
@@ -33,11 +33,25 @@ async function verifyRecaptchaToken(token, remoteIp) {
   if (!payload.success) {
     return {
       success: false,
-      error: 'reCAPTCHA verification failed. Please try again.',
+      error: 'Security verification failed. Please try again.',
     };
   }
 
-  return { success: true };
+  if (expectedAction && payload.action && payload.action !== expectedAction) {
+    return {
+      success: false,
+      error: 'Security verification failed. Please try again.',
+    };
+  }
+
+  if (typeof payload.score === 'number' && payload.score < env.recaptchaMinScore) {
+    return {
+      success: false,
+      error: 'Your message could not be verified as genuine. Please try again.',
+    };
+  }
+
+  return { success: true, score: payload.score };
 }
 
 module.exports = {

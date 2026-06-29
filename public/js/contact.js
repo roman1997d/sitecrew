@@ -1,5 +1,7 @@
 (function () {
   const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
+  const RECAPTCHA_SITE_KEY = window.SITECREW_RECAPTCHA_SITE_KEY || '';
+  const RECAPTCHA_ACTION = 'contact';
   const form = document.getElementById('contact-form');
   const alertBox = document.getElementById('contact-form-alert');
   const submitBtn = document.getElementById('contact-form-submit');
@@ -17,41 +19,56 @@
     alertBox.hidden = true;
   }
 
-  function getRecaptchaToken() {
-    if (typeof window.grecaptcha === 'undefined') {
-      return '';
-    }
-    return window.grecaptcha.getResponse();
+  function waitForRecaptchaReady() {
+    return new Promise((resolve, reject) => {
+      if (!RECAPTCHA_SITE_KEY) {
+        reject(new Error('reCAPTCHA is not configured.'));
+        return;
+      }
+
+      if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.ready) {
+        window.grecaptcha.ready(resolve);
+        return;
+      }
+
+      let attempts = 0;
+      const timer = window.setInterval(() => {
+        attempts += 1;
+        if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.ready) {
+          window.clearInterval(timer);
+          window.grecaptcha.ready(resolve);
+          return;
+        }
+        if (attempts >= 50) {
+          window.clearInterval(timer);
+          reject(new Error('Security verification failed to load. Please refresh the page.'));
+        }
+      }, 100);
+    });
   }
 
-  function resetRecaptcha() {
-    if (typeof window.grecaptcha !== 'undefined') {
-      window.grecaptcha.reset();
-    }
+  async function getRecaptchaToken() {
+    await waitForRecaptchaReady();
+    return window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: RECAPTCHA_ACTION });
   }
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearAlert();
 
-    const recaptchaToken = getRecaptchaToken();
-    if (!recaptchaToken) {
-      showAlert('Please complete the reCAPTCHA challenge.');
-      return;
-    }
-
     const payload = {
       name: form.name.value.trim(),
       email: form.email.value.trim(),
       subject: form.subject.value.trim(),
       message: form.message.value.trim(),
-      recaptchaToken,
     };
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
     try {
+      payload.recaptchaToken = await getRecaptchaToken();
+
       const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,10 +82,8 @@
 
       showAlert(data.message || 'Thanks for contacting SiteCrew.', 'success');
       form.reset();
-      resetRecaptcha();
     } catch (error) {
       showAlert(error.message);
-      resetRecaptcha();
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Send message';

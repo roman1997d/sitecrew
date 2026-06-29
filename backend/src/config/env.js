@@ -30,6 +30,7 @@ const env = {
   contactEmail: process.env.CONTACT_EMAIL || 'hello@sitecrew.uk',
   recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || '',
   recaptchaSecretKey: process.env.RECAPTCHA_SECRET_KEY || '',
+  recaptchaMinScore: Number(process.env.RECAPTCHA_MIN_SCORE || 0.5),
 };
 
 module.exports = env;
