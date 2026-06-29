@@ -290,6 +290,11 @@
   line-height: 1.4;
 }
 
+.login-recaptcha-wrap {
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
 .login-btn {
   width: 100%;
   margin-top: 1.5rem;

@@ -10,6 +10,7 @@ const asyncHandler = require('../../utils/asyncHandler');
 const { getLatestSalesPlanTerms } = require('../../utils/accessPlans');
 const { setAuthSessionCookie, clearAuthSessionCookie } = require('../../utils/requestToken');
 const { isEmailConfigured, sendPasswordResetEmail, sendWelcomeEmail } = require('../../utils/email');
+const { verifyRecaptchaToken, isRecaptchaConfigured } = require('../../utils/recaptcha');
 const {
   createPasswordResetToken,
   findValidResetToken,
@@ -50,6 +51,7 @@ const workerRegisterSchema = z.object({
     trades: z.array(z.string().trim().min(1)).optional(),
     city: z.string().trim().optional(),
     postcode: z.string().optional(),
+    recaptchaToken: z.string().optional(),
   }),
 });
 
@@ -93,8 +95,28 @@ const companyRegisterSchema = z.object({
     planKey: z.enum(['free', 'pro', 'ultra']),
     termsVersion: z.number().int().positive(),
     termsAccepted: z.literal(true),
+    recaptchaToken: z.string().optional(),
   }),
 });
+
+async function assertRecaptcha(token) {
+  if (!isRecaptchaConfigured()) {
+    return;
+  }
+
+  if (!token) {
+    const error = new Error('Please tick the reCAPTCHA box.');
+    error.status = 400;
+    throw error;
+  }
+
+  const result = await verifyRecaptchaToken(token);
+  if (!result.success) {
+    const error = new Error(result.error);
+    error.status = 400;
+    throw error;
+  }
+}
 
 function signToken(user) {
   return jwt.sign(
@@ -141,7 +163,8 @@ function queueWelcomeEmail({ to, role, name }) {
 }
 
 router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(async (req, res) => {
-  const { email, password, fullName, phone, city, postcode } = req.validated.body;
+  const { email, password, fullName, phone, city, postcode, recaptchaToken } = req.validated.body;
+  await assertRecaptcha(recaptchaToken);
   const trade = getRegistrationTrade(req.validated.body);
 
   if (!trade) {
@@ -205,7 +228,10 @@ router.post('/register-company', validate(companyRegisterSchema), asyncHandler(a
     postcode,
     planKey,
     termsVersion,
+    recaptchaToken,
   } = req.validated.body;
+
+  await assertRecaptcha(recaptchaToken);
 
   const latestTerms = await getLatestSalesPlanTerms(pool);
   if (!latestTerms.version) {

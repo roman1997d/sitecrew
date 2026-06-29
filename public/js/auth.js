@@ -1,4 +1,5 @@
 const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
+const RECAPTCHA_SITE_KEY = window.SITECREW_RECAPTCHA_SITE_KEY || '';
 
 const heading = document.querySelector('#auth-heading');
 const subtitle = document.querySelector('#auth-subtitle');
@@ -109,6 +110,31 @@ function setRegisterRole(role) {
   companyFields.forEach((field) => {
     field.hidden = !isCompany;
   });
+}
+
+function getRegisterRecaptchaResponse() {
+  if (!RECAPTCHA_SITE_KEY || typeof window.grecaptcha === 'undefined') {
+    return '';
+  }
+  return window.grecaptcha.getResponse();
+}
+
+function resetRegisterRecaptcha() {
+  if (!RECAPTCHA_SITE_KEY || typeof window.grecaptcha === 'undefined') {
+    return;
+  }
+  window.grecaptcha.reset();
+}
+
+function requireRegisterRecaptcha() {
+  if (!RECAPTCHA_SITE_KEY) {
+    return;
+  }
+  const token = getRegisterRecaptchaResponse();
+  if (!token) {
+    throw new Error('Please tick the reCAPTCHA box.');
+  }
+  return token;
 }
 
 async function apiRequest(path, payload) {
@@ -275,7 +301,11 @@ function validateCompanyRegistrationForm(formData) {
 
 async function openCompanyRegistrationFlow(formData) {
   validateCompanyRegistrationForm(formData);
-  pendingCompanyRegistration = buildCompanyRegistrationPayload(formData);
+  const recaptchaToken = requireRegisterRecaptcha();
+  pendingCompanyRegistration = {
+    ...buildCompanyRegistrationPayload(formData),
+    recaptchaToken,
+  };
   selectedCompanyPlanKey = null;
   if (companyPlanTermsAgree) {
     companyPlanTermsAgree.checked = false;
@@ -445,6 +475,7 @@ registerForm.addEventListener('submit', async (event) => {
       ...sharedPayload,
       fullName,
       trade,
+      recaptchaToken: requireRegisterRecaptcha(),
     };
 
     const data = await apiRequest('/api/auth/register-worker', payload);
@@ -458,6 +489,7 @@ registerForm.addEventListener('submit', async (event) => {
     redirectAfterAuth(data.user);
   } catch (error) {
     showAlert(error.message);
+    resetRegisterRecaptcha();
   } finally {
     setButtonLoading(button, false, 'Create account');
   }
@@ -517,6 +549,7 @@ companyPlanContinueBtn?.addEventListener('click', async () => {
   } catch (error) {
     showAlert(error.message);
     updateCompanyPlanContinueState();
+    resetRegisterRecaptcha();
   } finally {
     companyPlanContinueBtn.textContent = 'Continue with your Account';
   }

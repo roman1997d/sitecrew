@@ -94,7 +94,6 @@
           <label for="register-trade">Trade</label>
           <input type="text" id="register-trade" name="trade" placeholder="Type 3 letters, e.g. Ele" list="register-trades-options" autocomplete="off" required>
           <datalist id="register-trades-options"></datalist>
-          <small class="login-field-help">Choose your main trade from the suggestions. It becomes your first trade interest in the feed.</small>
           <i class="bi bi-tools login-field-icon"></i>
         </div>
 
@@ -103,6 +102,12 @@
           <input type="text" id="register-city" name="city" placeholder="Manchester" autocomplete="address-level2">
           <i class="bi bi-geo-alt login-field-icon"></i>
         </div>
+
+        <% if (recaptchaSiteKey) { %>
+        <div class="login-recaptcha-wrap">
+          <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
+        </div>
+        <% } %>
 
         <button type="submit" class="login-btn">Create account</button>
       </form>
@@ -164,6 +169,12 @@
   </div>
 
   <%- include('../partials/api-config') %>
+  <% if (recaptchaSiteKey) { %>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <% } %>
+  <script>
+    window.SITECREW_RECAPTCHA_SITE_KEY = '<%= recaptchaSiteKey || '' %>';
+  </script>
   <script src="/js/auth.js"></script>
 </body>
 </html>

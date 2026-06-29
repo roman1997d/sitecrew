@@ -1240,6 +1240,7 @@ app.get('/login', async (req, res) => {
 
   return res.render('auth/login', {
     seo: buildLoginSeo(req),
+    recaptchaSiteKey: RECAPTCHA_SITE_KEY,
   });
 });
 
