@@ -27,7 +27,7 @@ const env = {
   emailFrom: process.env.EMAIL_FROM || '',
   emailFromName: process.env.EMAIL_FROM_NAME || 'SiteCrew',
   passwordResetTtlMinutes: Number(process.env.PASSWORD_RESET_TTL_MINUTES || 60),
-  contactEmail: process.env.CONTACT_EMAIL || 'hello@sitecrew.uk',
+  contactEmail: process.env.CONTACT_EMAIL || 'info@sitecrew.uk',
   recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || '',
   recaptchaSecretKey: process.env.RECAPTCHA_SECRET_KEY || '',
   recaptchaMinScore: Number(process.env.RECAPTCHA_MIN_SCORE || 0.5),
