@@ -7,8 +7,9 @@ function validate(schema) {
     });
 
     if (!result.success) {
+      const firstIssue = result.error.issues[0];
       return res.status(400).json({
-        error: 'Validation failed',
+        error: firstIssue?.message || 'Validation failed',
         details: result.error.flatten(),
         issues: result.error.issues.map((issue) => ({
           path: issue.path.join('.'),

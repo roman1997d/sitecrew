@@ -19,10 +19,33 @@
     alertBox.hidden = true;
   }
 
+  function getErrorMessage(data = {}) {
+    if (Array.isArray(data.issues) && data.issues.length) {
+      return data.issues[0].message;
+    }
+    return data.error || 'Could not send your message. Please try again.';
+  }
+
+  function validateForm(payload) {
+    if (payload.name.length < 2) {
+      return 'Please enter your name.';
+    }
+    if (!payload.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+      return 'Please enter a valid email address.';
+    }
+    if (!payload.subject || payload.subject.length < 3) {
+      return 'Please choose a subject.';
+    }
+    if (payload.message.length < 10) {
+      return 'Please enter a message with at least 10 characters.';
+    }
+    return '';
+  }
+
   function waitForRecaptchaReady() {
     return new Promise((resolve, reject) => {
       if (!RECAPTCHA_SITE_KEY) {
-        reject(new Error('reCAPTCHA is not configured.'));
+        reject(new Error('Security verification is not configured. Please try again later.'));
         return;
       }
 
@@ -49,7 +72,11 @@
 
   async function getRecaptchaToken() {
     await waitForRecaptchaReady();
-    return window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: RECAPTCHA_ACTION });
+    const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: RECAPTCHA_ACTION });
+    if (!token) {
+      throw new Error('Security verification failed. Please refresh the page and try again.');
+    }
+    return token;
   }
 
   form?.addEventListener('submit', async (event) => {
@@ -62,6 +89,12 @@
       subject: form.subject.value.trim(),
       message: form.message.value.trim(),
     };
+
+    const validationError = validateForm(payload);
+    if (validationError) {
+      showAlert(validationError);
+      return;
+    }
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
@@ -77,7 +110,7 @@
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || 'Could not send your message. Please try again.');
+        throw new Error(getErrorMessage(data));
       }
 
       showAlert(data.message || 'Thanks for contacting SiteCrew.', 'success');

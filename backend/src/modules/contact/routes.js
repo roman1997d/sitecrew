@@ -14,7 +14,7 @@ const contactSchema = z.object({
     email: z.string().email('Please enter a valid email address.'),
     subject: z.string().trim().min(3, 'Please enter a subject.').max(120),
     message: z.string().trim().min(10, 'Please enter a message with at least 10 characters.').max(5000),
-    recaptchaToken: z.string().min(1, 'Please complete the reCAPTCHA challenge.'),
+    recaptchaToken: z.string().min(1, 'Security verification failed. Please refresh the page and try again.'),
   }),
 });
 
