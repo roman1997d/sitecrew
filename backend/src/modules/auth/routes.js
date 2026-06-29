@@ -9,7 +9,7 @@ const requireAuth = require('../../middleware/auth');
 const asyncHandler = require('../../utils/asyncHandler');
 const { getLatestSalesPlanTerms } = require('../../utils/accessPlans');
 const { setAuthSessionCookie, clearAuthSessionCookie } = require('../../utils/requestToken');
-const { isEmailConfigured, sendPasswordResetEmail } = require('../../utils/email');
+const { isEmailConfigured, sendPasswordResetEmail, sendWelcomeEmail } = require('../../utils/email');
 const {
   createPasswordResetToken,
   findValidResetToken,
@@ -130,6 +130,16 @@ async function createUser(client, { email, password, role }) {
   return result.rows[0];
 }
 
+function queueWelcomeEmail({ to, role, name }) {
+  if (!isEmailConfigured()) {
+    return;
+  }
+
+  sendWelcomeEmail({ to, role, name }).catch((error) => {
+    console.error('Welcome email failed:', error.message);
+  });
+}
+
 router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(async (req, res) => {
   const { email, password, fullName, phone, city, postcode } = req.validated.body;
   const trade = getRegistrationTrade(req.validated.body);
@@ -171,6 +181,7 @@ router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(asy
       ]
     );
     await client.query('COMMIT');
+    queueWelcomeEmail({ to: user.email, role: 'worker', name: fullName });
     sendAuthResponse(res, 201, user);
   } catch (error) {
     await client.query('ROLLBACK');
@@ -238,6 +249,7 @@ router.post('/register-company', validate(companyRegisterSchema), asyncHandler(a
       [user.id, companyName, phone || null, website || null, city || null, postcode || null, planKey, termsVersion]
     );
     await client.query('COMMIT');
+    queueWelcomeEmail({ to: user.email, role: 'company', name: companyName });
     sendAuthResponse(res, 201, user);
   } catch (error) {
     await client.query('ROLLBACK');

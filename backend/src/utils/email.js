@@ -104,7 +104,116 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
   });
 }
 
+function getDashboardUrl(role) {
+  const baseUrl = env.publicUrl.replace(/\/$/, '');
+  if (role === 'company') {
+    return `${baseUrl}/company/dashboard`;
+  }
+  return `${baseUrl}/worker/dashboard`;
+}
+
+async function sendWelcomeEmail({ to, role, name }) {
+  const from = `"${env.emailFromName}" <${env.emailFrom}>`;
+  const safeName = escapeHtml(name || 'there');
+  const dashboardUrl = getDashboardUrl(role);
+  const safeDashboardUrl = escapeHtml(dashboardUrl);
+  const isCompany = role === 'company';
+
+  const subject = isCompany
+    ? 'Welcome to SiteCrew — your company account is ready'
+    : 'Welcome to SiteCrew — your worker account is ready';
+
+  const headline = isCompany ? 'Welcome aboard' : 'Welcome to SiteCrew';
+  const intro = isCompany
+    ? `Hi ${safeName}, thanks for registering your company on SiteCrew.`
+    : `Hi ${safeName}, thanks for joining SiteCrew as a worker.`;
+
+  const steps = isCompany
+    ? [
+        'Complete your company profile and add your logo',
+        'Post jobs and reach skilled workers in your area',
+        'Review applicants and manage your team from the dashboard',
+      ]
+    : [
+        'Complete your profile and showcase your skills',
+        'Browse open jobs matched to your trade',
+        'Apply directly and connect with companies',
+      ];
+
+  const stepsHtml = steps
+    .map((step) => `<li style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#334155;">${escapeHtml(step)}</li>`)
+    .join('');
+
+  const ctaLabel = isCompany ? 'Go to company dashboard' : 'Go to worker dashboard';
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f4f7fb;font-family:Inter,Arial,sans-serif;color:#0f172a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="padding:28px 28px 8px;background:linear-gradient(135deg,#0b1f3b,#2563eb);color:#ffffff;">
+                <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">SiteCrew</div>
+                <h1 style="margin:10px 0 0;font-size:28px;line-height:1.2;">${headline}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px;">
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155;">
+                  ${intro}
+                </p>
+                <p style="margin:0 0 12px;font-size:16px;line-height:1.6;color:#334155;font-weight:700;">
+                  Here is how to get started:
+                </p>
+                <ul style="margin:0 0 24px;padding-left:20px;">
+                  ${stepsHtml}
+                </ul>
+                <p style="margin:0 0 28px;text-align:center;">
+                  <a href="${safeDashboardUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 24px;border-radius:12px;">
+                    ${ctaLabel}
+                  </a>
+                </p>
+                <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">
+                  Need help? Contact us at ${escapeHtml(env.emailFrom)}.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const text = [
+    subject,
+    '',
+    isCompany
+      ? `Hi ${name || 'there'}, thanks for registering your company on SiteCrew.`
+      : `Hi ${name || 'there'}, thanks for joining SiteCrew as a worker.`,
+    '',
+    'Here is how to get started:',
+    ...steps.map((step) => `- ${step}`),
+    '',
+    `Open your dashboard: ${dashboardUrl}`,
+    '',
+    `Need help? Contact us at ${env.emailFrom}.`,
+  ].join('\n');
+
+  await getTransporter().sendMail({
+    from,
+    to,
+    subject,
+    text,
+    html,
+  });
+}
+
 module.exports = {
   isEmailConfigured,
   sendPasswordResetEmail,
+  sendWelcomeEmail,
 };
