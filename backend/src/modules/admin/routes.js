@@ -42,6 +42,10 @@ const {
   scanAbandonedPictureFiles,
   deleteAbandonedPictureFiles,
 } = require('../../utils/serverHealth');
+const {
+  purgeDeletedUsersOlderThan24Hours,
+  forceDeleteUser,
+} = require('../../utils/deletedUserCleanup');
 
 const router = express.Router();
 
@@ -154,6 +158,12 @@ const deleteCompanySchema = z.object({
   body: z.object({
     reason: z.string().min(3).max(2000),
     adminPassword: z.string().min(1).max(256),
+  }),
+});
+
+const forceDeleteUserSchema = z.object({
+  body: z.object({
+    confirmText: z.literal('delete'),
   }),
 });
 
@@ -757,6 +767,16 @@ router.patch('/users/:id/status', validate(userStatusSchema), asyncHandler(async
   });
 
   res.json({ user: result.rows[0] });
+}));
+
+router.post('/users/purge-deleted', asyncHandler(async (req, res) => {
+  const result = await purgeDeletedUsersOlderThan24Hours();
+  res.json(result);
+}));
+
+router.post('/users/:id/force-delete', validate(forceDeleteUserSchema), asyncHandler(async (req, res) => {
+  const result = await forceDeleteUser(Number(req.params.id), req.user.id);
+  res.json({ ok: true, ...result });
 }));
 
 router.get('/companies', asyncHandler(async (req, res) => {

@@ -679,6 +679,24 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+}
+
+.admin-status-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-deleted-meta {
+  display: block;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #991B1B;
+  font-weight: 600;
+}
+
+.admin-force-delete-btn {
+  white-space: nowrap;
 }
 
 .admin-actions select,

@@ -142,6 +142,26 @@
     return fullName || user.email || 'User';
   }
 
+  function canForceDeleteUser(user = {}) {
+    return user.status === 'deleted' && (user.role === 'worker' || user.role === 'company');
+  }
+
+  function formatDeletedPurgeLabel(updatedAt) {
+    if (!updatedAt) {
+      return 'Auto-delete in 24h';
+    }
+
+    const purgeAt = new Date(updatedAt).getTime() + (24 * 60 * 60 * 1000);
+    const msLeft = purgeAt - Date.now();
+
+    if (msLeft <= 0) {
+      return 'Pending auto-delete';
+    }
+
+    const hoursLeft = Math.ceil(msLeft / (60 * 60 * 1000));
+    return `Auto-delete in ${hoursLeft}h`;
+  }
+
   function renderAvatarPreview(container, initialsEl, avatarPath, firstName, lastName, fallback = '?') {
     if (!container) return;
     if (avatarPath) {
@@ -430,11 +450,17 @@
               </td>
               <td>${escapeHtml(user.email)}</td>
               <td><span class="admin-pill">${escapeHtml(user.role)}</span></td>
-              <td><span class="admin-pill status-${escapeHtml(user.status)}">${escapeHtml(user.status)}</span></td>
+              <td>
+                <div class="admin-status-cell">
+                  <span class="admin-pill status-${escapeHtml(user.status)}">${escapeHtml(user.status)}</span>
+                  ${user.status === 'deleted' ? `<small class="admin-deleted-meta">${escapeHtml(formatDeletedPurgeLabel(user.updated_at))}</small>` : ''}
+                </div>
+              </td>
               <td>${escapeHtml(formatRatingLabel(user.averageRating, user.reviewCount))}</td>
               <td>${escapeHtml(formatDate(user.created_at))}</td>
               <td class="admin-actions">
                 ${renderStatusActionSelect(user.id)}
+                ${canForceDeleteUser(user) ? `<button type="button" class="admin-danger-btn admin-force-delete-btn" data-force-delete-user="${escapeHtml(user.id)}">Force delete</button>` : ''}
               </td>
             </tr>
           `;
@@ -1134,6 +1160,12 @@
   const adminCompanyInitialData = document.getElementById('adminCompanyInitialData');
   const adminCompanyHistoryList = document.getElementById('adminCompanyHistoryList');
   const adminCompanyStatusModal = document.getElementById('adminCompanyStatusModal');
+  const adminForceDeleteUserModal = document.getElementById('adminForceDeleteUserModal');
+  const adminForceDeleteUserForm = document.getElementById('adminForceDeleteUserForm');
+  const adminForceDeleteUserSummary = document.getElementById('adminForceDeleteUserSummary');
+  const adminForceDeleteUserConfirmInput = document.getElementById('adminForceDeleteUserConfirmInput');
+  const adminForceDeleteUserConfirmBtn = document.getElementById('adminForceDeleteUserConfirmBtn');
+  let pendingForceDeleteUser = null;
   const adminCompanyStatusForm = document.getElementById('adminCompanyStatusForm');
   const adminCompanyAddEventBtn = document.getElementById('adminCompanyAddEventBtn');
   const adminCompanyStatusModalTitle = document.getElementById('adminCompanyStatusModalTitle');
@@ -1189,6 +1221,66 @@
     if (passwordInput) {
       passwordInput.value = '';
       passwordInput.required = false;
+    }
+  }
+
+  function closeForceDeleteUserModal() {
+    if (!adminForceDeleteUserModal) return;
+    adminForceDeleteUserModal.hidden = true;
+    pendingForceDeleteUser = null;
+    adminForceDeleteUserForm?.reset();
+    if (adminForceDeleteUserConfirmBtn) {
+      adminForceDeleteUserConfirmBtn.disabled = false;
+      adminForceDeleteUserConfirmBtn.textContent = 'Force delete';
+    }
+  }
+
+  function openForceDeleteUserModal(userId) {
+    const user = cachedUsers.find((item) => String(item.id) === String(userId));
+    if (!user || !canForceDeleteUser(user)) {
+      showAlert('This account cannot be force deleted.');
+      return;
+    }
+
+    pendingForceDeleteUser = user;
+    if (adminForceDeleteUserSummary) {
+      adminForceDeleteUserSummary.textContent = `You are about to permanently delete ${getUserDisplayName(user)} (${user.email}). This action cannot be undone.`;
+    }
+    if (adminForceDeleteUserConfirmInput) {
+      adminForceDeleteUserConfirmInput.value = '';
+    }
+    adminForceDeleteUserModal.hidden = false;
+    adminForceDeleteUserConfirmInput?.focus();
+  }
+
+  async function submitForceDeleteUser(event) {
+    event.preventDefault();
+    if (!pendingForceDeleteUser) return;
+
+    const confirmText = adminForceDeleteUserConfirmInput?.value.trim() || '';
+    if (confirmText !== 'delete') {
+      showAlert('Type delete to confirm permanent deletion.');
+      return;
+    }
+
+    adminForceDeleteUserConfirmBtn.disabled = true;
+    adminForceDeleteUserConfirmBtn.textContent = 'Deleting...';
+
+    try {
+      await apiRequest(`/api/admin/users/${pendingForceDeleteUser.id}/force-delete`, {
+        method: 'POST',
+        body: JSON.stringify({ confirmText: 'delete' }),
+      });
+      showAlert(`${getUserDisplayName(pendingForceDeleteUser)} was permanently deleted.`, 'success');
+      closeForceDeleteUserModal();
+      setCachedUsers((await apiRequest('/api/admin/users')).users);
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      if (adminForceDeleteUserConfirmBtn) {
+        adminForceDeleteUserConfirmBtn.disabled = false;
+        adminForceDeleteUserConfirmBtn.textContent = 'Force delete';
+      }
     }
   }
 
@@ -3865,6 +3957,14 @@
   adminUsersClearBtn?.addEventListener('click', clearUsersFilters);
 
   document.getElementById('adminUsersTable')?.addEventListener('click', async (event) => {
+    const forceDeleteBtn = event.target.closest('[data-force-delete-user]');
+    if (forceDeleteBtn) {
+      event.preventDefault();
+      event.stopPropagation();
+      openForceDeleteUserModal(forceDeleteBtn.dataset.forceDeleteUser);
+      return;
+    }
+
     if (event.target.closest('select, button, a, label, input')) return;
     const row = event.target.closest('[data-user-id]');
     if (!row) return;
@@ -3889,8 +3989,17 @@
     element.addEventListener('click', closeUserModal);
   });
 
+  adminForceDeleteUserForm?.addEventListener('submit', submitForceDeleteUser);
+  adminForceDeleteUserModal?.querySelectorAll('[data-force-delete-user-close]').forEach((element) => {
+    element.addEventListener('click', closeForceDeleteUserModal);
+  });
+
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
+    if (adminForceDeleteUserModal && !adminForceDeleteUserModal.hidden) {
+      closeForceDeleteUserModal();
+      return;
+    }
     if (adminCompanyStatusModal && !adminCompanyStatusModal.hidden) {
       closeCompanyStatusReasonModal();
       return;

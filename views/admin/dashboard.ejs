@@ -56,7 +56,7 @@
       </section>
 
       <section class="admin-section" id="adminSection-users" data-section="users" hidden>
-        <p class="admin-section-lead">Click a user row to view and edit profile details.</p>
+        <p class="admin-section-lead">Click a user row to view and edit profile details. Accounts marked as <strong>deleted</strong> are permanently removed after 24 hours.</p>
 
         <div class="admin-users-panel">
           <div class="admin-toolbar" id="adminUsersToolbar">
@@ -719,6 +719,35 @@
         <div class="admin-modal-actions">
           <button type="button" class="admin-secondary-btn" data-admin-company-modal-close>Cancel</button>
           <button type="submit" class="admin-primary-btn" id="adminCompanySaveBtn">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminForceDeleteUserModal" hidden>
+    <div class="admin-modal-backdrop" data-force-delete-user-close></div>
+    <div class="admin-modal-dialog admin-status-reason-dialog" role="dialog" aria-modal="true" aria-labelledby="adminForceDeleteUserModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">Permanent deletion</p>
+          <h2 id="adminForceDeleteUserModalTitle">Force delete user</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-force-delete-user-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <form id="adminForceDeleteUserForm" class="admin-user-form">
+        <p class="admin-status-action-summary" id="adminForceDeleteUserSummary"></p>
+
+        <label class="admin-field">
+          <span>Type <strong>delete</strong> to confirm</span>
+          <input type="text" id="adminForceDeleteUserConfirmInput" autocomplete="off" placeholder="delete" required>
+        </label>
+
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-secondary-btn" data-force-delete-user-close>Cancel</button>
+          <button type="submit" class="admin-danger-btn" id="adminForceDeleteUserConfirmBtn">Force delete</button>
         </div>
       </form>
     </div>
