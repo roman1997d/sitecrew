@@ -88,8 +88,9 @@
 <script>
   window.SITECREW_API_BASE_URL = window.location.origin;
   window.SITECREW_RECAPTCHA_SITE_KEY = '<%= recaptchaSiteKey %>';
+  window.SITECREW_RECAPTCHA_ENTERPRISE = <%= recaptchaEnterprise ? 'true' : 'false' %>;
 </script>
-<script src="https://www.google.com/recaptcha/api.js?render=<%= recaptchaSiteKey %>" async defer></script>
+<script src="https://www.google.com/recaptcha/enterprise.js?render=<%= recaptchaSiteKey %>" async defer></script>
 <script src="/js/contact.js"></script>
 
 <%- include('../partials/footer') %>

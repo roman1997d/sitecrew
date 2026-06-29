@@ -1,6 +1,7 @@
 (function () {
   const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
   const RECAPTCHA_SITE_KEY = window.SITECREW_RECAPTCHA_SITE_KEY || '';
+  const RECAPTCHA_ENTERPRISE = window.SITECREW_RECAPTCHA_ENTERPRISE === true;
   const RECAPTCHA_ACTION = 'contact';
   const form = document.getElementById('contact-form');
   const alertBox = document.getElementById('contact-form-alert');
@@ -42,6 +43,13 @@
     return '';
   }
 
+  function getRecaptchaClient() {
+    if (RECAPTCHA_ENTERPRISE && window.grecaptcha?.enterprise) {
+      return window.grecaptcha.enterprise;
+    }
+    return window.grecaptcha;
+  }
+
   function waitForRecaptchaReady() {
     return new Promise((resolve, reject) => {
       if (!RECAPTCHA_SITE_KEY) {
@@ -49,17 +57,24 @@
         return;
       }
 
-      if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.ready) {
-        window.grecaptcha.ready(resolve);
+      const tryReady = () => {
+        const client = getRecaptchaClient();
+        if (client?.ready) {
+          client.ready(resolve);
+          return true;
+        }
+        return false;
+      };
+
+      if (tryReady()) {
         return;
       }
 
       let attempts = 0;
       const timer = window.setInterval(() => {
         attempts += 1;
-        if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.ready) {
+        if (tryReady()) {
           window.clearInterval(timer);
-          window.grecaptcha.ready(resolve);
           return;
         }
         if (attempts >= 50) {
@@ -72,7 +87,8 @@
 
   async function getRecaptchaToken() {
     await waitForRecaptchaReady();
-    const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: RECAPTCHA_ACTION });
+    const client = getRecaptchaClient();
+    const token = await client.execute(RECAPTCHA_SITE_KEY, { action: RECAPTCHA_ACTION });
     if (!token) {
       throw new Error('Security verification failed. Please refresh the page and try again.');
     }
