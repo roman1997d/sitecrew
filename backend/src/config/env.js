@@ -17,6 +17,16 @@ const env = {
   aiScanEnabled: process.env.AI_SCAN_ENABLED !== 'false',
   mediaReviewServiceUrl: process.env.MEDIA_REVIEW_SERVICE_URL || 'http://localhost:4002',
   mediaReviewApiKey: process.env.MEDIA_REVIEW_API_KEY || '',
+  publicUrl: (process.env.PUBLIC_URL || process.env.FRONTEND_ORIGIN || 'http://localhost:3000')
+    .split(',')[0]
+    .trim(),
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: Number(process.env.SMTP_PORT || 587),
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  emailFrom: process.env.EMAIL_FROM || '',
+  emailFromName: process.env.EMAIL_FROM_NAME || 'SiteCrew',
+  passwordResetTtlMinutes: Number(process.env.PASSWORD_RESET_TTL_MINUTES || 60),
 };
 
 module.exports = env;

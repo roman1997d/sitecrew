@@ -1202,6 +1202,26 @@ app.get('/auth/restore', (req, res) => {
   });
 });
 
+app.get('/forgot-password', (req, res) => {
+  res.render('auth/forgot-password', {
+    seo: buildSeo({
+      path: '/forgot-password',
+      title: 'Forgot password | SiteCrew',
+      description: 'Request a secure password reset link for your SiteCrew worker or company account.',
+    }),
+  });
+});
+
+app.get('/reset-password', (req, res) => {
+  res.render('auth/reset-password', {
+    seo: buildSeo({
+      path: '/reset-password',
+      title: 'Reset password | SiteCrew',
+      description: 'Choose a new password for your SiteCrew account.',
+    }),
+  });
+});
+
 app.get('/login', async (req, res) => {
   try {
     const session = await getSessionFromRequest(req);

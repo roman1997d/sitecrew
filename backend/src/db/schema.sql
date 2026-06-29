@@ -534,6 +534,19 @@ CREATE INDEX IF NOT EXISTS idx_content_scans_entity ON content_scans(entity_type
 CREATE INDEX IF NOT EXISTS idx_jobs_moderation ON jobs(moderation_status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_feed_comments_moderation ON feed_comments(moderation_status, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash VARCHAR(64) NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_active ON password_reset_tokens(token_hash, expires_at)
+  WHERE used_at IS NULL;
+
 CREATE TABLE IF NOT EXISTS media_review_queue (
   id SERIAL PRIMARY KEY,
   file_path VARCHAR(500) NOT NULL UNIQUE,

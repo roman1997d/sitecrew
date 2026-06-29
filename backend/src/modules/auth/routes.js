@@ -9,6 +9,12 @@ const requireAuth = require('../../middleware/auth');
 const asyncHandler = require('../../utils/asyncHandler');
 const { getLatestSalesPlanTerms } = require('../../utils/accessPlans');
 const { setAuthSessionCookie, clearAuthSessionCookie } = require('../../utils/requestToken');
+const { isEmailConfigured, sendPasswordResetEmail } = require('../../utils/email');
+const {
+  createPasswordResetToken,
+  findValidResetToken,
+  markResetTokenUsed,
+} = require('../../utils/passwordReset');
 
 const router = express.Router();
 
@@ -18,6 +24,21 @@ const credentialsSchema = z.object({
     password: z.string().min(8),
   }),
 });
+
+const forgotPasswordSchema = z.object({
+  body: z.object({
+    email: z.string().email(),
+  }),
+});
+
+const resetPasswordSchema = z.object({
+  body: z.object({
+    token: z.string().min(20),
+    password: z.string().min(8),
+  }),
+});
+
+const PASSWORD_RESET_GENERIC_MESSAGE = 'If an account exists for this email, you will receive reset instructions shortly.';
 
 const workerRegisterSchema = z.object({
   body: z.object({
@@ -250,6 +271,85 @@ router.post('/logout', (req, res) => {
   clearAuthSessionCookie(res);
   res.json({ ok: true });
 });
+
+router.post('/forgot-password', validate(forgotPasswordSchema), asyncHandler(async (req, res) => {
+  const { email } = req.validated.body;
+
+  if (!isEmailConfigured()) {
+    return res.status(503).json({ error: 'Password reset email is not configured yet. Please try again later.' });
+  }
+
+  const result = await pool.query(
+    `SELECT id, email, status
+     FROM users
+     WHERE lower(email) = lower($1)
+     LIMIT 1`,
+    [email]
+  );
+
+  if (result.rowCount > 0 && result.rows[0].status === 'active') {
+    const user = result.rows[0];
+    const { resetUrl } = await createPasswordResetToken(user.id);
+    await sendPasswordResetEmail({
+      to: user.email,
+      resetUrl,
+    });
+  }
+
+  res.json({ message: PASSWORD_RESET_GENERIC_MESSAGE });
+}));
+
+router.get('/reset-password/:token', asyncHandler(async (req, res) => {
+  const token = String(req.params.token || '').trim();
+  if (!token) {
+    return res.status(400).json({ valid: false, error: 'Reset token is required.' });
+  }
+
+  const resetToken = await findValidResetToken(token);
+  if (!resetToken || resetToken.status !== 'active') {
+    return res.status(400).json({ valid: false, error: 'This reset link is invalid or has expired.' });
+  }
+
+  res.json({ valid: true, email: resetToken.email });
+}));
+
+router.post('/reset-password', validate(resetPasswordSchema), asyncHandler(async (req, res) => {
+  const { token, password } = req.validated.body;
+  const resetToken = await findValidResetToken(token);
+
+  if (!resetToken || resetToken.status !== 'active') {
+    return res.status(400).json({ error: 'This reset link is invalid or has expired.' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      `UPDATE users
+       SET password_hash = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1`,
+      [resetToken.user_id, passwordHash]
+    );
+    await markResetTokenUsed(resetToken.id, client);
+    await client.query(
+      `UPDATE password_reset_tokens
+       SET used_at = CURRENT_TIMESTAMP
+       WHERE user_id = $1
+         AND used_at IS NULL`,
+      [resetToken.user_id]
+    );
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  res.json({ message: 'Your password has been updated. You can sign in now.' });
+}));
 
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   let profile = null;

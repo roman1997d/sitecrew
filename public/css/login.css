@@ -171,6 +171,30 @@
   color: var(--login-accent-hover);
 }
 
+.login-forgot-link,
+.login-secondary-link {
+  margin: 0 0 1rem;
+  text-align: right;
+  font-size: 0.92rem;
+}
+
+.login-secondary-link {
+  text-align: center;
+  color: var(--login-text-muted);
+}
+
+.login-forgot-link a,
+.login-secondary-link a {
+  color: var(--login-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-forgot-link a:hover,
+.login-secondary-link a:hover {
+  color: var(--login-accent-hover);
+}
+
 .role-switch {
   display: grid;
   grid-template-columns: 1fr 1fr;
