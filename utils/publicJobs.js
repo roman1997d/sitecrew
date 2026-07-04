@@ -21,6 +21,22 @@ function formatPublicJobRate(rate) {
   return raw || 'Rate negotiable';
 }
 
+function parseRateNumericValue(rate) {
+  const match = String(rate || '').match(/(\d+(?:\.\d+)?)/);
+  return match ? Number(match[1]) : undefined;
+}
+
+function getJobValidThrough(createdAt) {
+  const posted = new Date(createdAt);
+  if (Number.isNaN(posted.getTime())) {
+    return undefined;
+  }
+
+  const validThrough = new Date(posted);
+  validThrough.setDate(validThrough.getDate() + 30);
+  return validThrough.toISOString();
+}
+
 function mapPublicJobCard(job, index = 0) {
   const location = job.city || job.postcode || 'UK';
   return {
@@ -51,13 +67,15 @@ function mapPublicJobDetail(job) {
 }
 
 function getJobPostingSchema(job, canonicalUrl) {
+  const rateValue = parseRateNumericValue(job.rate);
+
   return {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
     title: job.title,
     description: job.description,
     datePosted: job.created_at,
-    validThrough: job.start_date || undefined,
+    validThrough: getJobValidThrough(job.created_at),
     employmentType: 'CONTRACTOR',
     hiringOrganization: {
       '@type': 'Organization',
@@ -71,13 +89,13 @@ function getJobPostingSchema(job, canonicalUrl) {
         addressCountry: 'GB',
       },
     },
-    baseSalary: job.rate
+    baseSalary: rateValue
       ? {
           '@type': 'MonetaryAmount',
           currency: 'GBP',
           value: {
             '@type': 'QuantitativeValue',
-            value: job.rate,
+            value: rateValue,
             unitText: 'DAY',
           },
         }
@@ -92,4 +110,6 @@ module.exports = {
   mapPublicJobCard,
   mapPublicJobDetail,
   getJobPostingSchema,
+  parseRateNumericValue,
+  getJobValidThrough,
 };

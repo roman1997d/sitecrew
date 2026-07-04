@@ -7,6 +7,7 @@ const {
   buildSeo,
   getHomeFaqItems,
   getHomePageJsonLd,
+  getBreadcrumbSchema,
   renderSitemapXml,
   renderRobotsTxt,
 } = require('./utils/seo');
@@ -38,6 +39,13 @@ function getRequestHost(req) {
   const forwarded = req.headers['x-forwarded-host'] || req.headers.host || '';
   return String(forwarded).split(',')[0].trim().split(':')[0].toLowerCase();
 }
+
+app.use((req, res, next) => {
+  if (getRequestHost(req) === 'www.sitecrew.uk') {
+    return res.redirect(301, `https://sitecrew.uk${req.originalUrl}`);
+  }
+  return next();
+});
 
 function isAdminHost(req) {
   return getRequestHost(req) === ADMIN_HOST.toLowerCase();
@@ -1057,7 +1065,7 @@ function buildLoginSeo(req) {
 
   if (mode === 'register' && role === 'worker') {
     return buildSeo({
-      path: '/login',
+      path: '/login?mode=register&role=worker',
       title: 'Register as a Construction Worker | SiteCrew',
       description: 'Create a free SiteCrew worker account, set your trades and availability, and apply to open construction jobs across the UK.',
     });
@@ -1065,7 +1073,7 @@ function buildLoginSeo(req) {
 
   if (mode === 'register' && role === 'company') {
     return buildSeo({
-      path: '/login',
+      path: '/login?mode=register&role=company',
       title: 'Register as a Hiring Company | SiteCrew',
       description: 'Create a SiteCrew company account to post construction jobs, invite workers, and hire verified tradespeople directly.',
     });
@@ -1073,7 +1081,7 @@ function buildLoginSeo(req) {
 
   if (mode === 'register') {
     return buildSeo({
-      path: '/login',
+      path: '/login?mode=register',
       title: 'Create Your SiteCrew Account',
       description: 'Register on SiteCrew as a construction worker or hiring company in the UK.',
     });
@@ -1083,6 +1091,7 @@ function buildLoginSeo(req) {
     path: '/login',
     title: 'Sign in to SiteCrew',
     description: 'Sign in to your SiteCrew worker or company account to manage jobs, applications, and messages.',
+    robots: 'noindex, follow',
   });
 }
 
@@ -1132,6 +1141,10 @@ app.get('/jobs', async (req, res) => {
       path: '/jobs',
       title: 'Construction Jobs in the UK | SiteCrew',
       description: 'Browse open construction jobs posted by verified UK companies on SiteCrew. Apply directly as a worker or post your own roles as a company.',
+      jsonLd: getBreadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Jobs', path: '/jobs' },
+      ]),
     }),
     jobs,
   });
@@ -1144,24 +1157,32 @@ app.get('/jobs/:id', async (req, res) => {
   }
 
   const jobPath = `/jobs/${job.id}`;
-  return res.render('jobs/detail', {
-    seo: buildSeo({
-      path: jobPath,
-      title: `${job.title} in ${job.location} | SiteCrew`,
-      description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
-      jsonLd: getJobPostingSchema(
+  const jobSeo = buildSeo({
+    path: jobPath,
+    title: `${job.title} in ${job.location} | SiteCrew`,
+    description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
+    jsonLd: [
+      getBreadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Jobs', path: '/jobs' },
+        { name: job.title, path: jobPath },
+      ]),
+      getJobPostingSchema(
         {
           title: job.title,
           description: job.description,
           created_at: job.createdAt,
-          start_date: job.startDate,
           company_name: job.companyName,
           city: job.location,
           rate: job.rate,
         },
         buildSeo({ path: jobPath }).canonical
       ),
-    }),
+    ],
+  });
+
+  return res.render('jobs/detail', {
+    seo: jobSeo,
     job,
   });
 });
@@ -1210,6 +1231,7 @@ app.get('/forgot-password', (req, res) => {
       path: '/forgot-password',
       title: 'Forgot password | SiteCrew',
       description: 'Request a secure password reset link for your SiteCrew worker or company account.',
+      robots: 'noindex, nofollow',
     }),
   });
 });
@@ -1220,6 +1242,7 @@ app.get('/reset-password', (req, res) => {
       path: '/reset-password',
       title: 'Reset password | SiteCrew',
       description: 'Choose a new password for your SiteCrew account.',
+      robots: 'noindex, nofollow',
     }),
   });
 });

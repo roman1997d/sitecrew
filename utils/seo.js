@@ -1,5 +1,9 @@
 const SITE_NAME = 'SiteCrew';
 const DEFAULT_DESCRIPTION = 'Connect with verified construction workers and companies across the UK. Post jobs, apply in minutes, and hire tradespeople directly — no agencies.';
+const DEFAULT_OG_IMAGE = '/images/og-default.png';
+const DEFAULT_OG_IMAGE_WIDTH = 1200;
+const DEFAULT_OG_IMAGE_HEIGHT = 630;
+const DEFAULT_OG_IMAGE_ALT = 'SiteCrew — UK construction jobs and direct hiring platform';
 
 function getSiteUrl() {
   const raw = process.env.PUBLIC_URL || process.env.API_BASE_URL || 'http://localhost:3000';
@@ -24,7 +28,10 @@ function buildSeo(overrides = {}) {
     description: overrides.description || DEFAULT_DESCRIPTION,
     canonical: overrides.canonical || absoluteUrl(path),
     ogType: overrides.ogType || 'website',
-    ogImage: overrides.ogImage || absoluteUrl('/android-chrome-512x512.png'),
+    ogImage: overrides.ogImage || absoluteUrl(DEFAULT_OG_IMAGE),
+    ogImageWidth: overrides.ogImageWidth || DEFAULT_OG_IMAGE_WIDTH,
+    ogImageHeight: overrides.ogImageHeight || DEFAULT_OG_IMAGE_HEIGHT,
+    ogImageAlt: overrides.ogImageAlt || DEFAULT_OG_IMAGE_ALT,
     robots: overrides.robots || 'index, follow',
     jsonLd: overrides.jsonLd || null,
   };
@@ -108,7 +115,8 @@ function getHomePageJsonLd() {
 const SITEMAP_PAGES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/jobs', changefreq: 'daily', priority: '0.9' },
-  { path: '/login', changefreq: 'monthly', priority: '0.8' },
+  { path: '/login?mode=register&role=worker', changefreq: 'monthly', priority: '0.7' },
+  { path: '/login?mode=register&role=company', changefreq: 'monthly', priority: '0.7' },
   { path: '/terms', changefreq: 'yearly', priority: '0.4' },
   { path: '/privacy', changefreq: 'yearly', priority: '0.4' },
   { path: '/contact', changefreq: 'yearly', priority: '0.5' },
@@ -146,6 +154,19 @@ function renderSitemapXml(extraUrls = []) {
   ].join('\n');
 }
 
+function getBreadcrumbSchema(items = []) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(item.path),
+    })),
+  };
+}
+
 function renderRobotsTxt() {
   return [
     'User-agent: *',
@@ -153,6 +174,9 @@ function renderRobotsTxt() {
     'Disallow: /admin/',
     'Disallow: /worker/dashboard',
     'Disallow: /company/dashboard',
+    'Disallow: /auth/',
+    'Disallow: /forgot-password',
+    'Disallow: /reset-password',
     'Disallow: /api/',
     '',
     `Sitemap: ${absoluteUrl('/sitemap.xml')}`,
@@ -162,11 +186,13 @@ function renderRobotsTxt() {
 module.exports = {
   SITE_NAME,
   DEFAULT_DESCRIPTION,
+  DEFAULT_OG_IMAGE,
   getSiteUrl,
   absoluteUrl,
   buildSeo,
   getHomeFaqItems,
   getHomePageJsonLd,
+  getBreadcrumbSchema,
   renderSitemapXml,
   renderRobotsTxt,
 };
