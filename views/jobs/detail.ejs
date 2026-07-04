@@ -7,7 +7,7 @@
     <article class="public-job-detail-card">
       <div class="public-job-detail-head <%= job.theme %>">
         <span class="public-job-detail-trade"><%= job.trade %></span>
-        <h1><%= job.title %></h1>
+        <h1><%= job.title || (job.trade + ' in ' + job.location) %></h1>
         <p><i class="bi bi-geo-alt"></i> <%= job.location %> ·
           <% if (job.companySlug) { %>
             <a href="/companies/<%= job.companySlug %>"><%= job.companyName %></a>

@@ -505,8 +505,11 @@ main { flex: 1; }
 .job-card-header.dryliner { background: linear-gradient(135deg, #1D4ED8, #3B82F6); }
 .job-card-header.labourer { background: linear-gradient(135deg, #059669, #10B981); }
 .job-card-header.plasterer { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+.job-card-header.apex { background: linear-gradient(135deg, #D97706, #F59E0B); }
+.job-card-header.north { background: linear-gradient(135deg, #0F766E, #14B8A6); }
 
-.job-card-header h4 {
+.job-card-header h4,
+.job-card-header h2 {
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 4px;
@@ -1123,6 +1126,7 @@ main { flex: 1; }
 .public-jobs-page .public-job-card h2 {
   font-size: 1.15rem;
   margin: 0;
+  color: #fff;
 }
 
 .public-job-trade,
@@ -1158,11 +1162,22 @@ main { flex: 1; }
 .public-job-detail-head {
   padding: 28px;
   color: #fff;
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
 }
 
+.public-job-detail-head.dryliner { background: linear-gradient(135deg, #1D4ED8, #3B82F6); }
+.public-job-detail-head.labourer { background: linear-gradient(135deg, #059669, #10B981); }
+.public-job-detail-head.plasterer { background: linear-gradient(135deg, #7C3AED, #A78BFA); }
+.public-job-detail-head.apex { background: linear-gradient(135deg, #D97706, #F59E0B); }
+.public-job-detail-head.north { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+
 .public-job-detail-head h1 {
-  margin: 8px 0;
+  margin: 8px 0 10px;
   font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .public-job-detail-trade {
