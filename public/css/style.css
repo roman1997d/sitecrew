@@ -260,7 +260,11 @@ main { flex: 1; }
   max-width: 480px;
 }
 
-.hero-cta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 32px; }
+.hero-cta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+
+.hero-cta-secondary {
+  margin-bottom: 32px;
+}
 
 .hero-stats {
   display: flex;
