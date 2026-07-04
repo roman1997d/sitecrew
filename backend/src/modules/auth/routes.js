@@ -270,9 +270,9 @@ router.post('/register-company', validate(companyRegisterSchema), asyncHandler(a
        )
        VALUES (
          $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP,
-         CASE WHEN $7 = 'free' THEN NULL ELSE CURRENT_TIMESTAMP + INTERVAL '1 month' END
+         CASE WHEN $9::text = 'free' THEN NULL::timestamp ELSE CURRENT_TIMESTAMP + INTERVAL '1 month' END
        )`,
-      [user.id, companyName, phone || null, website || null, city || null, postcode || null, planKey, termsVersion]
+      [user.id, companyName, phone || null, website || null, city || null, postcode || null, planKey, termsVersion, planKey]
     );
     await client.query('COMMIT');
     queueWelcomeEmail({ to: user.email, role: 'company', name: companyName });
