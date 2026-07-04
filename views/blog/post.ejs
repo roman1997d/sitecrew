@@ -1,28 +1,80 @@
 <%- include('../partials/header', { seo: seo }) %>
 
+<section class="blog-article-hero">
+  <div class="site-container">
+    <a href="/blog" class="blog-back-link"><i class="bi bi-arrow-left"></i> Back to blog</a>
+
+    <div class="blog-article-hero-card">
+      <div class="blog-article-meta">
+        <span class="blog-category-pill blog-category-pill-light"><i class="bi <%= post.icon %>"></i> <%= post.category %></span>
+        <span class="blog-meta-item"><i class="bi bi-calendar3"></i> <%= new Date(post.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
+        <span class="blog-meta-item"><i class="bi bi-clock"></i> <%= post.readMinutes %> min read</span>
+      </div>
+      <h1><%= post.title %></h1>
+      <p class="blog-article-lead"><%= post.description %></p>
+    </div>
+  </div>
+</section>
+
 <section class="section blog-post-page">
   <div class="site-container">
-    <a href="/blog" class="public-job-back"><i class="bi bi-arrow-left"></i> Back to blog</a>
+    <div class="blog-post-layout">
+      <article class="blog-post-content">
+        <% post.sections.forEach(function(section, index) { %>
+          <section class="blog-section">
+            <div class="blog-section-heading">
+              <span class="blog-section-number"><%= String(index + 1).padStart(2, '0') %></span>
+              <h2><%= section.heading %></h2>
+            </div>
+            <% section.paragraphs.forEach(function(paragraph) { %>
+              <p><%= paragraph %></p>
+            <% }); %>
+          </section>
+        <% }); %>
 
-    <article class="blog-post">
-      <span class="blog-date"><%= new Date(post.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
-      <h1 class="section-title"><%= post.title %></h1>
-      <p class="section-desc"><%= post.description %></p>
+        <div class="blog-post-cta">
+          <div class="blog-post-cta-copy">
+            <h3>Find work that matches your trade</h3>
+            <p>Browse open UK construction roles or join SiteCrew to apply directly to verified companies.</p>
+          </div>
+          <div class="blog-post-cta-actions">
+            <a href="/jobs" class="btn-sc btn-sc-cta">Browse construction jobs</a>
+            <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-outline">Join as worker</a>
+          </div>
+        </div>
+      </article>
 
-      <% post.sections.forEach(function(section) { %>
-        <section class="blog-section">
-          <h2><%= section.heading %></h2>
-          <% section.paragraphs.forEach(function(paragraph) { %>
-            <p><%= paragraph %></p>
-          <% }); %>
-        </section>
-      <% }); %>
+      <aside class="blog-post-sidebar">
+        <div class="blog-sidebar-card">
+          <h3>On this page</h3>
+          <ul class="blog-toc">
+            <% post.sections.forEach(function(section) { %>
+              <li><%= section.heading %></li>
+            <% }); %>
+          </ul>
+        </div>
 
-      <div class="blog-post-cta">
-        <a href="/jobs" class="btn-sc btn-sc-cta">Browse construction jobs</a>
-        <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-outline">Join as worker</a>
-      </div>
-    </article>
+        <div class="blog-sidebar-card blog-sidebar-card-accent">
+          <h3>Explore jobs</h3>
+          <p>See live roles by trade and city across the UK.</p>
+          <a href="/jobs" class="btn-sc btn-sc-cta btn-sc-sm">View open jobs</a>
+        </div>
+
+        <% if (relatedPosts && relatedPosts.length) { %>
+          <div class="blog-sidebar-card">
+            <h3>More guides</h3>
+            <div class="blog-related-list">
+              <% relatedPosts.forEach(function(related) { %>
+                <a href="/blog/<%= related.slug %>" class="blog-related-item">
+                  <strong><%= related.title %></strong>
+                  <span><%= related.readMinutes %> min · <%= related.category %></span>
+                </a>
+              <% }); %>
+            </div>
+          </div>
+        <% } %>
+      </aside>
+    </div>
   </div>
 </section>
 

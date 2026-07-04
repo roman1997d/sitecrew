@@ -1457,6 +1457,8 @@ app.get('/companies', async (req, res) => {
 
 app.get('/blog', (req, res) => {
   const posts = loadBlogPosts();
+  const featuredPost = posts[0] || null;
+  const morePosts = posts.slice(1);
   res.render('blog/list', {
     seo: buildSeo({
       path: '/blog',
@@ -1464,6 +1466,9 @@ app.get('/blog', (req, res) => {
       description: 'Guides for UK tradespeople and construction companies — finding jobs, day rates, and hiring without agencies.',
     }),
     posts,
+    featuredPost,
+    morePosts,
+    categories: [...new Set(posts.map((post) => post.category))],
   });
 });
 
@@ -1474,6 +1479,9 @@ app.get('/blog/:slug', (req, res) => {
   }
 
   const postPath = `/blog/${post.slug}`;
+  const relatedPosts = loadBlogPosts()
+    .filter((item) => item.slug !== post.slug)
+    .slice(0, 2);
   return res.render('blog/post', {
     seo: buildSeo({
       path: postPath,
@@ -1490,6 +1498,7 @@ app.get('/blog/:slug', (req, res) => {
       ],
     }),
     post,
+    relatedPosts,
   });
 });
 

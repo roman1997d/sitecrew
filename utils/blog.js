@@ -3,16 +3,46 @@ const path = require('path');
 
 const BLOG_DIR = path.join(__dirname, '..', 'content', 'blog');
 
+function getPostText(post) {
+  const sectionText = (post.sections || []).flatMap((section) => [
+    section.heading,
+    ...(section.paragraphs || []),
+  ]);
+  return [post.title, post.description, ...sectionText].filter(Boolean).join(' ');
+}
+
+function estimateReadMinutes(post) {
+  const words = getPostText(post).split(/\s+/).filter(Boolean).length;
+  return Math.max(2, Math.ceil(words / 200));
+}
+
+function enrichBlogPost(post) {
+  return {
+    ...post,
+    category: post.category || 'Guides',
+    icon: post.icon || 'bi-journal-text',
+    readMinutes: estimateReadMinutes(post),
+  };
+}
+
 function loadBlogPosts() {
   try {
     const indexPath = path.join(BLOG_DIR, 'posts.json');
     if (!fs.existsSync(indexPath)) return [];
     const raw = fs.readFileSync(indexPath, 'utf8');
     const posts = JSON.parse(raw);
-    return Array.isArray(posts) ? posts.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)) : [];
+    return Array.isArray(posts)
+      ? posts
+          .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+          .map(enrichBlogPost)
+      : [];
   } catch (error) {
     return [];
   }
+}
+
+function getBlogCategories(posts = loadBlogPosts()) {
+  return [...new Set(posts.map((post) => post.category))];
 }
 
 function getBlogPostBySlug(slug) {
@@ -53,4 +83,7 @@ module.exports = {
   getBlogPostBySlug,
   getBlogSitemapEntries,
   getArticleSchema,
+  getBlogCategories,
+  estimateReadMinutes,
+  enrichBlogPost,
 };

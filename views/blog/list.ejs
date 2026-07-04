@@ -1,22 +1,99 @@
 <%- include('../partials/header', { seo: seo }) %>
 
-<section class="section">
+<section class="blog-hero">
+  <div class="blog-hero-bg" aria-hidden="true"></div>
   <div class="site-container">
-    <div class="section-header">
-      <span class="section-eyebrow">SiteCrew blog</span>
-      <h1 class="section-title">Construction hiring guides</h1>
-      <p class="section-desc">Practical advice for UK tradespeople and companies — jobs, day rates, and hiring without agencies.</p>
-    </div>
+    <div class="blog-hero-inner">
+      <div class="blog-hero-copy">
+        <span class="blog-hero-badge"><i class="bi bi-journal-richtext"></i> SiteCrew blog</span>
+        <h1>Practical guides for <span class="blog-hero-highlight">UK construction</span> hiring</h1>
+        <p>Jobs, day rates, and direct hiring advice for tradespeople and companies — written for the UK site industry, without agency fluff.</p>
+        <div class="blog-hero-stats">
+          <div class="blog-hero-stat">
+            <strong><%= posts.length %></strong>
+            <span>Guides live</span>
+          </div>
+          <div class="blog-hero-stat">
+            <strong><%= categories.length %></strong>
+            <span>Topics covered</span>
+          </div>
+          <div class="blog-hero-stat">
+            <strong>UK</strong>
+            <span>Focused advice</span>
+          </div>
+        </div>
+      </div>
 
-    <div class="blog-list">
-      <% posts.forEach(function(post) { %>
-        <article class="blog-card">
-          <span class="blog-date"><%= new Date(post.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
-          <h2><a href="/blog/<%= post.slug %>"><%= post.title %></a></h2>
-          <p><%= post.description %></p>
-          <a href="/blog/<%= post.slug %>" class="btn-sc btn-sc-ghost btn-sc-sm">Read article</a>
+      <% if (featuredPost) { %>
+        <article class="blog-featured-card">
+          <div class="blog-featured-top">
+            <span class="blog-category-pill blog-category-pill-light"><i class="bi <%= featuredPost.icon %>"></i> <%= featuredPost.category %></span>
+            <span class="blog-meta-item"><i class="bi bi-clock"></i> <%= featuredPost.readMinutes %> min read</span>
+          </div>
+          <h2><a href="/blog/<%= featuredPost.slug %>"><%= featuredPost.title %></a></h2>
+          <p><%= featuredPost.description %></p>
+          <div class="blog-featured-footer">
+            <span class="blog-date"><%= new Date(featuredPost.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
+            <a href="/blog/<%= featuredPost.slug %>" class="btn-sc btn-sc-cta btn-sc-sm">Read featured guide <i class="bi bi-arrow-right"></i></a>
+          </div>
         </article>
-      <% }); %>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<section class="section blog-index-section">
+  <div class="site-container">
+    <% if (categories.length) { %>
+      <div class="blog-topic-row">
+        <span class="blog-topic-label">Browse topics</span>
+        <div class="blog-topic-pills">
+          <% categories.forEach(function(category) { %>
+            <span class="blog-topic-pill"><%= category %></span>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (morePosts.length) { %>
+      <div class="blog-grid">
+        <% morePosts.forEach(function(post, index) { %>
+          <article class="blog-card-v2 blog-card-v2-<%= (index % 3) + 1 %>">
+            <div class="blog-card-v2-icon" aria-hidden="true"><i class="bi <%= post.icon %>"></i></div>
+            <div class="blog-card-v2-body">
+              <div class="blog-card-v2-meta">
+                <span class="blog-category-pill"><%= post.category %></span>
+                <span class="blog-meta-item"><i class="bi bi-clock"></i> <%= post.readMinutes %> min</span>
+              </div>
+              <h2><a href="/blog/<%= post.slug %>"><%= post.title %></a></h2>
+              <p><%= post.description %></p>
+              <div class="blog-card-v2-footer">
+                <span class="blog-date"><%= new Date(post.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                <a href="/blog/<%= post.slug %>" class="blog-card-link">Read article <i class="bi bi-arrow-right"></i></a>
+              </div>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    <% } else if (!featuredPost) { %>
+      <div class="blog-empty-state">
+        <div class="blog-empty-icon" aria-hidden="true"><i class="bi bi-journal-x"></i></div>
+        <h2>No articles yet</h2>
+        <p>New UK construction hiring guides will appear here soon.</p>
+        <a href="/jobs" class="btn-sc btn-sc-outline">Browse open jobs</a>
+      </div>
+    <% } %>
+
+    <div class="blog-cta-panel">
+      <div class="blog-cta-copy">
+        <span class="section-eyebrow">Get on site faster</span>
+        <h2>Ready to find your next role?</h2>
+        <p>Browse live construction jobs across the UK or create a free worker profile to apply in minutes.</p>
+      </div>
+      <div class="blog-cta-actions">
+        <a href="/jobs" class="btn-sc btn-sc-cta">Browse jobs</a>
+        <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-outline">Join as worker</a>
+      </div>
     </div>
   </div>
 </section>
