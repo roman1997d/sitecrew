@@ -103,6 +103,12 @@ function setAuthMode(mode) {
   subtitle.textContent = isRegister ? 'Join SiteCrew as a worker or company' : 'Please fill your information';
 }
 
+function setRegisterFieldState(input, { active, required = active }) {
+  if (!input) return;
+  input.disabled = !active;
+  input.required = required;
+}
+
 function setRegisterRole(role) {
   roleInputs.forEach((input) => {
     input.checked = input.value === role;
@@ -110,9 +116,15 @@ function setRegisterRole(role) {
   const isCompany = role === 'company';
   workerFields.forEach((field) => {
     field.hidden = isCompany;
+    field.querySelectorAll('input, select, textarea').forEach((input) => {
+      setRegisterFieldState(input, { active: !isCompany });
+    });
   });
   companyFields.forEach((field) => {
     field.hidden = !isCompany;
+    field.querySelectorAll('input, select, textarea').forEach((input) => {
+      setRegisterFieldState(input, { active: isCompany, required: isCompany });
+    });
   });
   if (registerRecaptchaWrap) {
     registerRecaptchaWrap.hidden = isCompany;
@@ -131,13 +143,25 @@ function initRecaptchaWidgets() {
         sitekey: RECAPTCHA_SITE_KEY,
       });
     }
+  });
+}
 
-    const planEl = document.getElementById('companyPlanRecaptcha');
-    if (planEl && companyPlanRecaptchaWidgetId === null) {
+function ensureCompanyPlanRecaptcha() {
+  if (!RECAPTCHA_SITE_KEY || typeof window.grecaptcha === 'undefined') {
+    return;
+  }
+
+  const planEl = document.getElementById('companyPlanRecaptcha');
+  if (!planEl) return;
+
+  window.grecaptcha.ready(() => {
+    if (companyPlanRecaptchaWidgetId === null) {
       companyPlanRecaptchaWidgetId = window.grecaptcha.render(planEl, {
         sitekey: RECAPTCHA_SITE_KEY,
       });
+      return;
     }
+    resetRecaptchaWidget(companyPlanRecaptchaWidgetId);
   });
 }
 
@@ -310,10 +334,10 @@ function renderCompanyTermsMeta() {
 
 function openCompanyPlanModal() {
   if (!companyPlanModal) return;
-  resetRecaptchaWidget(companyPlanRecaptchaWidgetId);
   companyPlanModal.hidden = false;
   companyPlanModal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  ensureCompanyPlanRecaptcha();
   updateCompanyPlanContinueState();
 }
 
@@ -508,6 +532,11 @@ registerForm.addEventListener('submit', async (event) => {
   const formData = new FormData(registerForm);
   const role = formData.get('role');
   const button = registerForm.querySelector('button[type="submit"]');
+
+  if (!registerForm.reportValidity()) {
+    return;
+  }
+
   setButtonLoading(button, true, 'Create account');
 
   try {
@@ -634,6 +663,7 @@ initRecaptchaWidgets();
 (async function restoreSessionFromStorage() {
   const returnPath = params.get('return');
   if (returnPath) return;
+  if (params.get('mode') === 'register') return;
 
   const token = localStorage.getItem('sitecrewToken');
   if (!token) return;
