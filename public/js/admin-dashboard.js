@@ -6,6 +6,7 @@
     companies: 'Company Accounts',
     market: 'Market and Money',
     posts: 'Posts Moderator',
+    blog: 'Blog Manager',
     'api-logs': 'API Logs',
     audit: 'Audit Trails',
     server: 'Server',
@@ -76,6 +77,9 @@
   let cachedMarketAds = [];
   let marketAdTradeSearchTimer = null;
   let marketAdPreviewSlide = 0;
+  let editingBlogSlug = null;
+  let editingBlogIsNew = false;
+  let cachedBlogPosts = [];
   let mediaReviewObjectUrl = null;
   const adminPostsModerationStatus = document.getElementById('adminPostsModerationStatus');
   const adminMediaReviewEmpty = document.getElementById('adminMediaReviewEmpty');
@@ -2430,6 +2434,297 @@
     }
   }
 
+  function slugifyBlogTitle(title = '') {
+    return String(title)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 120);
+  }
+
+  function getDefaultBlogSection() {
+    return {
+      heading: '',
+      paragraphs: [''],
+    };
+  }
+
+  function getDefaultBlogPostDraft() {
+    const today = new Date().toISOString().slice(0, 10);
+    return {
+      slug: '',
+      title: '',
+      description: '',
+      category: 'Guides',
+      icon: 'bi-journal-text',
+      publishedAt: today,
+      sections: [getDefaultBlogSection()],
+    };
+  }
+
+  async function loadBlogSection() {
+    const data = await apiRequest('/api/admin/blog');
+    cachedBlogPosts = data.posts || [];
+    renderBlogTable();
+    return cachedBlogPosts;
+  }
+
+  function renderBlogTable() {
+    const container = document.getElementById('adminBlogTable');
+    const meta = document.getElementById('adminBlogMeta');
+    if (!container) return;
+
+    if (meta) {
+      meta.textContent = cachedBlogPosts.length
+        ? `Showing ${cachedBlogPosts.length} article${cachedBlogPosts.length === 1 ? '' : 's'}.`
+        : 'No blog articles yet. Create your first guide.';
+    }
+
+    if (!cachedBlogPosts.length) {
+      container.innerHTML = '<p class="admin-empty">No blog articles yet. Click “Create article” to start.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="admin-table admin-blog-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Slug</th>
+            <th>Category</th>
+            <th>Published</th>
+            <th>Updated</th>
+            <th>Read time</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cachedBlogPosts.map((post) => `
+            <tr>
+              <td>${escapeHtml(post.title)}</td>
+              <td><code>${escapeHtml(post.slug)}</code></td>
+              <td>${escapeHtml(post.category || 'Guides')}</td>
+              <td>${escapeHtml(formatBillingDate(`${post.publishedAt}T00:00:00`))}</td>
+              <td>${escapeHtml(formatBillingDate(`${(post.updatedAt || post.publishedAt)}T00:00:00`))}</td>
+              <td>${escapeHtml(String(post.readMinutes || 2))} min</td>
+              <td class="admin-billing-actions">
+                <a href="/blog/${escapeHtml(post.slug)}" target="_blank" rel="noopener noreferrer">View</a>
+                <button type="button" data-blog-edit="${escapeHtml(post.slug)}">Edit</button>
+                <button type="button" class="admin-danger-btn" data-blog-delete="${escapeHtml(post.slug)}">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function showBlogListView() {
+    editingBlogSlug = null;
+    editingBlogIsNew = false;
+    document.getElementById('adminBlogListView')?.removeAttribute('hidden');
+    document.getElementById('adminBlogEditorView')?.setAttribute('hidden', '');
+    renderBlogTable();
+  }
+
+  function renderBlogSectionEditor(section, index) {
+    return `
+      <article class="admin-blog-section-card" data-blog-section-index="${index}">
+        <div class="admin-blog-section-head">
+          <strong>Section ${index + 1}</strong>
+          <button type="button" class="admin-secondary-btn" data-blog-remove-section="${index}">Remove section</button>
+        </div>
+        <label class="admin-field">
+          <span>Heading</span>
+          <input type="text" data-blog-section-heading="${index}" maxlength="200" value="${escapeHtml(section.heading || '')}" placeholder="Why skip the agency?" required>
+        </label>
+        <div class="admin-blog-paragraphs" data-blog-paragraphs="${index}">
+          ${(section.paragraphs || ['']).map((paragraph, paragraphIndex) => `
+            <div class="admin-blog-paragraph-row" data-blog-paragraph-row="${paragraphIndex}">
+              <label class="admin-field">
+                <span>Paragraph ${paragraphIndex + 1}</span>
+                <textarea data-blog-section-paragraph="${index}" rows="4" maxlength="5000" placeholder="Write the paragraph content..." required>${escapeHtml(paragraph || '')}</textarea>
+              </label>
+              <button type="button" class="admin-secondary-btn" data-blog-remove-paragraph="${index}:${paragraphIndex}">Remove</button>
+            </div>
+          `).join('')}
+        </div>
+        <button type="button" class="admin-secondary-btn" data-blog-add-paragraph="${index}">Add paragraph</button>
+      </article>
+    `;
+  }
+
+  function renderBlogSectionsEditor(sections = []) {
+    const container = document.getElementById('adminBlogSectionsList');
+    if (!container) return;
+    const nextSections = sections.length ? sections : [getDefaultBlogSection()];
+    container.innerHTML = nextSections.map((section, index) => renderBlogSectionEditor(section, index)).join('');
+  }
+
+  function readBlogFormState() {
+    const sections = Array.from(document.querySelectorAll('[data-blog-section-index]')).map((card) => {
+      const index = Number(card.dataset.blogSectionIndex);
+      const headingInput = card.querySelector(`[data-blog-section-heading="${index}"]`);
+      const paragraphInputs = card.querySelectorAll(`[data-blog-section-paragraph="${index}"]`);
+      return {
+        heading: headingInput?.value?.trim() || '',
+        paragraphs: Array.from(paragraphInputs).map((input) => input.value.trim()).filter(Boolean),
+      };
+    });
+
+    return {
+      slug: document.getElementById('adminBlogSlug')?.value?.trim().toLowerCase() || '',
+      title: document.getElementById('adminBlogTitle')?.value?.trim() || '',
+      description: document.getElementById('adminBlogDescription')?.value?.trim() || '',
+      category: document.getElementById('adminBlogCategory')?.value?.trim() || 'Guides',
+      icon: document.getElementById('adminBlogIcon')?.value || 'bi-journal-text',
+      publishedAt: document.getElementById('adminBlogPublishedAt')?.value || new Date().toISOString().slice(0, 10),
+      sections,
+    };
+  }
+
+  function fillBlogForm(post) {
+    document.getElementById('adminBlogTitle').value = post.title || '';
+    document.getElementById('adminBlogSlug').value = post.slug || '';
+    document.getElementById('adminBlogDescription').value = post.description || '';
+    document.getElementById('adminBlogCategory').value = post.category || 'Guides';
+    document.getElementById('adminBlogIcon').value = post.icon || 'bi-journal-text';
+    document.getElementById('adminBlogPublishedAt').value = post.publishedAt || new Date().toISOString().slice(0, 10);
+    renderBlogSectionsEditor(post.sections || [getDefaultBlogSection()]);
+    updateBlogPreviewLink(post.slug);
+  }
+
+  function updateBlogPreviewLink(slug) {
+    const previewLink = document.getElementById('adminBlogPreviewLink');
+    if (!previewLink) return;
+    if (slug) {
+      previewLink.href = `/blog/${slug}`;
+      previewLink.hidden = false;
+    } else {
+      previewLink.hidden = true;
+    }
+  }
+
+  async function openBlogEditor(slug = null) {
+    editingBlogIsNew = !slug;
+    editingBlogSlug = slug;
+
+    document.getElementById('adminBlogListView')?.setAttribute('hidden', '');
+    document.getElementById('adminBlogEditorView')?.removeAttribute('hidden');
+
+    const meta = document.getElementById('adminBlogEditorMeta');
+    const deleteBtn = document.getElementById('adminBlogDeleteBtn');
+    const slugInput = document.getElementById('adminBlogSlug');
+
+    if (editingBlogIsNew) {
+      if (meta) meta.textContent = 'Create article';
+      deleteBtn?.setAttribute('hidden', '');
+      slugInput?.removeAttribute('readonly');
+      fillBlogForm(getDefaultBlogPostDraft());
+      return;
+    }
+
+    if (meta) meta.textContent = `Edit article: ${slug}`;
+    deleteBtn?.removeAttribute('hidden');
+    slugInput?.removeAttribute('readonly');
+
+    const data = await apiRequest(`/api/admin/blog/${encodeURIComponent(slug)}`);
+    fillBlogForm(data.post);
+  }
+
+  async function saveBlogPost(event) {
+    event.preventDefault();
+    const payload = readBlogFormState();
+
+    if (!payload.sections.length) {
+      showAlert('Add at least one section with a heading and paragraph.');
+      return;
+    }
+
+    try {
+      if (editingBlogIsNew) {
+        await apiRequest('/api/admin/blog', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        showAlert('Blog article created.', 'success');
+      } else {
+        await apiRequest(`/api/admin/blog/${encodeURIComponent(editingBlogSlug)}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        });
+        showAlert('Blog article updated.', 'success');
+      }
+
+      await loadBlogSection();
+      showBlogListView();
+    } catch (error) {
+      showAlert(error.message);
+    }
+  }
+
+  async function deleteBlogPost() {
+    if (!editingBlogSlug || editingBlogIsNew) return;
+    if (!window.confirm(`Delete blog article “${editingBlogSlug}”? This cannot be undone.`)) return;
+
+    try {
+      await apiRequest(`/api/admin/blog/${encodeURIComponent(editingBlogSlug)}`, { method: 'DELETE' });
+      await loadBlogSection();
+      showBlogListView();
+      showAlert('Blog article deleted.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    }
+  }
+
+  async function deleteBlogPostBySlug(slug) {
+    if (!window.confirm(`Delete blog article “${slug}”?`)) return;
+    try {
+      await apiRequest(`/api/admin/blog/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+      await loadBlogSection();
+      showAlert('Blog article deleted.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    }
+  }
+
+  function addBlogSection() {
+    const current = readBlogFormState();
+    current.sections.push(getDefaultBlogSection());
+    renderBlogSectionsEditor(current.sections);
+  }
+
+  function removeBlogSection(index) {
+    const current = readBlogFormState();
+    if (current.sections.length <= 1) {
+      showAlert('An article needs at least one section.');
+      return;
+    }
+    current.sections.splice(index, 1);
+    renderBlogSectionsEditor(current.sections);
+  }
+
+  function addBlogParagraph(sectionIndex) {
+    const current = readBlogFormState();
+    const section = current.sections[sectionIndex];
+    if (!section) return;
+    section.paragraphs = section.paragraphs || [];
+    section.paragraphs.push('');
+    renderBlogSectionsEditor(current.sections);
+  }
+
+  function removeBlogParagraph(sectionIndex, paragraphIndex) {
+    const current = readBlogFormState();
+    const section = current.sections[sectionIndex];
+    if (!section) return;
+    if ((section.paragraphs || []).length <= 1) {
+      showAlert('Each section needs at least one paragraph.');
+      return;
+    }
+    section.paragraphs.splice(paragraphIndex, 1);
+    renderBlogSectionsEditor(current.sections);
+  }
+
   async function setMarketAdStatus(adId, status) {
     try {
       await apiRequest(`/api/admin/market/ads/${adId}/status`, {
@@ -2837,6 +3132,11 @@
     }
     if (section === 'posts') {
       await loadPostsSection();
+      return;
+    }
+    if (section === 'blog') {
+      showBlogListView();
+      await loadBlogSection();
       return;
     }
     if (section === 'api-logs') {
@@ -4330,6 +4630,60 @@
 
   document.getElementById('adminMarketAdsCreateBtn')?.addEventListener('click', () => {
     openMarketAdEditor(null);
+  });
+
+  document.getElementById('adminBlogCreateBtn')?.addEventListener('click', () => {
+    openBlogEditor(null);
+  });
+
+  document.getElementById('adminBlogBackBtn')?.addEventListener('click', showBlogListView);
+
+  document.getElementById('adminBlogForm')?.addEventListener('submit', saveBlogPost);
+
+  document.getElementById('adminBlogDeleteBtn')?.addEventListener('click', deleteBlogPost);
+
+  document.getElementById('adminBlogAddSectionBtn')?.addEventListener('click', addBlogSection);
+
+  document.getElementById('adminBlogSlugFromTitleBtn')?.addEventListener('click', () => {
+    const title = document.getElementById('adminBlogTitle')?.value || '';
+    const slugInput = document.getElementById('adminBlogSlug');
+    if (!slugInput || !title.trim()) return;
+    slugInput.value = slugifyBlogTitle(title);
+    updateBlogPreviewLink(slugInput.value);
+  });
+
+  document.getElementById('adminBlogSlug')?.addEventListener('input', (event) => {
+    updateBlogPreviewLink(event.target.value.trim().toLowerCase());
+  });
+
+  document.getElementById('adminBlogTable')?.addEventListener('click', (event) => {
+    const editBtn = event.target.closest('[data-blog-edit]');
+    if (editBtn) {
+      openBlogEditor(editBtn.dataset.blogEdit).catch((error) => showAlert(error.message));
+      return;
+    }
+    const deleteBtn = event.target.closest('[data-blog-delete]');
+    if (deleteBtn) {
+      deleteBlogPostBySlug(deleteBtn.dataset.blogDelete);
+    }
+  });
+
+  document.getElementById('adminBlogEditorView')?.addEventListener('click', (event) => {
+    const removeSectionBtn = event.target.closest('[data-blog-remove-section]');
+    if (removeSectionBtn) {
+      removeBlogSection(Number(removeSectionBtn.dataset.blogRemoveSection));
+      return;
+    }
+    const addParagraphBtn = event.target.closest('[data-blog-add-paragraph]');
+    if (addParagraphBtn) {
+      addBlogParagraph(Number(addParagraphBtn.dataset.blogAddParagraph));
+      return;
+    }
+    const removeParagraphBtn = event.target.closest('[data-blog-remove-paragraph]');
+    if (removeParagraphBtn) {
+      const [sectionIndex, paragraphIndex] = removeParagraphBtn.dataset.blogRemoveParagraph.split(':').map(Number);
+      removeBlogParagraph(sectionIndex, paragraphIndex);
+    }
   });
 
   document.getElementById('adminMarketAdsBackBtn')?.addEventListener('click', showMarketAdsListView);

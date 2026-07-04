@@ -46,6 +46,14 @@ const {
   purgeDeletedUsersOlderThan24Hours,
   forceDeleteUser,
 } = require('../../utils/deletedUserCleanup');
+const {
+  loadBlogPosts,
+  getRawBlogPostBySlug,
+  createBlogPost,
+  updateBlogPost,
+  deleteBlogPost,
+  enrichBlogPost,
+} = require('../../../../utils/blog');
 
 const router = express.Router();
 
@@ -196,6 +204,40 @@ const marketplaceAdStatusSchema = z.object({
     status: z.enum(['draft', 'active', 'paused']),
   }),
 });
+
+const blogSectionSchema = z.object({
+  heading: z.string().trim().min(1).max(200),
+  paragraphs: z.array(z.string().trim().min(1).max(5000)).min(1).max(20),
+});
+
+const blogPostWriteSchema = z.object({
+  body: z.object({
+    slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(120),
+    title: z.string().trim().min(3).max(200),
+    description: z.string().trim().min(10).max(500),
+    category: z.string().trim().min(2).max(60).optional(),
+    icon: z.string().trim().regex(/^bi-[a-z0-9-]+$/).max(60).optional(),
+    publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    sections: z.array(blogSectionSchema).min(1).max(20),
+  }),
+});
+
+const blogPostUpdateSchema = z.object({
+  body: z.object({
+    slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).min(3).max(120).optional(),
+    title: z.string().trim().min(3).max(200).optional(),
+    description: z.string().trim().min(10).max(500).optional(),
+    category: z.string().trim().min(2).max(60).optional(),
+    icon: z.string().trim().regex(/^bi-[a-z0-9-]+$/).max(60).optional(),
+    publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    sections: z.array(blogSectionSchema).min(1).max(20).optional(),
+  }),
+});
+
+function sendBlogStoreError(res, error) {
+  const statusCode = error.statusCode || 500;
+  return res.status(statusCode).json({ error: error.message || 'Blog operation failed.' });
+}
 
 function splitFullName(fullName = '') {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -2370,6 +2412,70 @@ router.delete('/market/ads/:id', asyncHandler(async (req, res) => {
   });
 
   res.json({ ok: true, deletedId: Number(req.params.id) });
+}));
+
+router.get('/blog', asyncHandler(async (req, res) => {
+  res.json({ posts: loadBlogPosts() });
+}));
+
+router.get('/blog/:slug', asyncHandler(async (req, res) => {
+  const post = getRawBlogPostBySlug(req.params.slug);
+  if (!post) {
+    return res.status(404).json({ error: 'Blog post not found.' });
+  }
+  res.json({ post: enrichBlogPost(post) });
+}));
+
+router.post('/blog', validate(blogPostWriteSchema), asyncHandler(async (req, res) => {
+  try {
+    const post = createBlogPost(req.validated.body);
+    await logAudit({
+      actorId: req.user.id,
+      action: 'blog.post_created',
+      entityType: 'blog_post',
+      entityId: null,
+      metadata: { slug: post.slug, title: post.title },
+    });
+    res.status(201).json({ post });
+  } catch (error) {
+    return sendBlogStoreError(res, error);
+  }
+}));
+
+router.patch('/blog/:slug', validate(blogPostUpdateSchema), asyncHandler(async (req, res) => {
+  try {
+    const post = updateBlogPost(req.params.slug, req.validated.body);
+    await logAudit({
+      actorId: req.user.id,
+      action: 'blog.post_updated',
+      entityType: 'blog_post',
+      entityId: null,
+      metadata: {
+        slug: post.slug,
+        previousSlug: req.params.slug,
+        title: post.title,
+      },
+    });
+    res.json({ post });
+  } catch (error) {
+    return sendBlogStoreError(res, error);
+  }
+}));
+
+router.delete('/blog/:slug', asyncHandler(async (req, res) => {
+  try {
+    const deleted = deleteBlogPost(req.params.slug);
+    await logAudit({
+      actorId: req.user.id,
+      action: 'blog.post_deleted',
+      entityType: 'blog_post',
+      entityId: null,
+      metadata: deleted,
+    });
+    res.json({ ok: true, ...deleted });
+  } catch (error) {
+    return sendBlogStoreError(res, error);
+  }
 }));
 
 module.exports = router;

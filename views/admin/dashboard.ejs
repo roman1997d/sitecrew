@@ -28,6 +28,7 @@
         <button type="button" data-admin-section="companies" title="Company Accounts"><i class="bi bi-building"></i> Companies</button>
         <button type="button" data-admin-section="market" title="Market and Money"><i class="bi bi-currency-pound"></i> Market</button>
         <button type="button" data-admin-section="posts" title="Posts Moderator"><i class="bi bi-card-text"></i> Posts</button>
+        <button type="button" data-admin-section="blog" title="Blog Manager"><i class="bi bi-newspaper"></i> Blog</button>
         <button type="button" data-admin-section="api-logs" title="API Logs"><i class="bi bi-terminal"></i> API Logs</button>
         <button type="button" data-admin-section="audit" title="Audit Trails"><i class="bi bi-journal-text"></i> Audit</button>
         <button type="button" data-admin-section="server" title="Server"><i class="bi bi-hdd-network"></i> Server</button>
@@ -396,6 +397,98 @@
               <p class="admin-media-review-counter" id="adminMediaReviewCounter"></p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-blog" data-section="blog" hidden>
+        <p class="admin-section-lead">Create, edit, and delete public blog guides shown on <strong>/blog</strong>. Changes go live immediately after save.</p>
+
+        <div id="adminBlogListView">
+          <div class="admin-market-ads-toolbar">
+            <p class="admin-results-meta" id="adminBlogMeta">Manage SiteCrew blog articles.</p>
+            <button type="button" class="admin-primary-btn" id="adminBlogCreateBtn">
+              <i class="bi bi-plus-lg"></i> Create article
+            </button>
+          </div>
+          <div class="admin-table-wrap" id="adminBlogTable">
+            <p class="admin-empty">Loading blog posts...</p>
+          </div>
+        </div>
+
+        <div id="adminBlogEditorView" hidden>
+          <div class="admin-market-ads-editor-header">
+            <button type="button" class="admin-secondary-btn" id="adminBlogBackBtn">
+              <i class="bi bi-arrow-left"></i> Back to articles
+            </button>
+            <p class="admin-results-meta" id="adminBlogEditorMeta">Create article</p>
+          </div>
+
+          <form id="adminBlogForm" class="admin-market-ad-form admin-blog-form">
+            <fieldset class="admin-market-ad-section">
+              <legend>Article details</legend>
+              <label class="admin-field">
+                <span>Title</span>
+                <input type="text" id="adminBlogTitle" maxlength="200" placeholder="How to find construction jobs in the UK" required>
+              </label>
+              <div class="admin-market-ad-grid-2">
+                <label class="admin-field">
+                  <span>Slug (URL)</span>
+                  <input type="text" id="adminBlogSlug" maxlength="120" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="find-construction-jobs-uk" required>
+                </label>
+                <label class="admin-field">
+                  <span>&nbsp;</span>
+                  <button type="button" class="admin-secondary-btn" id="adminBlogSlugFromTitleBtn">Generate slug from title</button>
+                </label>
+              </div>
+              <label class="admin-field">
+                <span>Description (meta + intro)</span>
+                <textarea id="adminBlogDescription" rows="3" maxlength="500" placeholder="Short summary for SEO and the article header." required></textarea>
+              </label>
+              <div class="admin-market-ad-grid-2">
+                <label class="admin-field">
+                  <span>Category</span>
+                  <input type="text" id="adminBlogCategory" maxlength="60" list="adminBlogCategoryOptions" placeholder="Careers" required>
+                  <datalist id="adminBlogCategoryOptions">
+                    <option value="Careers"></option>
+                    <option value="Pay & rates"></option>
+                    <option value="Guides"></option>
+                    <option value="Hiring"></option>
+                    <option value="Compliance"></option>
+                  </datalist>
+                </label>
+                <label class="admin-field">
+                  <span>Icon (Bootstrap Icons class)</span>
+                  <select id="adminBlogIcon" required>
+                    <option value="bi-journal-text">Journal</option>
+                    <option value="bi-briefcase">Briefcase</option>
+                    <option value="bi-cash-stack">Cash stack</option>
+                    <option value="bi-tools">Tools</option>
+                    <option value="bi-building">Building</option>
+                    <option value="bi-geo-alt">Location</option>
+                    <option value="bi-people">People</option>
+                  </select>
+                </label>
+              </div>
+              <label class="admin-field">
+                <span>Published date</span>
+                <input type="date" id="adminBlogPublishedAt" required>
+              </label>
+            </fieldset>
+
+            <fieldset class="admin-market-ad-section">
+              <div class="admin-market-ad-section-head">
+                <legend>Content sections</legend>
+                <button type="button" class="admin-secondary-btn" id="adminBlogAddSectionBtn">Add section</button>
+              </div>
+              <div id="adminBlogSectionsList" class="admin-blog-sections-list"></div>
+            </fieldset>
+
+            <div class="admin-market-ad-form-actions">
+              <a href="#" id="adminBlogPreviewLink" class="admin-secondary-btn" target="_blank" rel="noopener noreferrer" hidden>Preview live</a>
+              <button type="button" class="admin-danger-btn" id="adminBlogDeleteBtn" hidden>Delete article</button>
+              <button type="submit" class="admin-primary-btn" id="adminBlogSaveBtn">Save article</button>
+            </div>
+          </form>
         </div>
       </section>
 
