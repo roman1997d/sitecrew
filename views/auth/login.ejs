@@ -104,8 +104,8 @@
         </div>
 
         <% if (recaptchaSiteKey) { %>
-        <div class="login-recaptcha-wrap">
-          <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>"></div>
+        <div class="login-recaptcha-wrap register-recaptcha-wrap">
+          <div id="registerRecaptcha"></div>
         </div>
         <% } %>
 
@@ -144,6 +144,12 @@
         <span>I agree to the Sales plan Terms &amp; Conditions</span>
       </label>
 
+      <% if (recaptchaSiteKey) { %>
+      <div class="company-plan-recaptcha-wrap">
+        <div id="companyPlanRecaptcha"></div>
+      </div>
+      <% } %>
+
       <button type="button" class="login-btn" id="companyPlanContinueBtn" disabled>
         Continue with your Account
       </button>
@@ -170,7 +176,7 @@
 
   <%- include('../partials/api-config') %>
   <% if (recaptchaSiteKey) { %>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script src="https://www.google.com/recaptcha/api.js?onload=sitecrewRecaptchaReady&render=explicit" async defer></script>
   <% } %>
   <script>
     window.SITECREW_RECAPTCHA_SITE_KEY = '<%= recaptchaSiteKey || '' %>';

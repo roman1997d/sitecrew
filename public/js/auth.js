@@ -21,6 +21,10 @@ const companyPlanTermsVersion = document.querySelector('#companyPlanTermsVersion
 const companyTermsModal = document.querySelector('#companyTermsModal');
 const companyTermsContent = document.querySelector('#companyTermsContent');
 const companyTermsModalVersion = document.querySelector('#companyTermsModalVersion');
+const registerRecaptchaWrap = document.querySelector('.register-recaptcha-wrap');
+const companyPlanRecaptchaWrap = document.querySelector('.company-plan-recaptcha-wrap');
+let registerRecaptchaWidgetId = null;
+let companyPlanRecaptchaWidgetId = null;
 let registerTradeSearchTimer;
 let pendingCompanyRegistration = null;
 let companyMarketPlans = [];
@@ -110,29 +114,90 @@ function setRegisterRole(role) {
   companyFields.forEach((field) => {
     field.hidden = !isCompany;
   });
-}
-
-function getRegisterRecaptchaResponse() {
-  if (!RECAPTCHA_SITE_KEY || typeof window.grecaptcha === 'undefined') {
-    return '';
+  if (registerRecaptchaWrap) {
+    registerRecaptchaWrap.hidden = isCompany;
   }
-  return window.grecaptcha.getResponse();
 }
 
-function resetRegisterRecaptcha() {
+function initRecaptchaWidgets() {
   if (!RECAPTCHA_SITE_KEY || typeof window.grecaptcha === 'undefined') {
     return;
   }
-  window.grecaptcha.reset();
+
+  window.grecaptcha.ready(() => {
+    const registerEl = document.getElementById('registerRecaptcha');
+    if (registerEl && registerRecaptchaWidgetId === null) {
+      registerRecaptchaWidgetId = window.grecaptcha.render(registerEl, {
+        sitekey: RECAPTCHA_SITE_KEY,
+      });
+    }
+
+    const planEl = document.getElementById('companyPlanRecaptcha');
+    if (planEl && companyPlanRecaptchaWidgetId === null) {
+      companyPlanRecaptchaWidgetId = window.grecaptcha.render(planEl, {
+        sitekey: RECAPTCHA_SITE_KEY,
+      });
+    }
+  });
+}
+
+window.sitecrewRecaptchaReady = initRecaptchaWidgets;
+
+function getRecaptchaResponse(widgetId = null) {
+  if (!RECAPTCHA_SITE_KEY || typeof window.grecaptcha === 'undefined') {
+    return '';
+  }
+  return widgetId === null ? window.grecaptcha.getResponse() : window.grecaptcha.getResponse(widgetId);
+}
+
+function resetRecaptchaWidget(widgetId = null) {
+  if (!RECAPTCHA_SITE_KEY || typeof window.grecaptcha === 'undefined') {
+    return;
+  }
+  if (widgetId === null) {
+    window.grecaptcha.reset();
+    return;
+  }
+  window.grecaptcha.reset(widgetId);
+}
+
+function assertRecaptchaReady() {
+  if (!RECAPTCHA_SITE_KEY) {
+    return;
+  }
+  if (typeof window.grecaptcha === 'undefined') {
+    throw new Error('Security check is still loading. Please wait a moment and try again.');
+  }
+}
+
+function getRegisterRecaptchaResponse() {
+  return getRecaptchaResponse(registerRecaptchaWidgetId);
+}
+
+function resetRegisterRecaptcha() {
+  resetRecaptchaWidget(registerRecaptchaWidgetId);
 }
 
 function requireRegisterRecaptcha() {
   if (!RECAPTCHA_SITE_KEY) {
     return;
   }
+  assertRecaptchaReady();
   const token = getRegisterRecaptchaResponse();
   if (!token) {
     throw new Error('Please tick the reCAPTCHA box.');
+  }
+  return token;
+}
+
+function requireCompanyPlanRecaptcha() {
+  if (!RECAPTCHA_SITE_KEY) {
+    return;
+  }
+  assertRecaptchaReady();
+  const token = getRecaptchaResponse(companyPlanRecaptchaWidgetId);
+  if (!token) {
+    throw new Error('Please complete the reCAPTCHA box in the plan window before continuing.');
   }
   return token;
 }
@@ -245,6 +310,7 @@ function renderCompanyTermsMeta() {
 
 function openCompanyPlanModal() {
   if (!companyPlanModal) return;
+  resetRecaptchaWidget(companyPlanRecaptchaWidgetId);
   companyPlanModal.hidden = false;
   companyPlanModal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
@@ -301,11 +367,7 @@ function validateCompanyRegistrationForm(formData) {
 
 async function openCompanyRegistrationFlow(formData) {
   validateCompanyRegistrationForm(formData);
-  const recaptchaToken = requireRegisterRecaptcha();
-  pendingCompanyRegistration = {
-    ...buildCompanyRegistrationPayload(formData),
-    recaptchaToken,
-  };
+  pendingCompanyRegistration = buildCompanyRegistrationPayload(formData);
   selectedCompanyPlanKey = null;
   if (companyPlanTermsAgree) {
     companyPlanTermsAgree.checked = false;
@@ -316,6 +378,7 @@ async function openCompanyRegistrationFlow(formData) {
   }
 
   openCompanyPlanModal();
+  showAlert('Choose a company plan and complete reCAPTCHA to finish registration.', 'success');
 
   const market = await fetchMarketData();
   companyMarketPlans = market.plans;
@@ -345,6 +408,7 @@ async function completeCompanyRegistration() {
     planKey: selectedCompanyPlanKey,
     termsVersion: companyMarketTerms.version,
     termsAccepted: true,
+    recaptchaToken: requireCompanyPlanRecaptcha(),
   });
 }
 
@@ -549,7 +613,7 @@ companyPlanContinueBtn?.addEventListener('click', async () => {
   } catch (error) {
     showAlert(error.message);
     updateCompanyPlanContinueState();
-    resetRegisterRecaptcha();
+    resetRecaptchaWidget(companyPlanRecaptchaWidgetId);
   } finally {
     companyPlanContinueBtn.textContent = 'Continue with your Account';
   }
@@ -565,6 +629,7 @@ if (lastEmail && loginForm.email && !loginForm.email.value) {
 
 setAuthMode(params.get('mode') === 'register' ? 'register' : 'login');
 setRegisterRole(params.get('role') === 'company' || (!params.get('role') && lastRole === 'company') ? 'company' : 'worker');
+initRecaptchaWidgets();
 
 (async function restoreSessionFromStorage() {
   const returnPath = params.get('return');

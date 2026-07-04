@@ -576,6 +576,12 @@
   accent-color: var(--login-accent);
 }
 
+.company-plan-recaptcha-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 16px;
+}
+
 .company-terms-content {
   max-height: 52vh;
   overflow: auto;
