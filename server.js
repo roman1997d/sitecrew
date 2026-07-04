@@ -23,6 +23,7 @@ const {
   getAllLandingPaths,
   getTradeBrowseLinks,
   getCityBrowseLinks,
+  getPopularLandingLinks,
 } = require('./utils/seoLandings');
 const {
   buildCompanySlug,
@@ -1139,6 +1140,21 @@ async function renderPublicJobsPage(req, res, options = {}) {
   });
 }
 
+function renderJobNotFound(res, jobId) {
+  return res.status(404).render('errors/job-not-found', {
+    seo: buildSeo({
+      path: `/jobs/${jobId}`,
+      title: 'Job not found | SiteCrew',
+      description: 'This construction job is no longer available on SiteCrew. Browse open roles across the UK by trade and location.',
+      robots: 'noindex, follow',
+    }),
+    jobId,
+    popularLandings: getPopularLandingLinks(),
+    tradeLinks: getTradeBrowseLinks().slice(0, 6),
+    cityLinks: getCityBrowseLinks().slice(0, 6),
+  });
+}
+
 async function fetchPublicOpenJobs(limit = 6) {
   const jobs = await fetchAllPublicOpenJobs();
   return jobs.slice(0, limit);
@@ -1272,7 +1288,7 @@ app.get('/jobs/:segment', async (req, res) => {
   if (/^\d+$/.test(segment)) {
     const job = await fetchPublicJobById(segment);
     if (!job) {
-      return res.redirect('/jobs');
+      return renderJobNotFound(res, segment);
     }
 
     const jobPath = `/jobs/${job.id}`;
@@ -1288,12 +1304,14 @@ app.get('/jobs/:segment', async (req, res) => {
         ]),
         getJobPostingSchema(
           {
+            id: job.id,
             title: job.title,
             description: job.description,
             created_at: job.createdAt,
             company_name: job.companyName,
             city: job.location,
             rate: job.rate,
+            trade: job.trade,
           },
           buildSeo({ path: jobPath }).canonical
         ),

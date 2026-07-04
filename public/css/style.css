@@ -1440,3 +1440,31 @@ main { flex: 1; }
     flex-direction: column;
   }
 }
+
+.job-not-found-page {
+  padding-top: 110px;
+}
+
+.job-not-found-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  background: #fff;
+  padding: 32px;
+  margin-bottom: 28px;
+}
+
+.job-not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.job-not-found-section {
+  margin-bottom: 24px;
+}
+
+.job-not-found-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}

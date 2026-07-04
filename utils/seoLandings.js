@@ -84,26 +84,44 @@ const CITY_LANDINGS = {
   },
 };
 
-const COMBO_LANDINGS = {
-  'electrician-jobs-in-london': {
-    label: 'Electrician jobs in London',
-    tradeFilter: 'Electrician',
-    cityFilter: 'London',
-    intro: 'Electrician jobs in London from verified construction companies. Compare day rates, view project details, and apply on SiteCrew without agencies.',
-  },
-  'builder-jobs-in-manchester': {
-    label: 'Builder jobs in Manchester',
-    tradeFilter: 'Builder',
-    cityFilter: 'Manchester',
-    intro: 'Builder roles in Manchester and Greater Manchester. SiteCrew connects skilled builders with companies hiring for live site work.',
-  },
-  'dryliner-jobs-in-london': {
-    label: 'Dryliner jobs in London',
-    tradeFilter: 'Dryliner',
-    cityFilter: 'London',
-    intro: 'Drylining and fixing jobs in London. Browse open contracts from verified employers and apply with your SiteCrew worker profile.',
-  },
-};
+const POPULAR_COMBO_SLUGS = [
+  'electrician-jobs-in-london',
+  'builder-jobs-in-manchester',
+  'dryliner-jobs-in-london',
+  'plumber-jobs-in-birmingham',
+  'carpenter-jobs-in-london',
+  'labourer-jobs-in-manchester',
+  'bricklayer-jobs-in-leeds',
+  'plasterer-jobs-in-bristol',
+];
+
+function buildComboSlug(tradeSlug, citySlug) {
+  return `${tradeSlug}-jobs-in-${citySlug}`;
+}
+
+function buildComboIntro(trade, city) {
+  return `Browse ${trade.label.toLowerCase()} jobs in ${city.label}. Open roles from verified UK construction companies on SiteCrew — view rates and apply directly.`;
+}
+
+function buildComboLandings() {
+  const combos = {};
+
+  Object.entries(TRADE_LANDINGS).forEach(([tradeSlug, trade]) => {
+    Object.entries(CITY_LANDINGS).forEach(([citySlug, city]) => {
+      const slug = buildComboSlug(tradeSlug, citySlug);
+      combos[slug] = {
+        label: `${trade.label} jobs in ${city.label}`,
+        tradeFilter: trade.filter,
+        cityFilter: city.filter,
+        intro: buildComboIntro(trade, city),
+      };
+    });
+  });
+
+  return combos;
+}
+
+const COMBO_LANDINGS = buildComboLandings();
 
 function resolveJobLandingSlug(slug) {
   const trade = TRADE_LANDINGS[slug];
@@ -194,6 +212,17 @@ function getCityBrowseLinks() {
   }));
 }
 
+function getPopularLandingLinks(limit = 8) {
+  return POPULAR_COMBO_SLUGS
+    .filter((slug) => COMBO_LANDINGS[slug])
+    .slice(0, limit)
+    .map((slug) => ({
+      slug,
+      path: `/jobs/${slug}`,
+      label: COMBO_LANDINGS[slug].label,
+    }));
+}
+
 module.exports = {
   TRADE_LANDINGS,
   CITY_LANDINGS,
@@ -204,4 +233,6 @@ module.exports = {
   getAllLandingPaths,
   getTradeBrowseLinks,
   getCityBrowseLinks,
+  getPopularLandingLinks,
+  buildComboLandings,
 };

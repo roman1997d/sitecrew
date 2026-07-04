@@ -72,6 +72,7 @@ function mapPublicJobDetail(job) {
 
 function getJobPostingSchema(job, canonicalUrl) {
   const rateValue = parseRateNumericValue(job.rate);
+  const tradeName = job.trade || job.trade_required || 'Construction';
 
   return {
     '@context': 'https://schema.org',
@@ -80,6 +81,15 @@ function getJobPostingSchema(job, canonicalUrl) {
     description: job.description,
     datePosted: job.created_at,
     validThrough: getJobValidThrough(job.created_at),
+    identifier: job.id
+      ? {
+          '@type': 'PropertyValue',
+          name: 'SiteCrew',
+          value: `sitecrew-job-${job.id}`,
+        }
+      : undefined,
+    industry: 'Construction',
+    occupationalCategory: tradeName,
     employmentType: 'CONTRACTOR',
     hiringOrganization: {
       '@type': 'Organization',
