@@ -38,7 +38,7 @@
         <ul class="public-company-details">
           <% if (company.businessType) { %><li><strong>Business type:</strong> <%= company.businessType %></li><% } %>
           <% if (company.trades.length) { %><li><strong>Trades:</strong> <%= company.trades.join(', ') %></li><% } %>
-          <% if (company.website) { %><li><strong>Website:</strong> <a href="<%= company.website %>" rel="noopener noreferrer"><%= company.website %></a></li><% } %>
+          <% if (company.website) { %><li><strong>Website:</strong> <a href="<%= company.website %>" rel="noopener noreferrer nofollow ugc" target="_blank"><%= company.website %></a></li><% } %>
         </ul>
       </section>
 

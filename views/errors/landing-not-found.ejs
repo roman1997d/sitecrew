@@ -1,0 +1,57 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section public-jobs-page job-not-found-page">
+  <div class="site-container">
+    <div class="job-not-found-card">
+      <span class="section-eyebrow">Page not found</span>
+      <h1 class="section-title">This job search page does not exist</h1>
+      <p class="section-desc">
+        <% if (slug) { %>
+          We could not find a job listing for <strong>/jobs/<%= slug %></strong>.
+        <% } else { %>
+          This trade or location page is not available on SiteCrew.
+        <% } %>
+        Browse open construction jobs by trade or city below.
+      </p>
+      <div class="job-not-found-actions">
+        <a href="/jobs" class="btn-sc btn-sc-cta">Browse all jobs</a>
+        <a href="/trades" class="btn-sc btn-sc-outline">View trades</a>
+      </div>
+    </div>
+
+    <% if (popularLandings && popularLandings.length) { %>
+      <div class="job-not-found-section">
+        <h2>Popular job searches</h2>
+        <div class="public-jobs-browse">
+          <% popularLandings.forEach(function(link) { %>
+            <a href="<%= link.path %>"><%= link.label %></a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (tradeLinks && tradeLinks.length) { %>
+      <div class="job-not-found-section">
+        <h2>Browse by trade</h2>
+        <div class="public-jobs-browse">
+          <% tradeLinks.forEach(function(link) { %>
+            <a href="<%= link.path %>"><%= link.label %></a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (cityLinks && cityLinks.length) { %>
+      <div class="job-not-found-section">
+        <h2>Browse by city</h2>
+        <div class="public-jobs-browse">
+          <% cityLinks.forEach(function(link) { %>
+            <a href="<%= link.path %>"><%= link.label %></a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

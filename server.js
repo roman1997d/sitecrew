@@ -76,6 +76,14 @@ app.use((req, res, next) => {
   return next();
 });
 
+app.use((req, res, next) => {
+  if (req.path.length > 1 && req.path.endsWith('/')) {
+    const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, `${req.path.slice(0, -1)}${query}`);
+  }
+  return next();
+});
+
 function isAdminHost(req) {
   return getRequestHost(req) === ADMIN_HOST.toLowerCase();
 }
@@ -149,6 +157,7 @@ app.get('/sitemap.xml', async (req, res) => {
   }
 
   res.type('application/xml');
+  res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
   res.send(renderSitemapXml(extraUrls));
 });
 
@@ -1115,6 +1124,15 @@ function buildJobsListPath(filters = {}) {
   return query ? `/jobs?${query}` : '/jobs';
 }
 
+function setPublicHtmlCache(res, profile = 'dynamic') {
+  if (profile === 'sitemap') {
+    res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
+    return;
+  }
+
+  res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+}
+
 async function renderPublicJobsPage(req, res, options = {}) {
   const filters = {
     q: String(options.filters?.q ?? req.query.q ?? '').trim(),
@@ -1154,6 +1172,8 @@ async function renderPublicJobsPage(req, res, options = {}) {
     ...(listSchema ? [listSchema] : []),
   ];
 
+  setPublicHtmlCache(res, options.landing ? 'landing' : 'dynamic');
+
   return res.render('jobs/list', {
     seo: buildSeo({
       path: pageMeta.path,
@@ -1170,6 +1190,7 @@ async function renderPublicJobsPage(req, res, options = {}) {
 }
 
 function renderJobNotFound(res, jobId) {
+  res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
   return res.status(404).render('errors/job-not-found', {
     seo: buildSeo({
       path: `/jobs/${jobId}`,
@@ -1178,6 +1199,22 @@ function renderJobNotFound(res, jobId) {
       robots: 'noindex, follow',
     }),
     jobId,
+    popularLandings: getPopularLandingLinks(),
+    tradeLinks: getTradeBrowseLinks().slice(0, 6),
+    cityLinks: getCityBrowseLinks().slice(0, 6),
+  });
+}
+
+function renderLandingNotFound(res, slug) {
+  res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
+  return res.status(404).render('errors/landing-not-found', {
+    seo: buildSeo({
+      path: `/jobs/${slug}`,
+      title: 'Job search not found | SiteCrew',
+      description: 'This trade or location job page does not exist on SiteCrew. Browse open UK construction jobs by trade and city.',
+      robots: 'noindex, follow',
+    }),
+    slug,
     popularLandings: getPopularLandingLinks(),
     tradeLinks: getTradeBrowseLinks().slice(0, 6),
     cityLinks: getCityBrowseLinks().slice(0, 6),
@@ -1225,6 +1262,8 @@ async function renderJobDetailPage(req, res, segment) {
       ),
     ],
   });
+
+  setPublicHtmlCache(res, 'job');
 
   return res.render('jobs/detail', {
     seo: jobSeo,
@@ -1371,7 +1410,7 @@ app.get('/jobs/:segment', async (req, res) => {
 
   const landing = resolveJobLandingSlug(segment);
   if (!landing) {
-    return res.redirect('/jobs');
+    return renderLandingNotFound(res, segment);
   }
 
   return renderPublicJobsPage(req, res, {

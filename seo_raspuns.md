@@ -120,7 +120,7 @@ function buildComboLandings() {
 // server.js
 const landing = resolveJobLandingSlug(segment);
 if (!landing) {
-  return res.redirect('/jobs');  // ⚠️ 302, nu 404
+  return renderLandingNotFound(res, segment);  // 404 util, noindex
 }
 return renderPublicJobsPage(req, res, {
   landing: { ...landing, slug: segment },
@@ -141,7 +141,7 @@ const response = await fetch(`${API_INTERNAL_URL}/api/jobs?${params}`);
 | Scenariu | HTTP | Comportament |
 |----------|------|--------------|
 | `/jobs/electrician-jobs-in-london` (slug valid) | **200** | Landing + joburi filtrate din API |
-| `/jobs/plumber-inexistent-oras` (slug invalid) | **302** → `/jobs` | Redirect, nu 404 |
+| `/jobs/plumber-inexistent-oras` (slug invalid) | **404** | Pagină utilă `landing-not-found`, `noindex` |
 | `/jobs/99999` (job inexistent) | **404** | Pagină custom `errors/job-not-found.ejs` |
 
 **Gap identificat:** landing-uri invalide ar putea returna **404** în loc de redirect, pentru a evita indexarea unui redirect soft către `/jobs`.
@@ -275,11 +275,10 @@ function buildJobsListPath(filters = {}) {
 
 ```html
 <!-- views/partials/header.ejs -->
-<html lang="en">
+<html lang="en-GB">
 ```
 
-- **Hardcodat `en`**, nu `en-GB` pe tag-ul HTML.
-- Schema `WebSite` folosește `inLanguage: 'en-GB'` în JSON-LD — mică inconsistență față de `<html lang>`.
+- Aliniat cu `inLanguage: 'en-GB'` din JSON-LD.
 
 ---
 
@@ -481,12 +480,12 @@ Da — poziții absolute 1, 2, 3. Nu sar peste niveluri.
 | Resursă | Strategie |
 |---------|-----------|
 | `/css/style.css` | `rel="preload"` + `<link rel="stylesheet">` |
+| `/vendor/bootstrap.min.css` | `rel="preload"` + `<link rel="stylesheet">` (self-hosted) |
 | Google Fonts | `preconnect` + `display=swap` în URL |
-| Bootstrap CSS | `<link>` blocant în `<head>` (render-blocking) |
-| Bootstrap JS | `defer` la final de `<body>` |
+| Bootstrap JS | `defer` la final de `<body>` (CDN) |
 | GA / cookie script | În `<head>` (async via gtag) |
 
-**Gap:** Bootstrap CSS de pe CDN rămâne render-blocking. Self-hosting ar îmbunătăți LCP.
+**Status:** Bootstrap CSS este self-hosted în `public/vendor/` — elimină dependența de cache CDN cross-site și permite preload local.
 
 ---
 
@@ -563,21 +562,15 @@ getCompanyOrganizationSchema(company, canonicalUrl)
 
 ### 14. Trailing slashes (`/jobs` vs `/jobs/`)
 
-**Răspuns onest:** **Nu există** middleware de normalizare trailing slash în `server.js`.
-
-Express (v5) tratează `/jobs` și `/jobs/` ca rute distincte. În practică:
-- Rutele sunt definite **fără** slash final (`app.get('/jobs', ...)`).
-- `/jobs/` poate returna **404** sau comportament neprevăzut, nu 301 forțat.
-
-**Gap recomandat:**
+**Implementat** în `server.js` (imediat după redirect-ul www):
 
 ```javascript
-// Middleware sugerat (NU e încă implementat)
 app.use((req, res, next) => {
   if (req.path.length > 1 && req.path.endsWith('/')) {
-    return res.redirect(301, req.path.slice(0, -1) + (req.url.slice(req.path.length) || ''));
+    const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, `${req.path.slice(0, -1)}${query}`);
   }
-  next();
+  return next();
 });
 ```
 
@@ -589,57 +582,47 @@ app.use((req, res, next) => {
 
 ```html
 <!-- views/companies/profile.ejs — website companie -->
-<a href="<%= company.website %>" rel="noopener noreferrer"><%= company.website %></a>
+<a href="<%= company.website %>" rel="noopener noreferrer nofollow ugc" target="_blank"><%= company.website %></a>
 ```
 
 | Tip link | rel actual | Recomandat SEO |
 |----------|------------|----------------|
-| Website companie (UGC) | `noopener noreferrer` | `noopener noreferrer nofollow` sau `ugc` |
+| Website companie (UGC) | `noopener noreferrer nofollow ugc` | ✅ |
 | reCAPTCHA / Google policies | `noopener noreferrer` | OK |
 | Descrieri job (text liber) | Nu sunt randate ca `<a>` auto-link | N/A |
 
-**Gap:** linkurile `website` din profiluri companii **nu au** `nofollow` / `ugc`. SiteCrew transferă PageRank către domenii terțe necontrolate.
-
-**Fix sugerat:**
-
-```html
-<a href="<%= company.website %>" rel="noopener noreferrer nofollow ugc" target="_blank">
-```
+**Fix aplicat** pe linkurile website din profiluri companii (`nofollow` + `ugc`).
 
 ---
 
 ### 16. Headere `Cache-Control`
 
-**Pagini publice SSR** (`/jobs`, landings, companii, blog):
+**Implementat** în `server.js` via `setPublicHtmlCache()`:
 
-- **Nu setăm** explicit `Cache-Control` în `server.js`.
-- Express default ≈ **fără cache** (browserul poate revalida la fiecare request).
-- Googlebot poate recrawl-ui fără a primi stale content din CDN/browser.
+```javascript
+// Landing pages + job detail + listă joburi
+res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
 
-**Excepție existentă:**
+// Sitemap
+res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
+```
+
+**Excepție existentă (admin API):**
 
 ```javascript
 // backend/src/modules/admin/routes.js (doar admin API)
 res.set('Cache-Control', 'private, max-age=60');
 ```
 
-**Sitemap:**
+**Sitemap** (în ruta `/sitemap.xml`):
 
 ```javascript
 res.type('application/xml');
+res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
 res.send(renderSitemapXml(extraUrls));
-// Fără Cache-Control — nginx poate adăuga headere proprii
 ```
 
-**Recomandare (nu implementată):**
-
-```javascript
-// Pagini dinamice cu joburi
-res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
-
-// Sitemap
-res.set('Cache-Control', 'public, max-age=3600');
-```
+**Notă termen lung (sitemap >1000 URL-uri):** generarea sincronă la fiecare request va bloca Event Loop-ul — mută generarea într-un worker care scrie un fișier `.xml` static la 12–24h.
 
 ---
 
@@ -648,22 +631,22 @@ res.set('Cache-Control', 'public, max-age=3600');
 | # | Subiect | Status | Acțiune recomandată |
 |---|---------|--------|---------------------|
 | 1 | Sitemap manual + escape XML | ✅ OK | — |
-| 2 | Landing invalid → 302 `/jobs` | ⚠️ | Consideră 404 |
+| 2 | Landing invalid → 404 util | ✅ OK | — |
 | 3 | WWW redirect | ✅ OK | — |
 | 4 | Job expirat → 404 custom | ✅ OK | — |
 | 5 | Canonical fără UTM | ✅ OK | — |
-| 6 | `lang="en"` vs `en-GB` | ⚠️ | Aliniază la `en-GB` |
+| 6 | `lang="en-GB"` aliniat JSON-LD | ✅ OK | — |
 | 7 | noindex rute sensibile | ✅ OK | — |
 | 8 | JobPosting schema | ✅ OK | Hide company name = N/A încă |
 | 9 | AggregateRating condiționat | ✅ OK | — |
 | 10 | Breadcrumbs 1-based | ✅ OK | — |
-| 11 | preload + defer | ✅ Parțial | Self-host Bootstrap CSS |
+| 11 | preload + self-host Bootstrap CSS | ✅ OK | — |
 | 12 | lazy-load logo-uri | ✅ OK | — |
 | 13 | SSR pagini publice | ✅ OK | — |
 | 14 | JSON-LD fără PII | ✅ OK | — |
-| 15 | Trailing slash | ❌ Lipsă | Middleware 301 |
-| 16 | rel nofollow pe UGC | ❌ Lipsă | Adaugă pe website links |
-| 17 | Cache-Control explicit | ❌ Lipsă | max-age pe sitemap + jobs |
+| 15 | Trailing slash 301 | ✅ OK | — |
+| 16 | rel nofollow/ugc pe UGC | ✅ OK | — |
+| 17 | Cache-Control explicit | ✅ OK | Sitemap static worker la scale |
 
 ---
 
