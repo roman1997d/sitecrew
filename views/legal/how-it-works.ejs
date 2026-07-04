@@ -1,0 +1,48 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section section-how">
+  <div class="site-container">
+    <div class="section-header">
+      <span class="section-eyebrow">Simple process</span>
+      <h1 class="section-title">How SiteCrew works</h1>
+      <p class="section-desc">Two paths. One platform. Get started in minutes.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="how-card how-card-worker">
+          <div class="how-card-icon"><i class="bi bi-person-hard-hat"></i></div>
+          <h2>For workers</h2>
+          <ul class="how-steps">
+            <li><span class="step-num">1</span> Create your free profile and add your trades</li>
+            <li><span class="step-num">2</span> Set availability and browse matched jobs</li>
+            <li><span class="step-num">3</span> Apply directly and message companies</li>
+          </ul>
+          <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-cta btn-sc-sm">Register as worker</a>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="how-card how-card-company">
+          <div class="how-card-icon"><i class="bi bi-building"></i></div>
+          <h2>For companies</h2>
+          <ul class="how-steps">
+            <li><span class="step-num">1</span> Register and get verified by SiteCrew</li>
+            <li><span class="step-num">2</span> Post open roles with rates and requirements</li>
+            <li><span class="step-num">3</span> Review applicants and hire on site</li>
+          </ul>
+          <a href="/login?mode=register&role=company" class="btn-sc btn-sc-outline btn-sc-sm">Register as company</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="how-faq-links">
+      <p>Explore open roles or learn more about the platform.</p>
+      <div class="hero-cta">
+        <a href="/jobs" class="btn-sc btn-sc-blue">Browse jobs</a>
+        <a href="/about" class="btn-sc btn-sc-outline">About SiteCrew</a>
+        <a href="/contact" class="btn-sc btn-sc-outline">Contact us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

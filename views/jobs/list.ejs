@@ -3,18 +3,55 @@
 <section class="section public-jobs-page">
   <div class="site-container">
     <div class="section-header">
-      <span class="section-eyebrow">Open roles</span>
-      <h1 class="section-title">Construction jobs in the UK</h1>
-      <p class="section-desc">Browse live site roles posted by verified companies on SiteCrew. Create a free worker account to apply.</p>
+      <span class="section-eyebrow"><%= page.eyebrow || 'Open roles' %></span>
+      <h1 class="section-title"><%= page.heading || 'Construction jobs in the UK' %></h1>
+      <p class="section-desc"><%= page.intro || 'Browse live site roles posted by verified companies on SiteCrew. Create a free worker account to apply.' %></p>
     </div>
+
+    <form class="public-jobs-search" method="get" action="/jobs">
+      <div class="public-jobs-search-grid">
+        <label class="public-jobs-search-field">
+          <span>Search</span>
+          <input type="search" name="q" value="<%= filters.q || '' %>" placeholder="Job title, trade, company…">
+        </label>
+        <label class="public-jobs-search-field">
+          <span>Trade</span>
+          <input type="text" name="trade" value="<%= filters.trade || '' %>" placeholder="e.g. Electrician">
+        </label>
+        <label class="public-jobs-search-field">
+          <span>Location</span>
+          <input type="text" name="city" value="<%= filters.city || '' %>" placeholder="e.g. London">
+        </label>
+        <button type="submit" class="btn-sc btn-sc-blue">Search jobs</button>
+      </div>
+    </form>
+
+    <% if (tradeLinks && tradeLinks.length) { %>
+      <div class="public-jobs-browse">
+        <span>Browse by trade:</span>
+        <% tradeLinks.forEach(function(link) { %>
+          <a href="<%= link.path %>"><%= link.label %></a>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <% if (cityLinks && cityLinks.length) { %>
+      <div class="public-jobs-browse">
+        <span>Browse by city:</span>
+        <% cityLinks.forEach(function(link) { %>
+          <a href="<%= link.path %>"><%= link.label %></a>
+        <% }); %>
+      </div>
+    <% } %>
 
     <% if (!jobs.length) { %>
       <div class="public-jobs-empty">
-        <h2>No open jobs right now</h2>
-        <p>New roles are posted regularly. Register as a worker to get matched when jobs go live.</p>
+        <h2>No matching jobs right now</h2>
+        <p>Try another trade or location, or register as a worker to get matched when new roles go live.</p>
         <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-cta">Join as worker</a>
       </div>
     <% } else { %>
+      <p class="public-jobs-count"><%= jobs.length %> job<%= jobs.length === 1 ? '' : 's' %> found</p>
       <div class="row g-4">
         <% jobs.forEach(function(job) { %>
           <div class="col-md-4">
@@ -25,7 +62,13 @@
               </div>
               <div class="job-card-body">
                 <p class="public-job-trade"><%= job.trade %></p>
-                <p class="public-job-company"><%= job.companyName %></p>
+                <p class="public-job-company">
+                  <% if (job.companySlug) { %>
+                    <a href="/companies/<%= job.companySlug %>"><%= job.companyName %></a>
+                  <% } else { %>
+                    <%= job.companyName %>
+                  <% } %>
+                </p>
                 <div class="job-rate-big"><%= job.rate %></div>
                 <% if (job.duration) { %>
                   <span class="badge-live"><%= job.duration %></span>

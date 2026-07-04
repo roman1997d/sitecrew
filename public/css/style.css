@@ -1201,3 +1201,242 @@ main { flex: 1; }
   gap: 12px;
   margin-top: 24px;
 }
+
+.public-jobs-search {
+  margin-bottom: 24px;
+}
+
+.public-jobs-search-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.public-jobs-search-field {
+  display: grid;
+  gap: 6px;
+}
+
+.public-jobs-search-field span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.public-jobs-search-field input {
+  width: 100%;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.public-jobs-browse {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.public-jobs-browse a {
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid #E2E8F0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: #fff;
+}
+
+.public-jobs-count {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+}
+
+.public-job-company a,
+.public-job-detail-head a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.public-company-page {
+  padding-top: 110px;
+}
+
+.public-company-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  padding: 28px;
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.public-company-hero-main {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.public-company-logo,
+.public-company-logo-img {
+  width: 84px;
+  height: 84px;
+  border-radius: 18px;
+  flex-shrink: 0;
+}
+
+.public-company-logo {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.4rem;
+}
+
+.public-company-logo-img {
+  object-fit: cover;
+  border: 1px solid #E2E8F0;
+}
+
+.public-company-meta {
+  color: var(--text-muted);
+  margin: 8px 0 12px;
+}
+
+.public-company-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #047857;
+  font-weight: 600;
+}
+
+.public-company-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.public-company-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.public-company-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  background: #fff;
+  padding: 24px;
+}
+
+.public-company-card h2 {
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.public-company-details {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.public-company-jobs {
+  display: grid;
+  gap: 12px;
+}
+
+.public-company-job {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.public-company-job:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.public-company-job h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.public-company-job p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.public-company-reviews {
+  margin-top: 20px;
+}
+
+.public-company-review-list {
+  display: grid;
+  gap: 14px;
+}
+
+.public-company-review-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.about-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  background: #fff;
+  padding: 24px;
+}
+
+.about-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.how-faq-links {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.how-faq-links .hero-cta {
+  justify-content: center;
+}
+
+@media (max-width: 991px) {
+  .public-jobs-search-grid,
+  .public-company-grid,
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-company-hero {
+    flex-direction: column;
+  }
+}

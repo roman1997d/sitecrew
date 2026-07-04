@@ -8,7 +8,13 @@
       <div class="public-job-detail-head <%= job.theme %>">
         <span class="public-job-detail-trade"><%= job.trade %></span>
         <h1><%= job.title %></h1>
-        <p><i class="bi bi-geo-alt"></i> <%= job.location %> · <%= job.companyName %></p>
+        <p><i class="bi bi-geo-alt"></i> <%= job.location %> ·
+          <% if (job.companySlug) { %>
+            <a href="/companies/<%= job.companySlug %>"><%= job.companyName %></a>
+          <% } else { %>
+            <%= job.companyName %>
+          <% } %>
+        </p>
       </div>
 
       <div class="public-job-detail-body">

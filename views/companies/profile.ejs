@@ -1,0 +1,84 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section public-company-page">
+  <div class="site-container">
+    <a href="/jobs" class="public-job-back"><i class="bi bi-arrow-left"></i> Back to jobs</a>
+
+    <article class="public-company-hero">
+      <div class="public-company-hero-main">
+        <% if (company.logo) { %>
+          <img src="<%= company.logo %>" alt="<%= company.name %> logo" class="public-company-logo-img">
+        <% } else { %>
+          <div class="public-company-logo"><%= company.initials %></div>
+        <% } %>
+        <div>
+          <span class="section-eyebrow">Hiring company</span>
+          <h1 class="section-title"><%= company.name %></h1>
+          <p class="public-company-meta">
+            <i class="bi bi-geo-alt"></i> <%= company.location %>
+            <% if (company.ratingCount) { %>
+              · <i class="bi bi-star-fill"></i> <%= company.ratingAverage %> (<%= company.ratingCount %> review<%= company.ratingCount === 1 ? '' : 's' %>)
+            <% } %>
+          </p>
+          <% if (company.verified) { %>
+            <span class="public-company-badge"><i class="bi bi-patch-check-fill"></i> Verified company</span>
+          <% } %>
+        </div>
+      </div>
+      <div class="public-company-cta">
+        <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-cta">Join to apply</a>
+        <a href="/jobs" class="btn-sc btn-sc-outline">Browse all jobs</a>
+      </div>
+    </article>
+
+    <div class="public-company-grid">
+      <section class="public-company-card">
+        <h2>About <%= company.name %></h2>
+        <p><%= company.description %></p>
+        <ul class="public-company-details">
+          <% if (company.businessType) { %><li><strong>Business type:</strong> <%= company.businessType %></li><% } %>
+          <% if (company.trades.length) { %><li><strong>Trades:</strong> <%= company.trades.join(', ') %></li><% } %>
+          <% if (company.website) { %><li><strong>Website:</strong> <a href="<%= company.website %>" rel="noopener noreferrer"><%= company.website %></a></li><% } %>
+        </ul>
+      </section>
+
+      <section class="public-company-card">
+        <h2>Open jobs</h2>
+        <% if (!jobs.length) { %>
+          <p>No open jobs from this company right now. Check back soon or browse other roles on SiteCrew.</p>
+        <% } else { %>
+          <div class="public-company-jobs">
+            <% jobs.forEach(function(job) { %>
+              <article class="public-company-job">
+                <div>
+                  <h3><a href="<%= job.url %>"><%= job.title %></a></h3>
+                  <p><%= job.trade %> · <%= job.location %> · <%= job.rate %></p>
+                </div>
+                <a href="<%= job.url %>" class="btn-sc btn-sc-blue btn-sc-sm">View job</a>
+              </article>
+            <% }); %>
+          </div>
+        <% } %>
+      </section>
+    </div>
+
+    <% if (reviews.length) { %>
+      <section class="public-company-card public-company-reviews">
+        <h2>Worker reviews</h2>
+        <div class="public-company-review-list">
+          <% reviews.forEach(function(review) { %>
+            <article class="public-company-review">
+              <div class="public-company-review-head">
+                <strong><%= review.workerName %></strong>
+                <span><%= '★'.repeat(review.rating) %><%= '☆'.repeat(5 - review.rating) %></span>
+              </div>
+              <% if (review.feedback) { %><p><%= review.feedback %></p><% } %>
+            </article>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

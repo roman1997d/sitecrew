@@ -326,6 +326,30 @@ router.get('/', requireAuth, requireRole('worker', 'company', 'admin'), asyncHan
   res.json({ companies, total, offset: pageOffset, limit: pageLimit });
 }));
 
+router.get('/public/index', asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    `SELECT
+       cp.user_id,
+       cp.company_name,
+       cp.city,
+       cp.updated_at,
+       (
+         SELECT COUNT(*)::int
+         FROM jobs j
+         WHERE j.company_id = cp.user_id
+           AND ${OPEN_WORKER_APPLYABLE_JOB_FILTER}
+       ) AS open_job_count
+     FROM company_profiles cp
+     JOIN users u ON u.id = cp.user_id
+     WHERE u.status = 'active'
+       AND cp.verification_status = 'approved'
+     ORDER BY cp.company_name ASC
+     LIMIT 500`
+  );
+
+  res.json({ companies: result.rows });
+}));
+
 router.get('/:id', asyncHandler(async (req, res) => {
   const profile = await pool.query(
     `SELECT cp.*, u.email

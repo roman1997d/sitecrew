@@ -16,6 +16,22 @@ const {
   mapPublicJobDetail,
   getJobPostingSchema,
 } = require('./utils/publicJobs');
+const {
+  resolveJobLandingSlug,
+  getLandingSeo,
+  getLandingFilters,
+  getAllLandingPaths,
+  getTradeBrowseLinks,
+  getCityBrowseLinks,
+} = require('./utils/seoLandings');
+const {
+  buildCompanySlug,
+  parseCompanySlug,
+  mapPublicCompanyProfile,
+  mapPublicCompanyJobs,
+  mapPublicCompanyReviews,
+  getCompanyOrganizationSchema,
+} = require('./utils/publicCompanies');
 const { isWorkerApplyableJob } = require('./backend/src/utils/jobVisibility');
 const { filterJobsByTradeInterests } = require('./backend/src/utils/tradeMatching');
 
@@ -90,12 +106,28 @@ app.get('/robots.txt', (req, res) => {
 app.get('/sitemap.xml', async (req, res) => {
   let extraUrls = [];
   try {
-    const jobs = await fetchAllPublicOpenJobs();
-    extraUrls = jobs.map((job) => ({
-      path: job.url,
-      changefreq: 'weekly',
-      priority: '0.7',
-    }));
+    const [jobs, companies] = await Promise.all([
+      fetchAllPublicOpenJobs(),
+      fetchPublicCompanyIndex(),
+    ]);
+
+    extraUrls = [
+      ...getAllLandingPaths().map((path) => ({
+        path,
+        changefreq: 'weekly',
+        priority: '0.75',
+      })),
+      ...jobs.map((job) => ({
+        path: job.url,
+        changefreq: 'weekly',
+        priority: '0.7',
+      })),
+      ...companies.map((company) => ({
+        path: `/companies/${company.slug}`,
+        changefreq: 'weekly',
+        priority: company.open_job_count > 0 ? '0.65' : '0.5',
+      })),
+    ];
   } catch (error) {
     // Keep static sitemap entries when the API is unavailable.
   }
@@ -997,15 +1029,114 @@ async function buildPublicCompanyProfile(token, companyId) {
   };
 }
 
-async function fetchAllPublicOpenJobs() {
+async function fetchFilteredPublicJobs({ trade = '', city = '', q = '' } = {}) {
   try {
-    const response = await fetch(`${API_INTERNAL_URL}/api/jobs?status=open`);
+    const params = new URLSearchParams({ status: 'open' });
+    if (trade) params.set('trade', trade);
+    if (city) params.set('city', city);
+
+    const response = await fetch(`${API_INTERNAL_URL}/api/jobs?${params}`);
     if (!response.ok) return [];
     const data = await response.json();
-    return (data.jobs || []).map(mapPublicJobCard);
+    let jobs = (data.jobs || []).map(mapPublicJobCard);
+    const query = String(q || '').trim().toLowerCase();
+
+    if (query) {
+      jobs = jobs.filter((job) => [job.title, job.trade, job.location, job.companyName, job.description]
+        .join(' ')
+        .toLowerCase()
+        .includes(query));
+    }
+
+    return jobs;
   } catch (error) {
     return [];
   }
+}
+
+async function fetchAllPublicOpenJobs() {
+  return fetchFilteredPublicJobs();
+}
+
+async function fetchPublicCompanyIndex() {
+  try {
+    const response = await fetch(`${API_INTERNAL_URL}/api/companies/public/index`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return (data.companies || []).map((company) => ({
+      slug: buildCompanySlug(company.company_name, company.user_id),
+      open_job_count: Number(company.open_job_count || 0),
+    }));
+  } catch (error) {
+    return [];
+  }
+}
+
+async function fetchPublicCompanyById(companyId) {
+  try {
+    const response = await fetch(`${API_INTERNAL_URL}/api/companies/${companyId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    return null;
+  }
+}
+
+function buildJobsListPath(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.q) params.set('q', filters.q);
+  if (filters.trade) params.set('trade', filters.trade);
+  if (filters.city) params.set('city', filters.city);
+  const query = params.toString();
+  return query ? `/jobs?${query}` : '/jobs';
+}
+
+async function renderPublicJobsPage(req, res, options = {}) {
+  const filters = {
+    q: String(options.filters?.q ?? req.query.q ?? '').trim(),
+    trade: String(options.filters?.trade ?? req.query.trade ?? '').trim(),
+    city: String(options.filters?.city ?? req.query.city ?? '').trim(),
+  };
+  const landing = options.landing || null;
+  const jobs = await fetchFilteredPublicJobs(filters);
+
+  let pageMeta;
+  if (landing) {
+    pageMeta = getLandingSeo(landing, jobs.length);
+  } else {
+    const hasFilters = Boolean(filters.q || filters.trade || filters.city);
+    const filterLabel = [filters.trade, filters.city, filters.q].filter(Boolean).join(' · ');
+    pageMeta = {
+      path: buildJobsListPath(filters),
+      eyebrow: hasFilters ? 'Search results' : 'Open roles',
+      heading: hasFilters ? `Construction jobs: ${filterLabel}` : 'Construction jobs in the UK',
+      intro: 'Browse live site roles posted by verified companies on SiteCrew. Create a free worker account to apply.',
+      title: hasFilters
+        ? `${filterLabel} construction jobs | SiteCrew`
+        : 'Construction Jobs in the UK | SiteCrew',
+      description: hasFilters
+        ? `Browse construction jobs matching ${filterLabel} on SiteCrew. Apply directly as a worker or post roles as a company.`
+        : 'Browse open construction jobs posted by verified UK companies on SiteCrew. Apply directly as a worker or post your own roles as a company.',
+    };
+  }
+
+  return res.render('jobs/list', {
+    seo: buildSeo({
+      path: pageMeta.path,
+      title: pageMeta.title,
+      description: pageMeta.description,
+      jsonLd: getBreadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Jobs', path: '/jobs' },
+        ...(landing ? [{ name: pageMeta.heading, path: pageMeta.path }] : []),
+      ]),
+    }),
+    jobs,
+    page: pageMeta,
+    filters,
+    tradeLinks: options.showBrowseLinks === false ? [] : getTradeBrowseLinks(),
+    cityLinks: options.showBrowseLinks === false ? [] : getCityBrowseLinks(),
+  });
 }
 
 async function fetchPublicOpenJobs(limit = 6) {
@@ -1133,57 +1264,77 @@ app.get('/', async (req, res) => {
   });
 });
 
-app.get('/jobs', async (req, res) => {
-  const jobs = await fetchAllPublicOpenJobs();
+app.get('/jobs', async (req, res) => renderPublicJobsPage(req, res));
 
-  return res.render('jobs/list', {
-    seo: buildSeo({
-      path: '/jobs',
-      title: 'Construction Jobs in the UK | SiteCrew',
-      description: 'Browse open construction jobs posted by verified UK companies on SiteCrew. Apply directly as a worker or post your own roles as a company.',
-      jsonLd: getBreadcrumbSchema([
-        { name: 'Home', path: '/' },
-        { name: 'Jobs', path: '/jobs' },
-      ]),
-    }),
-    jobs,
-  });
-});
+app.get('/jobs/:segment', async (req, res) => {
+  const { segment } = req.params;
 
-app.get('/jobs/:id', async (req, res) => {
-  const job = await fetchPublicJobById(req.params.id);
-  if (!job) {
+  if (/^\d+$/.test(segment)) {
+    const job = await fetchPublicJobById(segment);
+    if (!job) {
+      return res.redirect('/jobs');
+    }
+
+    const jobPath = `/jobs/${job.id}`;
+    const jobSeo = buildSeo({
+      path: jobPath,
+      title: `${job.title} in ${job.location} | SiteCrew`,
+      description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
+      jsonLd: [
+        getBreadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Jobs', path: '/jobs' },
+          { name: job.title, path: jobPath },
+        ]),
+        getJobPostingSchema(
+          {
+            title: job.title,
+            description: job.description,
+            created_at: job.createdAt,
+            company_name: job.companyName,
+            city: job.location,
+            rate: job.rate,
+          },
+          buildSeo({ path: jobPath }).canonical
+        ),
+      ],
+    });
+
+    return res.render('jobs/detail', {
+      seo: jobSeo,
+      job,
+    });
+  }
+
+  const landing = resolveJobLandingSlug(segment);
+  if (!landing) {
     return res.redirect('/jobs');
   }
 
-  const jobPath = `/jobs/${job.id}`;
-  const jobSeo = buildSeo({
-    path: jobPath,
-    title: `${job.title} in ${job.location} | SiteCrew`,
-    description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
-    jsonLd: [
-      getBreadcrumbSchema([
-        { name: 'Home', path: '/' },
-        { name: 'Jobs', path: '/jobs' },
-        { name: job.title, path: jobPath },
-      ]),
-      getJobPostingSchema(
-        {
-          title: job.title,
-          description: job.description,
-          created_at: job.createdAt,
-          company_name: job.companyName,
-          city: job.location,
-          rate: job.rate,
-        },
-        buildSeo({ path: jobPath }).canonical
-      ),
-    ],
+  return renderPublicJobsPage(req, res, {
+    landing: { ...landing, slug: segment },
+    filters: getLandingFilters(landing),
+    showBrowseLinks: false,
   });
+});
 
-  return res.render('jobs/detail', {
-    seo: jobSeo,
-    job,
+app.get('/about', (req, res) => {
+  res.render('legal/about', {
+    seo: buildSeo({
+      path: '/about',
+      title: 'About SiteCrew — UK Construction Recruitment',
+      description: 'Learn how SiteCrew connects UK construction workers and verified companies for direct hiring, job applications, and site communication.',
+    }),
+  });
+});
+
+app.get('/how-it-works', (req, res) => {
+  res.render('legal/how-it-works', {
+    seo: buildSeo({
+      path: '/how-it-works',
+      title: 'How SiteCrew Works for Workers & Companies',
+      description: 'See how workers find construction jobs and how companies hire tradespeople directly on SiteCrew — register, match, apply, and hire in minutes.',
+    }),
   });
 });
 
@@ -1310,19 +1461,67 @@ app.get('/workers/:id/profile', requireWorkerAuth, async (req, res) => {
   }
 });
 
-app.get('/companies/:id', requireWorkerAuth, async (req, res) => {
-  try {
-    const profile = await buildPublicCompanyProfile(req.authToken, req.params.id);
-    profile.workerLanguagePreference = req.sessionProfile?.language_preference || '';
-    profile.workerId = req.sessionUser.id;
-    res.render('company/public-profile', {
-      title: profile.company.name,
-      profile,
-    });
-  } catch (error) {
-    console.error(error);
-    res.redirect('/worker/dashboard');
+app.get('/companies/:slugOrId', async (req, res) => {
+  const companyId = parseCompanySlug(req.params.slugOrId);
+  if (!companyId) {
+    return res.redirect('/jobs');
   }
+
+  let session = null;
+  try {
+    session = await getSessionFromRequest(req);
+  } catch (error) {
+    session = null;
+  }
+
+  if (session?.user?.role === 'worker') {
+    try {
+      const profile = await buildPublicCompanyProfile(session.token, companyId);
+      profile.workerLanguagePreference = session.profile?.language_preference || '';
+      profile.workerId = session.user.id;
+      return res.render('company/public-profile', {
+        title: profile.company.name,
+        profile,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.redirect('/worker/dashboard');
+    }
+  }
+
+  const data = await fetchPublicCompanyById(companyId);
+  if (!data?.profile) {
+    return res.redirect('/jobs');
+  }
+
+  const company = mapPublicCompanyProfile(data);
+  const canonicalSlug = company.slug;
+  if (req.params.slugOrId !== canonicalSlug && req.params.slugOrId !== String(companyId)) {
+    return res.redirect(301, `/companies/${canonicalSlug}`);
+  }
+
+  const companyPath = `/companies/${canonicalSlug}`;
+  const robots = company.verified ? 'index, follow' : 'noindex, follow';
+
+  return res.render('companies/profile', {
+    seo: buildSeo({
+      path: companyPath,
+      title: `${company.name} — Construction Jobs & Hiring | SiteCrew`,
+      description: `${company.name} in ${company.location}. ${company.description.slice(0, 140)}`,
+      robots,
+      jsonLd: [
+        getBreadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Jobs', path: '/jobs' },
+          { name: company.name, path: companyPath },
+        ]),
+        getCompanyOrganizationSchema(company, buildSeo({ path: companyPath }).canonical),
+      ],
+    }),
+    company,
+    jobs: mapPublicCompanyJobs(data.jobs || []),
+    reviews: mapPublicCompanyReviews(data.reviews || []),
+  });
 });
 
 app.get('/company/dashboard', requireCompanyAuth, async (req, res) => {

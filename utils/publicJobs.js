@@ -39,6 +39,8 @@ function getJobValidThrough(createdAt) {
 
 function mapPublicJobCard(job, index = 0) {
   const location = job.city || job.postcode || 'UK';
+  const companyName = job.company_name || 'Company';
+  const companyId = job.company_id || null;
   return {
     id: job.id,
     title: job.title,
@@ -48,7 +50,9 @@ function mapPublicJobCard(job, index = 0) {
     duration: job.duration || '',
     theme: getJobCardTheme(job.trade_required, index),
     url: `/jobs/${job.id}`,
-    companyName: job.company_name || 'Company',
+    companyName,
+    companyId,
+    companySlug: companyId ? `${slugify(companyName)}-${companyId}` : '',
     description: job.description || '',
     createdAt: job.created_at,
   };

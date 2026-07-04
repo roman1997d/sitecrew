@@ -60,6 +60,14 @@ function getWebsiteSchema() {
     url: getSiteUrl(),
     description: DEFAULT_DESCRIPTION,
     inLanguage: 'en-GB',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${getSiteUrl()}/jobs?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
   };
 }
 
@@ -115,6 +123,8 @@ function getHomePageJsonLd() {
 const SITEMAP_PAGES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/jobs', changefreq: 'daily', priority: '0.9' },
+  { path: '/about', changefreq: 'monthly', priority: '0.6' },
+  { path: '/how-it-works', changefreq: 'monthly', priority: '0.6' },
   { path: '/login?mode=register&role=worker', changefreq: 'monthly', priority: '0.7' },
   { path: '/login?mode=register&role=company', changefreq: 'monthly', priority: '0.7' },
   { path: '/terms', changefreq: 'yearly', priority: '0.4' },
