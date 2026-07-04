@@ -1,0 +1,24 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section">
+  <div class="site-container">
+    <div class="section-header">
+      <span class="section-eyebrow">SiteCrew blog</span>
+      <h1 class="section-title">Construction hiring guides</h1>
+      <p class="section-desc">Practical advice for UK tradespeople and companies — jobs, day rates, and hiring without agencies.</p>
+    </div>
+
+    <div class="blog-list">
+      <% posts.forEach(function(post) { %>
+        <article class="blog-card">
+          <span class="blog-date"><%= new Date(post.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
+          <h2><a href="/blog/<%= post.slug %>"><%= post.title %></a></h2>
+          <p><%= post.description %></p>
+          <a href="/blog/<%= post.slug %>" class="btn-sc btn-sc-ghost btn-sc-sm">Read article</a>
+        </article>
+      <% }); %>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -82,6 +82,36 @@ const CITY_LANDINGS = {
     filter: 'Brighton',
     intro: 'Construction roles in Brighton and the South Coast. View current vacancies and apply directly to hiring companies.',
   },
+  sheffield: {
+    label: 'Sheffield',
+    filter: 'Sheffield',
+    intro: 'Construction jobs in Sheffield and South Yorkshire. Browse open site roles from verified employers on SiteCrew.',
+  },
+  nottingham: {
+    label: 'Nottingham',
+    filter: 'Nottingham',
+    intro: 'Find construction work in Nottingham and the East Midlands. Apply directly to companies hiring on SiteCrew.',
+  },
+  cardiff: {
+    label: 'Cardiff',
+    filter: 'Cardiff',
+    intro: 'Cardiff construction vacancies across trades. View live jobs and connect with hiring companies in Wales.',
+  },
+  edinburgh: {
+    label: 'Edinburgh',
+    filter: 'Edinburgh',
+    intro: 'Edinburgh construction jobs from verified UK companies. Browse roles and apply with a free SiteCrew account.',
+  },
+  newcastle: {
+    label: 'Newcastle',
+    filter: 'Newcastle',
+    intro: 'Construction roles in Newcastle and the North East. SiteCrew lists open jobs with rates and company details.',
+  },
+  southampton: {
+    label: 'Southampton',
+    filter: 'Southampton',
+    intro: 'Southampton construction jobs on live projects. Find skilled trade work and apply without agencies.',
+  },
 };
 
 const POPULAR_COMBO_SLUGS = [

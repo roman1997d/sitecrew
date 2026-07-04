@@ -154,66 +154,37 @@
       </div>
       <div class="company-carousel-viewport">
         <div class="company-carousel-track">
-          <div class="company-carousel-slide">
-            <div class="company-post">
-              <div class="company-post-img img-1"><div class="company-avatar"><i class="bi bi-building"></i></div></div>
-              <div class="company-post-body">
-                <h5>Apex Construction</h5>
-                <p>Starting 120-unit residential project in Liverpool — hiring 20+ trades.</p>
-                <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-ghost btn-sc-sm">Join to follow</a>
+          <% if (companiesCarousel && companiesCarousel.length) { %>
+            <% companiesCarousel.forEach(function(company) { %>
+              <div class="company-carousel-slide">
+                <div class="company-post">
+                  <div class="company-post-img <%= company.themeClass %>">
+                    <% if (company.logo) { %>
+                      <img src="<%= company.logo %>" alt="<%= company.name %>" class="company-carousel-logo" loading="lazy" decoding="async" width="48" height="48">
+                    <% } else { %>
+                      <div class="company-avatar"><%= company.initials %></div>
+                    <% } %>
+                  </div>
+                  <div class="company-post-body">
+                    <h5><%= company.name %></h5>
+                    <p><%= company.description %></p>
+                    <a href="/companies/<%= company.slug %>" class="btn-sc btn-sc-ghost btn-sc-sm">View company</a>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="company-carousel-slide">
+              <div class="company-post">
+                <div class="company-post-img img-1"><div class="company-avatar"><i class="bi bi-building"></i></div></div>
+                <div class="company-post-body">
+                  <h5>Verified UK companies</h5>
+                  <p>Browse construction employers hiring on SiteCrew.</p>
+                  <a href="/companies" class="btn-sc btn-sc-ghost btn-sc-sm">View companies</a>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="company-carousel-slide">
-            <div class="company-post">
-              <div class="company-post-img img-2"><div class="company-avatar"><i class="bi bi-building"></i></div></div>
-              <div class="company-post-body">
-                <h5>NorthBuild Ltd</h5>
-                <p>Looking for 15 dryliners for a major Manchester commercial fit-out.</p>
-                <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-ghost btn-sc-sm">Join to follow</a>
-              </div>
-            </div>
-          </div>
-          <div class="company-carousel-slide">
-            <div class="company-post">
-              <div class="company-post-img img-3"><div class="company-avatar"><i class="bi bi-building"></i></div></div>
-              <div class="company-post-body">
-                <h5>Skyline Projects</h5>
-                <p>New Leeds commercial project kicking off next week — multiple trades needed.</p>
-                <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-ghost btn-sc-sm">Join to follow</a>
-              </div>
-            </div>
-          </div>
-          <div class="company-carousel-slide">
-            <div class="company-post">
-              <div class="company-post-img img-4"><div class="company-avatar"><i class="bi bi-building"></i></div></div>
-              <div class="company-post-body">
-                <h5>Brickwell Group</h5>
-                <p>Expanding Birmingham team — bricklayers and labourers wanted immediately.</p>
-                <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-ghost btn-sc-sm">Join to follow</a>
-              </div>
-            </div>
-          </div>
-          <div class="company-carousel-slide">
-            <div class="company-post">
-              <div class="company-post-img img-5"><div class="company-avatar"><i class="bi bi-building"></i></div></div>
-              <div class="company-post-body">
-                <h5>Metro Fit-Out</h5>
-                <p>London office refurbishment starting Monday — electricians &amp; joiners needed.</p>
-                <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-ghost btn-sc-sm">Join to follow</a>
-              </div>
-            </div>
-          </div>
-          <div class="company-carousel-slide">
-            <div class="company-post">
-              <div class="company-post-img img-6"><div class="company-avatar"><i class="bi bi-building"></i></div></div>
-              <div class="company-post-body">
-                <h5>Coastal Developments</h5>
-                <p>Brighton seafront project — plasterers and painters required for 6-month contract.</p>
-                <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-ghost btn-sc-sm">Join to follow</a>
-              </div>
-            </div>
-          </div>
+          <% } %>
         </div>
       </div>
       <div class="company-carousel-dots" role="tablist" aria-label="Company updates slides"></div>

@@ -246,11 +246,13 @@ CREATE TABLE IF NOT EXISTS jobs (
   rate VARCHAR(60),
   workers_required INTEGER NOT NULL DEFAULT 1,
   status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'closed')),
+  closes_at TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS closes_at TIMESTAMP;
 UPDATE jobs SET created_by_user_id = company_id WHERE created_by_user_id IS NULL;
 
 CREATE TABLE IF NOT EXISTS applications (

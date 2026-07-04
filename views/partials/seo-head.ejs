@@ -7,6 +7,9 @@
 <title><%= pageTitle %></title>
 <meta name="description" content="<%= pageDescription %>">
 <meta name="robots" content="<%= robots %>">
+<% if (typeof googleSiteVerification !== 'undefined' && googleSiteVerification) { %>
+<meta name="google-site-verification" content="<%= googleSiteVerification %>">
+<% } %>
 <% if (canonicalUrl) { %>
 <link rel="canonical" href="<%= canonicalUrl %>">
 <% } %>

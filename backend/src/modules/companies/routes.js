@@ -332,6 +332,8 @@ router.get('/public/index', asyncHandler(async (req, res) => {
        cp.user_id,
        cp.company_name,
        cp.city,
+       cp.description,
+       cp.logo,
        cp.updated_at,
        (
          SELECT COUNT(*)::int
@@ -343,7 +345,7 @@ router.get('/public/index', asyncHandler(async (req, res) => {
      JOIN users u ON u.id = cp.user_id
      WHERE u.status = 'active'
        AND cp.verification_status = 'approved'
-     ORDER BY cp.company_name ASC
+     ORDER BY open_job_count DESC, cp.company_name ASC
      LIMIT 500`
   );
 
@@ -400,12 +402,22 @@ router.get('/:id', asyncHandler(async (req, res) => {
   );
 
   res.json({
-    profile: profile.rows[0],
+    profile: sanitizeCompanyProfileForRequest(profile.rows[0], req),
     jobs: jobs.rows,
     reviews: reviews.rows,
     rating: rating.rows[0],
   });
 }));
+
+function sanitizeCompanyProfileForRequest(profile, req) {
+  const isAuthenticated = Boolean(req.headers.authorization);
+  if (isAuthenticated) {
+    return profile;
+  }
+
+  const { email, phone, ...publicProfile } = profile;
+  return publicProfile;
+}
 
 router.post('/:id/reviews', requireAuth, requireRole('worker'), validate(companyReviewSchema), asyncHandler(async (req, res) => {
   const company = await pool.query(

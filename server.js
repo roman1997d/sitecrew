@@ -15,6 +15,8 @@ const {
   mapPublicJobCard,
   mapPublicJobDetail,
   getJobPostingSchema,
+  getJobItemListSchema,
+  parseJobIdFromSegment,
 } = require('./utils/publicJobs');
 const {
   resolveJobLandingSlug,
@@ -32,14 +34,24 @@ const {
   mapPublicCompanyJobs,
   mapPublicCompanyReviews,
   getCompanyOrganizationSchema,
+  getCompanyReviewSchemas,
+  mapPublicCompanyCarouselItem,
 } = require('./utils/publicCompanies');
+const {
+  loadBlogPosts,
+  getBlogPostBySlug,
+  getBlogSitemapEntries,
+  getArticleSchema,
+} = require('./utils/blog');
 const { isWorkerApplyableJob } = require('./backend/src/utils/jobVisibility');
 const { filterJobsByTradeInterests } = require('./backend/src/utils/tradeMatching');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GOOGLE_ANALYTICS_ID = process.env.GOOGLE_ANALYTICS_ID || 'G-RQRV1DW5GG';
+const GOOGLE_SITE_VERIFICATION = process.env.GOOGLE_SITE_VERIFICATION || '';
 app.locals.googleAnalyticsId = GOOGLE_ANALYTICS_ID;
+app.locals.googleSiteVerification = GOOGLE_SITE_VERIFICATION;
 const PUBLIC_URL = process.env.PUBLIC_URL || process.env.API_BASE_URL || 'http://localhost:3000';
 const ADMIN_PUBLIC_URL = process.env.ADMIN_PUBLIC_URL || 'https://admin.sitecrew.uk';
 const ADMIN_HOST = process.env.ADMIN_HOST || 'admin.sitecrew.uk';
@@ -118,15 +130,18 @@ app.get('/sitemap.xml', async (req, res) => {
         changefreq: 'weekly',
         priority: '0.75',
       })),
+      ...getBlogSitemapEntries(),
       ...jobs.map((job) => ({
         path: job.url,
         changefreq: 'weekly',
         priority: '0.7',
+        lastmod: job.closesAt || job.createdAt,
       })),
       ...companies.map((company) => ({
         path: `/companies/${company.slug}`,
         changefreq: 'weekly',
         priority: company.open_job_count > 0 ? '0.65' : '0.5',
+        lastmod: company.updated_at,
       })),
     ];
   } catch (error) {
@@ -1065,12 +1080,20 @@ async function fetchPublicCompanyIndex() {
     if (!response.ok) return [];
     const data = await response.json();
     return (data.companies || []).map((company) => ({
+      ...company,
       slug: buildCompanySlug(company.company_name, company.user_id),
       open_job_count: Number(company.open_job_count || 0),
     }));
   } catch (error) {
     return [];
   }
+}
+
+async function fetchPublicCompaniesCarousel(limit = 6) {
+  const companies = await fetchPublicCompanyIndex();
+  return companies
+    .slice(0, limit)
+    .map(mapPublicCompanyCarouselItem);
 }
 
 async function fetchPublicCompanyById(companyId) {
@@ -1121,16 +1144,22 @@ async function renderPublicJobsPage(req, res, options = {}) {
     };
   }
 
+  const listSchema = getJobItemListSchema(jobs, pageMeta.heading);
+  const jsonLd = [
+    getBreadcrumbSchema([
+      { name: 'Home', path: '/' },
+      { name: 'Jobs', path: '/jobs' },
+      ...(landing ? [{ name: pageMeta.heading, path: pageMeta.path }] : []),
+    ]),
+    ...(listSchema ? [listSchema] : []),
+  ];
+
   return res.render('jobs/list', {
     seo: buildSeo({
       path: pageMeta.path,
       title: pageMeta.title,
       description: pageMeta.description,
-      jsonLd: getBreadcrumbSchema([
-        { name: 'Home', path: '/' },
-        { name: 'Jobs', path: '/jobs' },
-        ...(landing ? [{ name: pageMeta.heading, path: pageMeta.path }] : []),
-      ]),
+      jsonLd,
     }),
     jobs,
     page: pageMeta,
@@ -1152,6 +1181,54 @@ function renderJobNotFound(res, jobId) {
     popularLandings: getPopularLandingLinks(),
     tradeLinks: getTradeBrowseLinks().slice(0, 6),
     cityLinks: getCityBrowseLinks().slice(0, 6),
+  });
+}
+
+async function renderJobDetailPage(req, res, segment) {
+  const jobId = parseJobIdFromSegment(segment);
+  if (!jobId) {
+    return renderJobNotFound(res, segment);
+  }
+
+  const job = await fetchPublicJobById(jobId);
+  if (!job) {
+    return renderJobNotFound(res, segment);
+  }
+
+  if (segment !== job.slug) {
+    return res.redirect(301, job.url);
+  }
+
+  const jobSeo = buildSeo({
+    path: job.url,
+    title: `${job.title} in ${job.location} | SiteCrew`,
+    description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
+    jsonLd: [
+      getBreadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Jobs', path: '/jobs' },
+        { name: job.title, path: job.url },
+      ]),
+      getJobPostingSchema(
+        {
+          id: job.id,
+          title: job.title,
+          description: job.description,
+          created_at: job.createdAt,
+          closes_at: job.closesAt,
+          company_name: job.companyName,
+          city: job.location,
+          rate: job.rate,
+          trade: job.trade,
+        },
+        buildSeo({ path: job.url }).canonical
+      ),
+    ],
+  });
+
+  return res.render('jobs/detail', {
+    seo: jobSeo,
+    job,
   });
 }
 
@@ -1261,9 +1338,10 @@ app.get('/', async (req, res) => {
     return res.redirect('/login');
   }
 
-  const [featuredJobs, platformStats] = await Promise.all([
+  const [featuredJobs, platformStats, companiesCarousel] = await Promise.all([
     fetchPublicOpenJobs(6),
     fetchPlatformStats(),
+    fetchPublicCompaniesCarousel(6),
   ]);
 
   return res.render('index', {
@@ -1277,6 +1355,7 @@ app.get('/', async (req, res) => {
     featuredJobs,
     featuredJob: featuredJobs[0] || null,
     heroStats: buildHeroStats(platformStats),
+    companiesCarousel,
   });
 });
 
@@ -1284,44 +1363,10 @@ app.get('/jobs', async (req, res) => renderPublicJobsPage(req, res));
 
 app.get('/jobs/:segment', async (req, res) => {
   const { segment } = req.params;
+  const jobId = parseJobIdFromSegment(segment);
 
-  if (/^\d+$/.test(segment)) {
-    const job = await fetchPublicJobById(segment);
-    if (!job) {
-      return renderJobNotFound(res, segment);
-    }
-
-    const jobPath = `/jobs/${job.id}`;
-    const jobSeo = buildSeo({
-      path: jobPath,
-      title: `${job.title} in ${job.location} | SiteCrew`,
-      description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
-      jsonLd: [
-        getBreadcrumbSchema([
-          { name: 'Home', path: '/' },
-          { name: 'Jobs', path: '/jobs' },
-          { name: job.title, path: jobPath },
-        ]),
-        getJobPostingSchema(
-          {
-            id: job.id,
-            title: job.title,
-            description: job.description,
-            created_at: job.createdAt,
-            company_name: job.companyName,
-            city: job.location,
-            rate: job.rate,
-            trade: job.trade,
-          },
-          buildSeo({ path: jobPath }).canonical
-        ),
-      ],
-    });
-
-    return res.render('jobs/detail', {
-      seo: jobSeo,
-      job,
-    });
+  if (jobId) {
+    return renderJobDetailPage(req, res, segment);
   }
 
   const landing = resolveJobLandingSlug(segment);
@@ -1333,6 +1378,79 @@ app.get('/jobs/:segment', async (req, res) => {
     landing: { ...landing, slug: segment },
     filters: getLandingFilters(landing),
     showBrowseLinks: false,
+  });
+});
+
+app.get('/trades', (req, res) => {
+  res.render('trades/index', {
+    seo: buildSeo({
+      path: '/trades',
+      title: 'Construction Jobs by Trade | SiteCrew',
+      description: 'Browse UK construction jobs by trade — electricians, builders, dryliners, plasterers, labourers, and more on SiteCrew.',
+      jsonLd: getBreadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Jobs', path: '/jobs' },
+        { name: 'Trades', path: '/trades' },
+      ]),
+    }),
+    tradeLinks: getTradeBrowseLinks(),
+  });
+});
+
+app.get('/companies', async (req, res) => {
+  const companies = (await fetchPublicCompanyIndex())
+    .map(mapPublicCompanyCarouselItem)
+    .sort((a, b) => b.openJobCount - a.openJobCount || a.name.localeCompare(b.name));
+
+  res.render('companies/index', {
+    seo: buildSeo({
+      path: '/companies',
+      title: 'Verified Construction Companies | SiteCrew',
+      description: 'Browse verified UK construction companies hiring on SiteCrew. View open jobs and company profiles.',
+      jsonLd: getBreadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Companies', path: '/companies' },
+      ]),
+    }),
+    companies,
+  });
+});
+
+app.get('/blog', (req, res) => {
+  const posts = loadBlogPosts();
+  res.render('blog/list', {
+    seo: buildSeo({
+      path: '/blog',
+      title: 'SiteCrew Blog — UK Construction Hiring Guides',
+      description: 'Guides for UK tradespeople and construction companies — finding jobs, day rates, and hiring without agencies.',
+    }),
+    posts,
+  });
+});
+
+app.get('/blog/:slug', (req, res) => {
+  const post = getBlogPostBySlug(req.params.slug);
+  if (!post) {
+    return res.redirect('/blog');
+  }
+
+  const postPath = `/blog/${post.slug}`;
+  return res.render('blog/post', {
+    seo: buildSeo({
+      path: postPath,
+      title: `${post.title} | SiteCrew Blog`,
+      description: post.description,
+      ogType: 'article',
+      jsonLd: [
+        getBreadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Blog', path: '/blog' },
+          { name: post.title, path: postPath },
+        ]),
+        getArticleSchema(post, buildSeo({ path: postPath }).canonical),
+      ],
+    }),
+    post,
   });
 });
 
@@ -1520,6 +1638,7 @@ app.get('/companies/:slugOrId', async (req, res) => {
 
   const companyPath = `/companies/${canonicalSlug}`;
   const robots = company.verified ? 'index, follow' : 'noindex, follow';
+  const reviews = mapPublicCompanyReviews(data.reviews || []);
 
   return res.render('companies/profile', {
     seo: buildSeo({
@@ -1534,11 +1653,12 @@ app.get('/companies/:slugOrId', async (req, res) => {
           { name: company.name, path: companyPath },
         ]),
         getCompanyOrganizationSchema(company, buildSeo({ path: companyPath }).canonical),
+        ...getCompanyReviewSchemas(reviews, company.name),
       ],
     }),
     company,
     jobs: mapPublicCompanyJobs(data.jobs || []),
-    reviews: mapPublicCompanyReviews(data.reviews || []),
+    reviews,
   });
 });
 

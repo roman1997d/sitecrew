@@ -1,0 +1,27 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section public-jobs-page">
+  <div class="site-container">
+    <div class="section-header">
+      <span class="section-eyebrow">Browse trades</span>
+      <h1 class="section-title">Construction jobs by trade</h1>
+      <p class="section-desc">Find open UK site roles by trade — electricians, builders, dryliners, labourers, and more on SiteCrew.</p>
+    </div>
+
+    <div class="hub-link-grid">
+      <% tradeLinks.forEach(function(link) { %>
+        <a href="<%= link.path %>" class="hub-link-card">
+          <strong><%= link.label %></strong>
+          <span>View <%= link.label.toLowerCase() %> jobs</span>
+        </a>
+      <% }); %>
+    </div>
+
+    <div class="public-jobs-cta">
+      <p>Not sure where to start?</p>
+      <a href="/jobs" class="btn-sc btn-sc-outline">Browse all jobs</a>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

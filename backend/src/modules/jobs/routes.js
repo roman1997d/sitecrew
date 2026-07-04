@@ -363,6 +363,11 @@ router.patch('/:id', requireAuth, requireRole('company'), validate(updateJobSche
       rate = COALESCE($12, rate),
       workers_required = COALESCE($13, workers_required),
       status = COALESCE($14, status),
+      closes_at = CASE
+        WHEN COALESCE($14, status) = 'closed' AND status <> 'closed' THEN CURRENT_TIMESTAMP
+        WHEN COALESCE($14, status) = 'open' THEN NULL
+        ELSE closes_at
+      END,
       moderation_status = $15,
       updated_at = CURRENT_TIMESTAMP
      WHERE id = $1 AND company_id = $2

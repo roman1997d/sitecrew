@@ -123,6 +123,9 @@ function getHomePageJsonLd() {
 const SITEMAP_PAGES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
   { path: '/jobs', changefreq: 'daily', priority: '0.9' },
+  { path: '/trades', changefreq: 'weekly', priority: '0.75' },
+  { path: '/companies', changefreq: 'weekly', priority: '0.75' },
+  { path: '/blog', changefreq: 'weekly', priority: '0.65' },
   { path: '/about', changefreq: 'monthly', priority: '0.6' },
   { path: '/how-it-works', changefreq: 'monthly', priority: '0.6' },
   { path: '/login?mode=register&role=worker', changefreq: 'monthly', priority: '0.7' },
@@ -141,11 +144,25 @@ function escapeXml(value = '') {
     .replaceAll("'", '&apos;');
 }
 
+function formatSitemapLastmod(value) {
+  if (!value) {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  return date.toISOString().slice(0, 10);
+}
+
 function renderSitemapXml(extraUrls = []) {
-  const lastmod = new Date().toISOString().slice(0, 10);
+  const defaultLastmod = formatSitemapLastmod();
   const entries = [...SITEMAP_PAGES, ...extraUrls];
   const urls = entries.map((entry) => {
     const loc = escapeXml(absoluteUrl(entry.path));
+    const lastmod = formatSitemapLastmod(entry.lastmod || defaultLastmod);
     return [
       '  <url>',
       `    <loc>${loc}</loc>`,
@@ -203,6 +220,7 @@ module.exports = {
   getHomeFaqItems,
   getHomePageJsonLd,
   getBreadcrumbSchema,
+  formatSitemapLastmod,
   renderSitemapXml,
   renderRobotsTxt,
 };

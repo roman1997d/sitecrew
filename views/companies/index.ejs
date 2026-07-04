@@ -1,0 +1,40 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section public-company-page">
+  <div class="site-container">
+    <div class="section-header">
+      <span class="section-eyebrow">Hiring companies</span>
+      <h1 class="section-title">Verified construction companies</h1>
+      <p class="section-desc">Browse approved UK employers on SiteCrew and view their open construction jobs.</p>
+    </div>
+
+    <% if (!companies.length) { %>
+      <div class="public-jobs-empty">
+        <h2>No verified companies listed yet</h2>
+        <p>Check back soon or browse open jobs across the UK.</p>
+        <a href="/jobs" class="btn-sc btn-sc-cta">Browse jobs</a>
+      </div>
+    <% } else { %>
+      <div class="hub-company-list">
+        <% companies.forEach(function(company) { %>
+          <article class="hub-company-card">
+            <div class="hub-company-main">
+              <% if (company.logo) { %>
+                <img src="<%= company.logo %>" alt="<%= company.name %> logo" class="public-company-logo-img" loading="lazy" decoding="async" width="64" height="64">
+              <% } else { %>
+                <div class="public-company-logo"><%= company.initials %></div>
+              <% } %>
+              <div>
+                <h2><a href="/companies/<%= company.slug %>"><%= company.name %></a></h2>
+                <p><%= company.city %><% if (company.openJobCount) { %> · <%= company.openJobCount %> open job<%= company.openJobCount === 1 ? '' : 's' %><% } %></p>
+              </div>
+            </div>
+            <a href="/companies/<%= company.slug %>" class="btn-sc btn-sc-blue btn-sc-sm">View company</a>
+          </article>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

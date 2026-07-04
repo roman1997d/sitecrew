@@ -1,4 +1,4 @@
-const { slugify } = require('./publicJobs');
+const { slugify, buildJobPath } = require('./publicJobs');
 
 function getInitials(name = '') {
   return String(name)
@@ -56,7 +56,7 @@ function mapPublicCompanyJobs(jobs = []) {
     location: job.city || job.postcode || 'UK',
     rate: job.rate || 'Rate negotiable',
     description: job.description || '',
-    url: `/jobs/${job.id}`,
+    url: buildJobPath(job),
   }));
 }
 
@@ -98,6 +98,52 @@ function getCompanyOrganizationSchema(company, canonicalUrl) {
   };
 }
 
+function getCompanyReviewSchemas(reviews = [], companyName = 'SiteCrew company') {
+  return reviews
+    .filter((review) => review.rating && (review.feedback || review.workerName))
+    .slice(0, 10)
+    .map((review) => ({
+      '@context': 'https://schema.org',
+      '@type': 'Review',
+      itemReviewed: {
+        '@type': 'Organization',
+        name: companyName,
+      },
+      author: {
+        '@type': 'Person',
+        name: review.workerName || 'SiteCrew worker',
+      },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: review.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      reviewBody: review.feedback || undefined,
+      datePublished: review.date || undefined,
+    }));
+}
+
+function mapPublicCompanyCarouselItem(company) {
+  const name = company.company_name || 'SiteCrew Company';
+  const description = String(company.description || '').trim()
+    || (company.open_job_count > 0
+      ? `${company.open_job_count} open job${company.open_job_count === 1 ? '' : 's'} on SiteCrew.`
+      : 'Verified construction company on SiteCrew.');
+
+  return {
+    id: company.user_id,
+    name,
+    slug: buildCompanySlug(name, company.user_id),
+    city: company.city || 'UK',
+    description: description.length > 140 ? `${description.slice(0, 137)}...` : description,
+    logo: company.logo || '',
+    initials: getInitials(name),
+    openJobCount: Number(company.open_job_count || 0),
+    themeClass: ['img-1', 'img-2', 'img-3', 'img-4', 'img-5', 'img-6'][company.user_id % 6],
+  };
+}
+
 module.exports = {
   buildCompanySlug,
   parseCompanySlug,
@@ -105,4 +151,6 @@ module.exports = {
   mapPublicCompanyJobs,
   mapPublicCompanyReviews,
   getCompanyOrganizationSchema,
+  getCompanyReviewSchemas,
+  mapPublicCompanyCarouselItem,
 };

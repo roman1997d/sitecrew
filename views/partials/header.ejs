@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <%- include('google-analytics', { googleAnalyticsId: googleAnalyticsId || 'G-RQRV1DW5GG' }) %>
   <%- include('cookie-script') %>
-  <%- include('seo-head', { seo: typeof seo !== 'undefined' ? seo : null, title: typeof title !== 'undefined' ? title : null }) %>
+  <%- include('seo-head', { seo: typeof seo !== 'undefined' ? seo : null, title: typeof title !== 'undefined' ? title : null, googleSiteVerification: typeof googleSiteVerification !== 'undefined' ? googleSiteVerification : '' }) %>
   <%- include('favicon') %>
+  <link rel="preload" href="/css/style.css" as="style">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,8 +26,9 @@
         <ul class="navbar-nav ms-auto align-items-lg-center">
           <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
           <li class="nav-item"><a class="nav-link" href="/jobs">Jobs</a></li>
-          <li class="nav-item"><a class="nav-link" href="/how-it-works">How it works</a></li>
-          <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="/trades">Trades</a></li>
+          <li class="nav-item"><a class="nav-link" href="/companies">Companies</a></li>
+          <li class="nav-item"><a class="nav-link" href="/blog">Blog</a></li>
           <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
           <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
             <a class="btn-sc btn-sc-cta btn-sc-sm" href="/login?mode=register">Register</a>

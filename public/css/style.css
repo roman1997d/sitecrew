@@ -1429,6 +1429,110 @@ main { flex: 1; }
   justify-content: center;
 }
 
+.hub-link-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.hub-link-card {
+  display: grid;
+  gap: 6px;
+  padding: 20px;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+}
+
+.hub-link-card span {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.hub-company-list {
+  display: grid;
+  gap: 14px;
+}
+
+.hub-company-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 20px;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.hub-company-main {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.hub-company-card h2 {
+  font-size: 1.1rem;
+  margin: 0 0 4px;
+}
+
+.hub-company-card p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.company-carousel-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.blog-list,
+.blog-post {
+  display: grid;
+  gap: 20px;
+}
+
+.blog-card,
+.blog-post {
+  border: 1px solid #E2E8F0;
+  border-radius: 18px;
+  background: #fff;
+  padding: 24px;
+}
+
+.blog-date {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.blog-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.blog-post-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 991px) {
+  .hub-link-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hub-company-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 991px) {
   .public-jobs-search-grid,
   .public-company-grid,

@@ -7,7 +7,7 @@
     <article class="public-company-hero">
       <div class="public-company-hero-main">
         <% if (company.logo) { %>
-          <img src="<%= company.logo %>" alt="<%= company.name %> logo" class="public-company-logo-img">
+          <img src="<%= company.logo %>" alt="<%= company.name %> logo" class="public-company-logo-img" loading="lazy" decoding="async" width="84" height="84">
         <% } else { %>
           <div class="public-company-logo"><%= company.initials %></div>
         <% } %>
