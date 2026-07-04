@@ -140,6 +140,21 @@
     return localStorage.getItem('sitecrewToken') || decodeURIComponent(getCookie('sitecrewToken') || '');
   }
 
+  async function clearAuthSession() {
+    localStorage.removeItem('sitecrewToken');
+    localStorage.removeItem('sitecrewUser');
+    document.cookie = 'sitecrewToken=; path=/; max-age=0; SameSite=Lax';
+
+    try {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      // Continue to login even if the logout request fails.
+    }
+  }
+
   function openPostJobModal() {
     if (!postJobModal) return;
     editingJobId = null;
@@ -1597,11 +1612,10 @@
   });
 
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('sitecrewToken');
-      localStorage.removeItem('sitecrewUser');
-      document.cookie = 'sitecrewToken=; path=/; max-age=0; SameSite=Lax';
-      window.location.href = '/login';
+    logoutBtn.addEventListener('click', async () => {
+      logoutBtn.disabled = true;
+      await clearAuthSession();
+      window.location.replace('/login');
     });
   }
 
