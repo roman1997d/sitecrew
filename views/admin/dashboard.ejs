@@ -29,9 +29,7 @@
         <button type="button" data-admin-section="market" title="Market and Money"><i class="bi bi-currency-pound"></i> Market</button>
         <button type="button" data-admin-section="posts" title="Posts Moderator"><i class="bi bi-card-text"></i> Posts</button>
         <button type="button" data-admin-section="blog" title="Blog Manager"><i class="bi bi-newspaper"></i> Blog</button>
-        <% if (fakeSimulatorEnabled) { %>
-        <button type="button" data-admin-section="fake-simulator" title="Fake data simulator"><i class="bi bi-magic"></i> Simulator</button>
-        <% } %>
+        <button type="button" data-admin-section="fake-simulator" title="Demo data generator"><i class="bi bi-magic"></i> Demo data</button>
         <button type="button" data-admin-section="api-logs" title="API Logs"><i class="bi bi-terminal"></i> API Logs</button>
         <button type="button" data-admin-section="audit" title="Audit Trails"><i class="bi bi-journal-text"></i> Audit</button>
         <button type="button" data-admin-section="server" title="Server"><i class="bi bi-hdd-network"></i> Server</button>
@@ -49,7 +47,12 @@
           <p>Platform administration</p>
           <h1 id="adminSectionTitle">Metrics Tracker</h1>
         </div>
-        <button type="button" class="admin-refresh-btn" id="adminRefreshBtn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        <div class="admin-topbar-actions">
+          <button type="button" class="admin-secondary-btn admin-demo-data-btn" id="adminOpenFakeSimulatorBtn" title="Open demo data generator">
+            <i class="bi bi-magic"></i> Demo data
+          </button>
+          <button type="button" class="admin-refresh-btn" id="adminRefreshBtn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+        </div>
       </header>
 
       <section class="admin-section active" id="adminSection-metrics" data-section="metrics">
@@ -495,7 +498,6 @@
         </div>
       </section>
 
-      <% if (fakeSimulatorEnabled) { %>
       <section class="admin-section" id="adminSection-fake-simulator" data-section="fake-simulator" hidden>
         <p class="admin-section-lead">
           Generate realistic demo workers and companies for staging. All simulator accounts use emails ending in
@@ -545,7 +547,6 @@
 
         <div class="admin-fake-sim-result" id="adminFakeSimResult" hidden></div>
       </section>
-      <% } %>
 
       <section class="admin-section" id="adminSection-api-logs" data-section="api-logs" hidden>
         <div class="admin-users-panel">
@@ -1103,12 +1104,7 @@
   <div class="admin-alert" id="adminAlert" hidden role="status" aria-live="polite"></div>
 
   <%- include('../partials/api-config') %>
-  <script>
-    window.SITECREW_FAKE_SIMULATOR_ENABLED = <%= fakeSimulatorEnabled ? 'true' : 'false' %>;
-  </script>
   <script src="/js/admin-dashboard.js"></script>
-  <% if (fakeSimulatorEnabled) { %>
   <script src="/js/admin-fake-simulator.js"></script>
-  <% } %>
 </body>
 </html>

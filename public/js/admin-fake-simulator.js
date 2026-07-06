@@ -1,6 +1,4 @@
 (function () {
-  if (!window.SITECREW_FAKE_SIMULATOR_ENABLED) return;
-
   const statsEl = document.getElementById('adminFakeSimStats');
   const resultEl = document.getElementById('adminFakeSimResult');
   const workerCountInput = document.getElementById('adminFakeWorkerCount');

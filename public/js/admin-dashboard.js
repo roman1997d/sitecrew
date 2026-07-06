@@ -7,7 +7,7 @@
     market: 'Market and Money',
     posts: 'Posts Moderator',
     blog: 'Blog Manager',
-    'fake-simulator': 'Fake Data Simulator',
+    'fake-simulator': 'Demo Data Generator',
     'api-logs': 'API Logs',
     audit: 'Audit Trails',
     server: 'Server',
@@ -34,6 +34,7 @@
   const adminSectionTitle = document.getElementById('adminSectionTitle');
   const adminAlert = document.getElementById('adminAlert');
   const adminRefreshBtn = document.getElementById('adminRefreshBtn');
+  const adminOpenFakeSimulatorBtn = document.getElementById('adminOpenFakeSimulatorBtn');
   const adminLogoutBtn = document.getElementById('adminLogoutBtn');
   const navButtons = document.querySelectorAll('[data-admin-section]');
   const sections = document.querySelectorAll('.admin-section');
@@ -4145,6 +4146,15 @@
     try {
       await loadSection(activeSection);
       showAlert('Section refreshed.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    }
+  });
+
+  adminOpenFakeSimulatorBtn?.addEventListener('click', async () => {
+    setActiveSection('fake-simulator');
+    try {
+      await loadSection('fake-simulator');
     } catch (error) {
       showAlert(error.message);
     }

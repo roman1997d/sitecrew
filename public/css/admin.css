@@ -364,6 +364,20 @@
   margin-bottom: 20px;
 }
 
+.admin-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-demo-data-btn {
+  border-color: #C4B5FD;
+  background: linear-gradient(135deg, #F5F3FF, #EEF2FF);
+  color: #5B21B6;
+  font-weight: 600;
+}
+
 .admin-topbar p {
   margin: 0 0 4px;
   color: #64748B;

@@ -4,13 +4,9 @@ Staging tool for generating realistic workers and companies. **Disable before li
 
 ## Enable
 
-In `.env` (backend):
+Available to **admin / superadmin** from the dashboard — click **Demo data** (top bar or sidebar). No environment variable required.
 
-```
-ENABLE_FAKE_DATA_SIMULATOR=true
-```
-
-Restart `sitecrew-api`. The **Simulator** tab appears in admin dashboard.
+Optional legacy flag (unused for UI): `ENABLE_FAKE_DATA_SIMULATOR=true`
 
 ## How fake accounts are marked
 
