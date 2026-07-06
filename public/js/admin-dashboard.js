@@ -2494,7 +2494,7 @@
     if (!container) return;
 
     try {
-      const data = await apiRequest('/api/admin/blog/og-presets');
+      const data = await apiRequest('/api/admin/og-presets');
       cachedBlogOgPresets = data.presets || [];
     } catch (error) {
       cachedBlogOgPresets = [];
@@ -4058,6 +4058,10 @@
       await loadPostsListPanel();
       return;
     }
+    if (panel === 'share-previews') {
+      await loadSharePreviewsSection();
+      return;
+    }
     if (panel === 'ai-scan') {
       await loadAiScanSection();
       return;
@@ -4065,6 +4069,56 @@
     if (panel === 'media-review') {
       await loadMediaReviewSection();
     }
+  }
+
+  function renderSharePreviewsGrid(presets = []) {
+    const grid = document.getElementById('adminSharePreviewsGrid');
+    const meta = document.getElementById('adminSharePreviewsMeta');
+    if (!grid) return;
+
+    if (meta) {
+      meta.textContent = presets.length
+        ? `${presets.length} preview image${presets.length === 1 ? '' : 's'} available for jobs and blog posts.`
+        : 'No preview images yet. Upload your first preset below.';
+    }
+
+    if (!presets.length) {
+      grid.innerHTML = '<p class="admin-empty">No preview images uploaded yet.</p>';
+      return;
+    }
+
+    grid.innerHTML = presets.map((preset) => `
+      <article class="admin-share-preview-card">
+        <img src="${escapeHtml(preset.path)}" alt="${escapeHtml(preset.label || preset.filename)}" loading="lazy">
+        <div class="admin-share-preview-card-body">
+          <strong>${escapeHtml(preset.label || preset.filename)}</strong>
+          <code>${escapeHtml(preset.path)}</code>
+          <div class="admin-share-preview-card-actions">
+            <small>${preset.updatedAt ? formatDate(preset.updatedAt) : 'Preset image'}</small>
+            <button type="button" class="admin-danger-btn" data-share-preview-delete="${escapeHtml(preset.filename)}">Delete</button>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  async function loadSharePreviewsSection() {
+    const data = await apiRequest('/api/admin/og-presets');
+    renderSharePreviewsGrid(data.presets || []);
+    return data.presets || [];
+  }
+
+  async function uploadSharePreviewImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const data = await apiUpload('/api/admin/og-presets', formData);
+    return data.preset;
+  }
+
+  async function deleteSharePreviewImage(filename) {
+    await apiRequest(`/api/admin/og-presets/${encodeURIComponent(filename)}`, {
+      method: 'DELETE',
+    });
   }
 
   function revokeMediaReviewObjectUrl() {
@@ -4250,6 +4304,49 @@
         showAlert(error.message);
       }
     });
+  });
+
+  document.getElementById('adminSharePreviewUploadForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const fileInput = document.getElementById('adminSharePreviewFile');
+    const uploadBtn = document.getElementById('adminSharePreviewUploadBtn');
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      showAlert('Choose an image before uploading.');
+      return;
+    }
+
+    uploadBtn.disabled = true;
+    try {
+      await uploadSharePreviewImage(file);
+      if (fileInput) fileInput.value = '';
+      await loadSharePreviewsSection();
+      showAlert('Preview image uploaded. It is now available for jobs and blog posts.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      uploadBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('adminSharePreviewsGrid')?.addEventListener('click', async (event) => {
+    const deleteBtn = event.target.closest('[data-share-preview-delete]');
+    if (!deleteBtn) return;
+
+    const filename = deleteBtn.dataset.sharePreviewDelete;
+    if (!window.confirm(`Delete preview image “${filename}”? Jobs or blog posts using it will fall back to another image.`)) {
+      return;
+    }
+
+    deleteBtn.disabled = true;
+    try {
+      await deleteSharePreviewImage(filename);
+      await loadSharePreviewsSection();
+      showAlert('Preview image deleted.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+      deleteBtn.disabled = false;
+    }
   });
 
   adminMediaReviewApproveBtn?.addEventListener('click', () => handleMediaReviewDecision('approve'));

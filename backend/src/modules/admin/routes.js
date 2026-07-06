@@ -54,7 +54,7 @@ const {
   deleteBlogPost,
   enrichBlogPost,
 } = require('../../../../utils/blog');
-const { listOgPresetImages } = require('../../../../utils/ogImages');
+const { listOgPresetImages, deleteOgPresetImage } = require('../../../../utils/ogImages');
 const { savePublicOgImage } = require('../../utils/publicOgImage');
 
 const router = express.Router();
@@ -2422,6 +2422,45 @@ router.delete('/market/ads/:id', asyncHandler(async (req, res) => {
 
 router.get('/blog', asyncHandler(async (req, res) => {
   res.json({ posts: loadBlogPosts() });
+}));
+
+router.get('/og-presets', asyncHandler(async (req, res) => {
+  res.json({ presets: listOgPresetImages() });
+}));
+
+router.post('/og-presets', upload.single('image'), asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Preview image is required.' });
+  }
+
+  const imagePath = await savePublicOgImage(req.file, 'presets');
+  const filename = imagePath.split('/').pop();
+  await logAudit({
+    actorId: req.user.id,
+    action: 'og_preset.uploaded',
+    entityType: 'og_preset',
+    entityId: null,
+    metadata: { path: imagePath, filename },
+  });
+  res.status(201).json({
+    preset: listOgPresetImages().find((item) => item.filename === filename) || {
+      filename,
+      path: imagePath,
+      label: filename,
+    },
+  });
+}));
+
+router.delete('/og-presets/:filename', asyncHandler(async (req, res) => {
+  const deleted = deleteOgPresetImage(req.params.filename);
+  await logAudit({
+    actorId: req.user.id,
+    action: 'og_preset.deleted',
+    entityType: 'og_preset',
+    entityId: null,
+    metadata: deleted,
+  });
+  res.json({ ok: true, deleted });
 }));
 
 router.get('/blog/og-presets', asyncHandler(async (req, res) => {

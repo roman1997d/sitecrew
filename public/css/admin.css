@@ -2004,6 +2004,79 @@
   min-width: 0;
 }
 
+.admin-share-previews {
+  display: grid;
+  gap: 18px;
+  max-width: 1080px;
+}
+
+.admin-share-preview-upload {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  background: #F8FAFC;
+}
+
+.admin-share-preview-upload .admin-field {
+  flex: 1 1 280px;
+  margin: 0;
+}
+
+.admin-share-previews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.admin-share-preview-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  display: grid;
+  gap: 0;
+}
+
+.admin-share-preview-card img {
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  display: block;
+  background: #E2E8F0;
+}
+
+.admin-share-preview-card-body {
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-share-preview-card-body strong {
+  font-size: 14px;
+}
+
+.admin-share-preview-card-body code {
+  font-size: 11px;
+  color: #475569;
+  word-break: break-all;
+}
+
+.admin-share-preview-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-share-preview-card-actions small {
+  color: #64748B;
+  font-size: 11px;
+}
+
 .admin-text-review {
   max-width: 760px;
   margin: 0 auto;

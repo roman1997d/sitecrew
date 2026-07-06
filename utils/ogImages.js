@@ -65,6 +65,7 @@ function listOgPresetImages() {
       .sort((a, b) => a.localeCompare(b))
       .map((filename) => {
         const imagePath = `/images/og/presets/${filename}`;
+        const stats = fs.statSync(path.join(OG_PRESETS_DIR, filename));
         return {
           filename,
           path: imagePath,
@@ -73,11 +74,47 @@ function listOgPresetImages() {
             .replace(path.extname(filename), '')
             .replace(/[-_]+/g, ' ')
             .replace(/\b\w/g, (char) => char.toUpperCase()),
+          updatedAt: stats.mtime.toISOString(),
         };
       });
   } catch (error) {
     return [];
   }
+}
+
+function sanitizeOgPresetFilename(filename = '') {
+  const base = path.basename(String(filename || '').trim());
+  if (!base || base !== String(filename || '').trim() || base.includes('..')) {
+    return null;
+  }
+
+  if (!ALLOWED_OG_EXTENSIONS.has(path.extname(base).toLowerCase())) {
+    return null;
+  }
+
+  return base;
+}
+
+function deleteOgPresetImage(filename) {
+  const safeName = sanitizeOgPresetFilename(filename);
+  if (!safeName) {
+    const error = new Error('Invalid preset image filename.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const absolutePath = path.join(OG_PRESETS_DIR, safeName);
+  if (!fs.existsSync(absolutePath)) {
+    const error = new Error('Preset image not found.');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  fs.unlinkSync(absolutePath);
+  return {
+    filename: safeName,
+    path: `/images/og/presets/${safeName}`,
+  };
 }
 
 module.exports = {
@@ -86,4 +123,6 @@ module.exports = {
   resolveOgImageUrl,
   resolveOgImageFromSources,
   listOgPresetImages,
+  sanitizeOgPresetFilename,
+  deleteOgPresetImage,
 };

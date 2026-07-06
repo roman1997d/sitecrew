@@ -334,6 +334,7 @@
 
           <div class="admin-posts-subnav" role="tablist" aria-label="Posts moderator panels">
             <button type="button" class="active" data-posts-panel="list" role="tab" aria-selected="true">Posts list</button>
+            <button type="button" data-posts-panel="share-previews" role="tab" aria-selected="false">Share previews</button>
             <button type="button" data-posts-panel="ai-scan" role="tab" aria-selected="false">AI Scan</button>
             <button type="button" data-posts-panel="media-review" role="tab" aria-selected="false">Media Review</button>
           </div>
@@ -341,6 +342,30 @@
           <div class="admin-posts-panel active" id="adminPostsListPanel" data-posts-panel="list" role="tabpanel">
             <div class="admin-table-wrap" id="adminPostsTable">
               <p class="admin-empty">Loading posts...</p>
+            </div>
+          </div>
+
+          <div class="admin-posts-panel" id="adminPostsSharePreviewsPanel" data-posts-panel="share-previews" role="tabpanel" hidden>
+            <div class="admin-share-previews">
+              <p class="admin-section-lead">
+                Upload images used when sharing <strong>jobs</strong> and <strong>blog articles</strong> on social media.
+                Recommended size: <strong>1200×630 px</strong>. Uploaded images appear as presets in company job posts and blog editor.
+              </p>
+
+              <form id="adminSharePreviewUploadForm" class="admin-share-preview-upload">
+                <label class="admin-field">
+                  <span>Upload preview image</span>
+                  <input type="file" id="adminSharePreviewFile" accept="image/jpeg,image/png,image/webp,image/gif" required>
+                </label>
+                <button type="submit" class="admin-primary-btn" id="adminSharePreviewUploadBtn">
+                  <i class="bi bi-cloud-upload"></i> Upload preset
+                </button>
+              </form>
+
+              <p class="admin-results-meta" id="adminSharePreviewsMeta">Loading preview images...</p>
+              <div class="admin-share-previews-grid" id="adminSharePreviewsGrid">
+                <p class="admin-empty">Loading preview images...</p>
+              </div>
             </div>
           </div>
 
