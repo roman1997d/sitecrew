@@ -108,6 +108,7 @@ app.use((req, res, next) => {
 
   if (isAdminHost(req) && !req.path.startsWith('/admin') && !req.path.startsWith('/api')) {
     const publicAsset = req.path.startsWith('/uploads/')
+      || req.path.startsWith('/assets/')
       || req.path.startsWith('/css/')
       || req.path.startsWith('/js/')
       || req.path === '/favicon.ico';
@@ -162,6 +163,10 @@ app.get('/sitemap.xml', async (req, res) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/assets', express.static(path.join(__dirname, 'assets'), {
+  maxAge: '7d',
+  immutable: true,
+}));
 app.use('/uploads', express.static(path.join(__dirname, 'backend', 'uploads')));
 
 function parseCookies(cookieHeader = '') {
