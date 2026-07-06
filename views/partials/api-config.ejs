@@ -1,3 +1,13 @@
 <script>
-  window.SITECREW_API_BASE_URL = window.location.origin;
+  (function () {
+    var origin = window.location.origin;
+    var host = window.location.hostname;
+    var isLocalWeb = host === 'localhost' || host === '127.0.0.1';
+    var isAdminHost = host.indexOf('admin.') === 0;
+
+    window.SITECREW_API_BASE_URL = isLocalWeb ? 'http://localhost:4000' : origin;
+    window.SITECREW_PUBLIC_SITE_URL = isLocalWeb
+      ? 'http://localhost:3000'
+      : (isAdminHost ? 'https://sitecrew.uk' : origin.replace(/^https?:\/\/admin\./, 'https://'));
+  })();
 </script>

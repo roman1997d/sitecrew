@@ -1,5 +1,6 @@
 (function () {
-  const API_BASE_URL = window.SITECREW_API_BASE_URL || 'http://localhost:4000';
+  const API_BASE_URL = window.SITECREW_API_BASE_URL || window.location.origin;
+  const PUBLIC_SITE_URL = window.SITECREW_PUBLIC_SITE_URL || 'https://sitecrew.uk';
   const SECTION_TITLES = {
     metrics: 'Metrics Tracker',
     users: 'Users',
@@ -2580,7 +2581,7 @@
               <td>${escapeHtml(formatBillingDate(`${(post.updatedAt || post.publishedAt)}T00:00:00`))}</td>
               <td>${escapeHtml(String(post.readMinutes || 2))} min</td>
               <td class="admin-billing-actions">
-                <a href="/blog/${escapeHtml(post.slug)}" target="_blank" rel="noopener noreferrer">View</a>
+                <a href="${escapeHtml(PUBLIC_SITE_URL)}/blog/${escapeHtml(post.slug)}" target="_blank" rel="noopener noreferrer">View</a>
                 <button type="button" data-blog-edit="${escapeHtml(post.slug)}">Edit</button>
                 <button type="button" class="admin-danger-btn" data-blog-delete="${escapeHtml(post.slug)}">Delete</button>
               </td>
@@ -2674,7 +2675,7 @@
     const previewLink = document.getElementById('adminBlogPreviewLink');
     if (!previewLink) return;
     if (slug) {
-      previewLink.href = `/blog/${slug}`;
+      previewLink.href = `${PUBLIC_SITE_URL}/blog/${slug}`;
       previewLink.hidden = false;
     } else {
       previewLink.hidden = true;

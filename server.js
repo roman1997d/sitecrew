@@ -98,6 +98,56 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(async (req, res, next) => {
+  if (!req.path.startsWith('/api')) {
+    return next();
+  }
+
+  const host = getRequestHost(req);
+  const isLocalWeb = host === 'localhost' || host === '127.0.0.1';
+  if (!isLocalWeb) {
+    return next();
+  }
+
+  const targetUrl = `${API_INTERNAL_URL}${req.originalUrl}`;
+  const headers = { ...req.headers };
+  delete headers.host;
+  delete headers.connection;
+
+  const init = {
+    method: req.method,
+    headers,
+    redirect: 'manual',
+  };
+
+  if (!['GET', 'HEAD'].includes(req.method)) {
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    if (chunks.length) {
+      init.body = Buffer.concat(chunks);
+    }
+  }
+
+  try {
+    const response = await fetch(targetUrl, init);
+    res.status(response.status);
+    response.headers.forEach((value, key) => {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey !== 'transfer-encoding' && lowerKey !== 'connection') {
+        res.setHeader(key, value);
+      }
+    });
+    const body = Buffer.from(await response.arrayBuffer());
+    return res.send(body);
+  } catch (error) {
+    return res.status(502).json({
+      error: 'API unavailable. Start the backend with: cd backend && npm run dev',
+    });
+  }
+});
+
 app.use((req, res, next) => {
   if (isAdminHost(req) && req.path === '/') {
     return res.redirect('/admin/login');
