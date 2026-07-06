@@ -67,9 +67,19 @@ function buildCompanyEmailParts(companyName) {
   return { local, domain };
 }
 
-function buildJobBundle(city, trade) {
-  const titleTemplate = pick(JOB_TITLES);
-  const descriptionTemplate = pick(JOB_DESCRIPTIONS);
+function pickUniqueFrom(list, count) {
+  const pool = [...list];
+  const chosen = [];
+  while (chosen.length < count && pool.length) {
+    const index = randomInt(0, pool.length - 1);
+    chosen.push(pool.splice(index, 1)[0]);
+  }
+  return chosen;
+}
+
+function buildJobBundle(city, trade, jobIndex) {
+  const titleTemplate = pickIndex(JOB_TITLES, jobIndex);
+  const descriptionTemplate = pickIndex(JOB_DESCRIPTIONS, jobIndex);
   const title = titleTemplate.replace('{trade}', trade);
   const description = descriptionTemplate
     .replace('{trade}', trade.toLowerCase())
@@ -133,7 +143,7 @@ async function createWorker(client, passwordHash, index) {
 async function createCompanyWithJobs(client, passwordHash, index) {
   const companyName = buildCompanyName();
   const [city, postcode] = pickIndex(UK_CITIES, index + 3);
-  const companyTrades = [pick(TRADES), pick(TRADES), pick(TRADES)];
+  const companyTrades = pickUniqueFrom(TRADES, JOBS_PER_COMPANY);
   const { local, domain } = buildCompanyEmailParts(companyName);
   const email = await buildUniqueEmail(client, local, domain);
 
@@ -167,9 +177,19 @@ async function createCompanyWithJobs(client, passwordHash, index) {
   );
 
   const jobs = [];
+  const usedTitles = new Set();
   for (let jobIndex = 0; jobIndex < JOBS_PER_COMPANY; jobIndex += 1) {
-    const trade = pick(companyTrades);
-    const job = buildJobBundle(city, trade);
+    const trade = companyTrades[jobIndex] || pickIndex(TRADES, jobIndex);
+    let job = buildJobBundle(city, trade, jobIndex);
+    let suffix = 0;
+    while (usedTitles.has(job.title)) {
+      suffix += 1;
+      job = {
+        ...job,
+        title: `${job.title} (${city} ${suffix})`,
+      };
+    }
+    usedTitles.add(job.title);
     const startOffset = randomInt(3, 21);
     const jobResult = await client.query(
       `INSERT INTO jobs (
