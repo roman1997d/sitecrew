@@ -2478,4 +2478,9 @@ router.delete('/blog/:slug', asyncHandler(async (req, res) => {
   }
 }));
 
+const fakeDataSimulator = require('./fakeDataSimulator');
+if (fakeDataSimulator.isFakeDataSimulatorEnabled()) {
+  router.use('/fake-simulator', fakeDataSimulator.router);
+}
+
 module.exports = router;

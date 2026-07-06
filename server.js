@@ -1746,6 +1746,7 @@ app.get('/admin/dashboard', requireAdminAuth, (req, res) => {
       email: req.sessionUser.email,
       role: req.sessionUser.role,
     },
+    fakeSimulatorEnabled: process.env.ENABLE_FAKE_DATA_SIMULATOR === 'true',
   });
 });
 

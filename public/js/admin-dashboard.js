@@ -7,6 +7,7 @@
     market: 'Market and Money',
     posts: 'Posts Moderator',
     blog: 'Blog Manager',
+    'fake-simulator': 'Fake Data Simulator',
     'api-logs': 'API Logs',
     audit: 'Audit Trails',
     server: 'Server',
@@ -3137,6 +3138,10 @@
     if (section === 'blog') {
       showBlogListView();
       await loadBlogSection();
+      return;
+    }
+    if (section === 'fake-simulator' && window.adminFakeSimulatorLoad) {
+      await window.adminFakeSimulatorLoad();
       return;
     }
     if (section === 'api-logs') {

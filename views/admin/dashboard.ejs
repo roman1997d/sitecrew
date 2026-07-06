@@ -29,6 +29,9 @@
         <button type="button" data-admin-section="market" title="Market and Money"><i class="bi bi-currency-pound"></i> Market</button>
         <button type="button" data-admin-section="posts" title="Posts Moderator"><i class="bi bi-card-text"></i> Posts</button>
         <button type="button" data-admin-section="blog" title="Blog Manager"><i class="bi bi-newspaper"></i> Blog</button>
+        <% if (fakeSimulatorEnabled) { %>
+        <button type="button" data-admin-section="fake-simulator" title="Fake data simulator"><i class="bi bi-magic"></i> Simulator</button>
+        <% } %>
         <button type="button" data-admin-section="api-logs" title="API Logs"><i class="bi bi-terminal"></i> API Logs</button>
         <button type="button" data-admin-section="audit" title="Audit Trails"><i class="bi bi-journal-text"></i> Audit</button>
         <button type="button" data-admin-section="server" title="Server"><i class="bi bi-hdd-network"></i> Server</button>
@@ -491,6 +494,58 @@
           </form>
         </div>
       </section>
+
+      <% if (fakeSimulatorEnabled) { %>
+      <section class="admin-section" id="adminSection-fake-simulator" data-section="fake-simulator" hidden>
+        <p class="admin-section-lead">
+          Generate realistic demo workers and companies for staging. All simulator accounts use emails ending in
+          <strong>.fpd</strong> (e.g. <code>james.smith@gmail.fpd</code>, <code>hiring@metrobuild.fpd</code>).
+          Remove this module before live traffic — folder <code>backend/src/modules/admin/fakeDataSimulator/</code>.
+        </p>
+
+        <div class="admin-fake-sim-stats" id="adminFakeSimStats">
+          <p class="admin-empty">Loading simulator stats...</p>
+        </div>
+
+        <div class="admin-fake-sim-grid">
+          <article class="admin-fake-sim-card">
+            <h2>Fake workers</h2>
+            <p>Creates worker profiles with realistic UK names, trades, and cities.</p>
+            <label class="admin-field">
+              <span>How many workers?</span>
+              <input type="number" id="adminFakeWorkerCount" min="1" max="100" value="10">
+            </label>
+            <button type="button" class="admin-primary-btn" id="adminFakeWorkersGenerateBtn">
+              <i class="bi bi-person-plus"></i> Generate workers
+            </button>
+          </article>
+
+          <article class="admin-fake-sim-card">
+            <h2>Fake companies + jobs</h2>
+            <p>Each company is verified and gets <strong>3 open job posts</strong> automatically.</p>
+            <label class="admin-field">
+              <span>How many companies?</span>
+              <input type="number" id="adminFakeCompanyCount" min="1" max="50" value="5">
+            </label>
+            <button type="button" class="admin-primary-btn" id="adminFakeCompaniesGenerateBtn">
+              <i class="bi bi-building-add"></i> Generate companies
+            </button>
+          </article>
+        </div>
+
+        <div class="admin-fake-sim-danger">
+          <h2>Purge all .fpd accounts</h2>
+          <p>Deletes every user whose email contains <code>.fpd</code> (workers, companies, and their jobs).</p>
+          <label class="admin-field">
+            <span>Type <code>DELETE-FPD-ACCOUNTS</code> to confirm</span>
+            <input type="text" id="adminFakePurgeConfirm" placeholder="DELETE-FPD-ACCOUNTS" autocomplete="off">
+          </label>
+          <button type="button" class="admin-danger-btn" id="adminFakePurgeBtn">Purge simulator data</button>
+        </div>
+
+        <div class="admin-fake-sim-result" id="adminFakeSimResult" hidden></div>
+      </section>
+      <% } %>
 
       <section class="admin-section" id="adminSection-api-logs" data-section="api-logs" hidden>
         <div class="admin-users-panel">
@@ -1048,6 +1103,12 @@
   <div class="admin-alert" id="adminAlert" hidden role="status" aria-live="polite"></div>
 
   <%- include('../partials/api-config') %>
+  <script>
+    window.SITECREW_FAKE_SIMULATOR_ENABLED = <%= fakeSimulatorEnabled ? 'true' : 'false' %>;
+  </script>
   <script src="/js/admin-dashboard.js"></script>
+  <% if (fakeSimulatorEnabled) { %>
+  <script src="/js/admin-fake-simulator.js"></script>
+  <% } %>
 </body>
 </html>
