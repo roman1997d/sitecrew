@@ -54,6 +54,8 @@ const {
   deleteBlogPost,
   enrichBlogPost,
 } = require('../../../../utils/blog');
+const { listOgPresetImages } = require('../../../../utils/ogImages');
+const { savePublicOgImage } = require('../../utils/publicOgImage');
 
 const router = express.Router();
 
@@ -218,6 +220,8 @@ const blogPostWriteSchema = z.object({
     category: z.string().trim().min(2).max(60).optional(),
     icon: z.string().trim().regex(/^bi-[a-z0-9-]+$/).max(60).optional(),
     publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    ogImage: z.string().trim().max(500).optional(),
+    ogImageAlt: z.string().trim().max(200).optional(),
     sections: z.array(blogSectionSchema).min(1).max(20),
   }),
 });
@@ -230,6 +234,8 @@ const blogPostUpdateSchema = z.object({
     category: z.string().trim().min(2).max(60).optional(),
     icon: z.string().trim().regex(/^bi-[a-z0-9-]+$/).max(60).optional(),
     publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    ogImage: z.string().trim().max(500).optional(),
+    ogImageAlt: z.string().trim().max(200).optional(),
     sections: z.array(blogSectionSchema).min(1).max(20).optional(),
   }),
 });
@@ -2416,6 +2422,19 @@ router.delete('/market/ads/:id', asyncHandler(async (req, res) => {
 
 router.get('/blog', asyncHandler(async (req, res) => {
   res.json({ posts: loadBlogPosts() });
+}));
+
+router.get('/blog/og-presets', asyncHandler(async (req, res) => {
+  res.json({ presets: listOgPresetImages() });
+}));
+
+router.post('/blog/og-image', upload.single('image'), asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Social share image is required.' });
+  }
+
+  const path = await savePublicOgImage(req.file, 'blog');
+  res.status(201).json({ path });
 }));
 
 router.get('/blog/:slug', asyncHandler(async (req, res) => {

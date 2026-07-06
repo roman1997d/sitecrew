@@ -18,6 +18,9 @@ const {
   isWorkerApplyableJob,
 } = require('../../utils/jobVisibility');
 const { queueJobAlertEmails } = require('../../utils/jobAlertEmails');
+const { normalizeOgImagePath } = require('../../../../utils/ogImages');
+const { savePublicOgImage } = require('../../utils/publicOgImage');
+const upload = require('../../middleware/upload');
 
 const router = express.Router();
 
@@ -36,6 +39,7 @@ const jobSchema = z.object({
     workersRequired: z.number().int().positive().default(1),
     status: z.enum(['open', 'closed']).default('open'),
     companyId: z.number().int().positive().optional(),
+    shareImage: z.string().trim().max(500).optional(),
   }),
 });
 
@@ -109,8 +113,8 @@ router.post('/', requireAuth, validate(jobSchema), asyncHandler(async (req, res)
     recentTexts,
   });
   const result = await pool.query(
-    `INSERT INTO jobs (company_id, created_by_user_id, title, description, city, postcode, trade_required, experience_required, certificates_required, start_date, duration, rate, workers_required, status, moderation_status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+    `INSERT INTO jobs (company_id, created_by_user_id, title, description, city, postcode, trade_required, experience_required, certificates_required, start_date, duration, rate, workers_required, status, moderation_status, share_image)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
      RETURNING *`,
     [
       companyId,
@@ -128,6 +132,7 @@ router.post('/', requireAuth, validate(jobSchema), asyncHandler(async (req, res)
       job.workersRequired,
       job.status,
       moderation.moderationStatus,
+      normalizeOgImagePath(job.shareImage) || null,
     ]
   );
 
@@ -293,6 +298,20 @@ router.post('/trades/rates/feedback', requireAuth, requireRole('worker', 'compan
   });
 }));
 
+router.get('/og-presets', asyncHandler(async (req, res) => {
+  const { listOgPresetImages } = require('../../../../utils/ogImages');
+  res.json({ presets: listOgPresetImages() });
+}));
+
+router.post('/share-image', requireAuth, requireRole('company', 'worker', 'admin'), upload.single('image'), asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Share image is required.' });
+  }
+
+  const imagePath = await savePublicOgImage(req.file, 'jobs');
+  res.status(201).json({ path: imagePath });
+}));
+
 router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
   const result = await pool.query(
     `SELECT j.*, cp.company_name, cp.logo
@@ -363,6 +382,7 @@ router.patch('/:id', requireAuth, requireRole('company'), validate(updateJobSche
       rate = COALESCE($12, rate),
       workers_required = COALESCE($13, workers_required),
       status = COALESCE($14, status),
+      share_image = COALESCE($16, share_image),
       closes_at = CASE
         WHEN COALESCE($14, status) = 'closed' AND status <> 'closed' THEN CURRENT_TIMESTAMP
         WHEN COALESCE($14, status) = 'open' THEN NULL
@@ -388,6 +408,7 @@ router.patch('/:id', requireAuth, requireRole('company'), validate(updateJobSche
       job.workersRequired || null,
       job.status || null,
       moderationStatus,
+      job.shareImage === undefined ? null : (normalizeOgImagePath(job.shareImage) || null),
     ]
   );
 

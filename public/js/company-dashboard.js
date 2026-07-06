@@ -168,6 +168,7 @@
     postJobModal.classList.add('open');
     postJobModal.setAttribute('aria-hidden', 'false');
     postJobAlert.hidden = true;
+    preparePostJobModal('');
     postJobForm?.querySelector('input[name="title"]')?.focus();
   }
 
@@ -200,6 +201,7 @@
     postJobAlert.hidden = true;
     postJobModal.classList.add('open');
     postJobModal.setAttribute('aria-hidden', 'false');
+    preparePostJobModal(card.dataset.shareImage || '');
     postJobForm.querySelector('input[name="title"]')?.focus();
   }
 
@@ -274,6 +276,89 @@
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
+  }
+
+  let cachedJobOgPresets = [];
+
+  function getJobOgImageUrl(imagePath = '') {
+    const value = String(imagePath || '').trim();
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    return value.startsWith('/') ? value : `/${value}`;
+  }
+
+  function updatePostJobOgPreview(imagePath = '') {
+    const hiddenInput = document.getElementById('postJobShareImage');
+    const pathInput = document.getElementById('postJobShareImagePath');
+    const preview = document.getElementById('postJobOgPreview');
+    const previewImg = document.getElementById('postJobOgPreviewImg');
+    const normalized = getJobOgImageUrl(imagePath);
+
+    if (hiddenInput) hiddenInput.value = normalized;
+    if (pathInput && document.activeElement !== pathInput) {
+      pathInput.value = normalized;
+    }
+
+    document.querySelectorAll('[data-job-og-preset]').forEach((button) => {
+      button.classList.toggle('selected', button.dataset.jobOgPreset === normalized);
+    });
+
+    if (!preview || !previewImg) return;
+    if (!normalized) {
+      preview.hidden = true;
+      previewImg.removeAttribute('src');
+      return;
+    }
+
+    preview.hidden = false;
+    previewImg.src = normalized;
+    previewImg.alt = 'Social share preview';
+  }
+
+  async function loadJobOgPresets() {
+    const container = document.getElementById('postJobOgPresets');
+    if (!container) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/og-presets`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Could not load share images.');
+      cachedJobOgPresets = data.presets || [];
+    } catch (error) {
+      cachedJobOgPresets = [];
+    }
+
+    if (!cachedJobOgPresets.length) {
+      container.innerHTML = '<p class="company-side-empty">No preset images yet. Upload a custom image or leave blank to use your company logo.</p>';
+      return;
+    }
+
+    container.innerHTML = cachedJobOgPresets.map((preset) => `
+      <button type="button" class="company-og-preset-btn" data-job-og-preset="${escapeHtml(preset.path)}" title="${escapeHtml(preset.label)}">
+        <img src="${escapeHtml(preset.path)}" alt="${escapeHtml(preset.label)}" loading="lazy">
+        <span>${escapeHtml(preset.label)}</span>
+      </button>
+    `).join('');
+  }
+
+  async function uploadJobShareImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await fetch(`${API_BASE_URL}/api/jobs/share-image`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: formData,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || 'Could not upload share image.');
+    }
+    return data.path;
+  }
+
+  async function preparePostJobModal(shareImage = '') {
+    await loadJobOgPresets();
+    updatePostJobOgPreview(shareImage);
   }
 
   async function submitJob(payload) {
@@ -1623,6 +1708,35 @@
     openPostJobModalBtn.addEventListener('click', openPostJobModal);
   }
 
+  document.getElementById('postJobOgPresets')?.addEventListener('click', (event) => {
+    const presetBtn = event.target.closest('[data-job-og-preset]');
+    if (!presetBtn) return;
+    updatePostJobOgPreview(presetBtn.dataset.jobOgPreset);
+  });
+
+  document.getElementById('postJobShareImagePath')?.addEventListener('change', (event) => {
+    updatePostJobOgPreview(event.target.value.trim());
+  });
+
+  document.getElementById('postJobShareImagePath')?.addEventListener('blur', (event) => {
+    updatePostJobOgPreview(event.target.value.trim());
+  });
+
+  document.getElementById('postJobShareImageFile')?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imagePath = await uploadJobShareImage(file);
+      updatePostJobOgPreview(imagePath);
+      setPostJobAlert('Social share image uploaded.', 'success');
+    } catch (error) {
+      setPostJobAlert(error.message);
+    } finally {
+      event.target.value = '';
+    }
+  });
+
   postJobForm?.elements.tradeRequired?.addEventListener('input', (event) => {
     const query = event.target.value.trim();
     window.clearTimeout(tradeSearchTimer);
@@ -2056,6 +2170,7 @@
         duration: formData.get('duration').trim() || undefined,
         rate: formData.get('rate').trim(),
         workersRequired,
+        shareImage: formData.get('shareImage')?.trim() || undefined,
         status: 'open',
       });
 

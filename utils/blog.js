@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { normalizeOgImagePath } = require('./ogImages');
 
 const BLOG_DIR = path.join(__dirname, '..', 'content', 'blog');
 const BLOG_POSTS_FILE = path.join(BLOG_DIR, 'posts.json');
@@ -51,6 +52,8 @@ function normalizeBlogPostInput(input, { fallbackPublishedAt = null } = {}) {
     icon: String(input.icon || 'bi-journal-text').trim() || 'bi-journal-text',
     publishedAt,
     updatedAt: input.updatedAt || today,
+    ogImage: normalizeOgImagePath(input.ogImage),
+    ogImageAlt: String(input.ogImageAlt || '').trim(),
     sections: normalizeBlogSections(input.sections),
   };
 }
@@ -198,7 +201,7 @@ function getBlogSitemapEntries() {
 }
 
 function getArticleSchema(post, canonicalUrl) {
-  return {
+  const schema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
@@ -215,6 +218,13 @@ function getArticleSchema(post, canonicalUrl) {
     },
     mainEntityOfPage: canonicalUrl,
   };
+
+  if (post.ogImage) {
+    const { resolveOgImageUrl } = require('./ogImages');
+    schema.image = resolveOgImageUrl(post.ogImage);
+  }
+
+  return schema;
 }
 
 module.exports = {

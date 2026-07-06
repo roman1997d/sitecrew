@@ -2451,6 +2451,74 @@
     };
   }
 
+  let cachedBlogOgPresets = [];
+
+  function getBlogOgImageUrl(imagePath = '') {
+    const value = String(imagePath || '').trim();
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    return value.startsWith('/') ? value : `/${value}`;
+  }
+
+  function updateBlogOgPreview(imagePath = '') {
+    const hiddenInput = document.getElementById('adminBlogOgImage');
+    const pathInput = document.getElementById('adminBlogOgImagePath');
+    const preview = document.getElementById('adminBlogOgPreview');
+    const previewImg = document.getElementById('adminBlogOgPreviewImg');
+    const normalized = getBlogOgImageUrl(imagePath);
+
+    if (hiddenInput) hiddenInput.value = normalized;
+    if (pathInput && document.activeElement !== pathInput) {
+      pathInput.value = normalized;
+    }
+
+    document.querySelectorAll('[data-blog-og-preset]').forEach((button) => {
+      button.classList.toggle('selected', button.dataset.blogOgPreset === normalized);
+    });
+
+    if (!preview || !previewImg) return;
+    if (!normalized) {
+      preview.hidden = true;
+      previewImg.removeAttribute('src');
+      return;
+    }
+
+    preview.hidden = false;
+    previewImg.src = normalized;
+    previewImg.alt = document.getElementById('adminBlogOgImageAlt')?.value?.trim() || 'Social share preview';
+  }
+
+  async function loadBlogOgPresets() {
+    const container = document.getElementById('adminBlogOgPresets');
+    if (!container) return;
+
+    try {
+      const data = await apiRequest('/api/admin/blog/og-presets');
+      cachedBlogOgPresets = data.presets || [];
+    } catch (error) {
+      cachedBlogOgPresets = [];
+    }
+
+    if (!cachedBlogOgPresets.length) {
+      container.innerHTML = '<p class="admin-empty">No preset images yet. Upload one or add files to <code>public/images/og/presets/</code>.</p>';
+      return;
+    }
+
+    container.innerHTML = cachedBlogOgPresets.map((preset) => `
+      <button type="button" class="admin-og-preset-btn" data-blog-og-preset="${escapeHtml(preset.path)}" title="${escapeHtml(preset.label)}">
+        <img src="${escapeHtml(preset.path)}" alt="${escapeHtml(preset.label)}" loading="lazy">
+        <span>${escapeHtml(preset.label)}</span>
+      </button>
+    `).join('');
+  }
+
+  async function uploadBlogOgImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const data = await apiUpload('/api/admin/blog/og-image', formData);
+    return data.path;
+  }
+
   function getDefaultBlogPostDraft() {
     const today = new Date().toISOString().slice(0, 10);
     return {
@@ -2460,6 +2528,8 @@
       category: 'Guides',
       icon: 'bi-journal-text',
       publishedAt: today,
+      ogImage: '',
+      ogImageAlt: '',
       sections: [getDefaultBlogSection()],
     };
   }
@@ -2581,6 +2651,8 @@
       category: document.getElementById('adminBlogCategory')?.value?.trim() || 'Guides',
       icon: document.getElementById('adminBlogIcon')?.value || 'bi-journal-text',
       publishedAt: document.getElementById('adminBlogPublishedAt')?.value || new Date().toISOString().slice(0, 10),
+      ogImage: document.getElementById('adminBlogOgImage')?.value?.trim() || '',
+      ogImageAlt: document.getElementById('adminBlogOgImageAlt')?.value?.trim() || '',
       sections,
     };
   }
@@ -2592,6 +2664,8 @@
     document.getElementById('adminBlogCategory').value = post.category || 'Guides';
     document.getElementById('adminBlogIcon').value = post.icon || 'bi-journal-text';
     document.getElementById('adminBlogPublishedAt').value = post.publishedAt || new Date().toISOString().slice(0, 10);
+    document.getElementById('adminBlogOgImageAlt').value = post.ogImageAlt || '';
+    updateBlogOgPreview(post.ogImage || '');
     renderBlogSectionsEditor(post.sections || [getDefaultBlogSection()]);
     updateBlogPreviewLink(post.slug);
   }
@@ -2622,6 +2696,7 @@
       if (meta) meta.textContent = 'Create article';
       deleteBtn?.setAttribute('hidden', '');
       slugInput?.removeAttribute('readonly');
+      await loadBlogOgPresets();
       fillBlogForm(getDefaultBlogPostDraft());
       return;
     }
@@ -2630,6 +2705,7 @@
     deleteBtn?.removeAttribute('hidden');
     slugInput?.removeAttribute('readonly');
 
+    await loadBlogOgPresets();
     const data = await apiRequest(`/api/admin/blog/${encodeURIComponent(slug)}`);
     fillBlogForm(data.post);
   }
@@ -4669,6 +4745,39 @@
 
   document.getElementById('adminBlogSlug')?.addEventListener('input', (event) => {
     updateBlogPreviewLink(event.target.value.trim().toLowerCase());
+  });
+
+  document.getElementById('adminBlogOgPresets')?.addEventListener('click', (event) => {
+    const presetBtn = event.target.closest('[data-blog-og-preset]');
+    if (!presetBtn) return;
+    updateBlogOgPreview(presetBtn.dataset.blogOgPreset);
+  });
+
+  document.getElementById('adminBlogOgImagePath')?.addEventListener('change', (event) => {
+    updateBlogOgPreview(event.target.value.trim());
+  });
+
+  document.getElementById('adminBlogOgImagePath')?.addEventListener('blur', (event) => {
+    updateBlogOgPreview(event.target.value.trim());
+  });
+
+  document.getElementById('adminBlogOgImageAlt')?.addEventListener('input', () => {
+    updateBlogOgPreview(document.getElementById('adminBlogOgImage')?.value || '');
+  });
+
+  document.getElementById('adminBlogOgImageFile')?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imagePath = await uploadBlogOgImage(file);
+      updateBlogOgPreview(imagePath);
+      showAlert('Social share image uploaded.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      event.target.value = '';
+    }
   });
 
   document.getElementById('adminBlogTable')?.addEventListener('click', (event) => {

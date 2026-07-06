@@ -1383,6 +1383,55 @@
   max-width: 920px;
 }
 
+.admin-og-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-og-preset-btn {
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.admin-og-preset-btn img {
+  width: 100%;
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.admin-og-preset-btn span {
+  font-size: 12px;
+  color: #475569;
+}
+
+.admin-og-preset-btn.selected {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 1px #2563EB;
+}
+
+.admin-og-preview {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-og-preview img {
+  width: min(100%, 420px);
+  aspect-ratio: 1200 / 630;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+}
+
 .admin-blog-sections-list {
   display: grid;
   gap: 16px;

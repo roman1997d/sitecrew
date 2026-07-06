@@ -482,6 +482,33 @@
             </fieldset>
 
             <fieldset class="admin-market-ad-section">
+              <legend>Social share image</legend>
+              <p class="admin-section-lead">Choose the image shown when this article is shared on Facebook, LinkedIn, X, etc. Recommended size: 1200×630.</p>
+              <input type="hidden" id="adminBlogOgImage" value="">
+              <div class="admin-og-presets" id="adminBlogOgPresets">
+                <p class="admin-empty">Loading image options...</p>
+              </div>
+              <div class="admin-market-ad-grid-2">
+                <label class="admin-field">
+                  <span>Upload custom image</span>
+                  <input type="file" id="adminBlogOgImageFile" accept="image/jpeg,image/png,image/webp,image/gif">
+                </label>
+                <label class="admin-field">
+                  <span>Or image path</span>
+                  <input type="text" id="adminBlogOgImagePath" maxlength="500" placeholder="/images/og/presets/site-default.png">
+                </label>
+              </div>
+              <label class="admin-field">
+                <span>Image alt text (optional)</span>
+                <input type="text" id="adminBlogOgImageAlt" maxlength="200" placeholder="Short description for accessibility and social previews">
+              </label>
+              <div class="admin-og-preview" id="adminBlogOgPreview" hidden>
+                <span>Preview</span>
+                <img id="adminBlogOgPreviewImg" alt="">
+              </div>
+            </fieldset>
+
+            <fieldset class="admin-market-ad-section">
               <div class="admin-market-ad-section-head">
                 <legend>Content sections</legend>
                 <button type="button" class="admin-secondary-btn" id="adminBlogAddSectionBtn">Add section</button>

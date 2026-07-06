@@ -253,6 +253,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS closes_at TIMESTAMP;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS share_image VARCHAR(500);
 UPDATE jobs SET created_by_user_id = company_id WHERE created_by_user_id IS NULL;
 
 CREATE TABLE IF NOT EXISTS applications (

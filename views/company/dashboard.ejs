@@ -151,6 +151,27 @@
           <input type="text" name="certificatesRequired" placeholder="CSCS Gold, First Aid">
         </label>
 
+        <div class="company-form-full company-share-image-field">
+          <span>Social share image <small>(optional — shown when this job link is shared online)</small></span>
+          <input type="hidden" name="shareImage" id="postJobShareImage" value="">
+          <div class="company-og-presets" id="postJobOgPresets">
+            <p class="company-side-empty">Loading image options...</p>
+          </div>
+          <div class="company-form-grid">
+            <label>
+              <span>Upload custom image</span>
+              <input type="file" id="postJobShareImageFile" accept="image/jpeg,image/png,image/webp,image/gif">
+            </label>
+            <label>
+              <span>Or image path</span>
+              <input type="text" id="postJobShareImagePath" placeholder="/images/og/presets/site-default.png">
+            </label>
+          </div>
+          <div class="company-og-preview" id="postJobOgPreview" hidden>
+            <img id="postJobOgPreviewImg" alt="Social share preview">
+          </div>
+        </div>
+
         <div class="company-modal-actions">
           <button type="button" class="company-secondary-btn" id="cancelPostJob">Cancel</button>
           <button type="submit" class="company-submit-btn">Post Job</button>

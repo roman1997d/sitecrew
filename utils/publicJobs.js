@@ -99,6 +99,7 @@ function mapPublicJobDetail(job) {
     workersRequired: job.workers_required || 1,
     experienceRequired: job.experience_required || '',
     companyLogo: job.logo || '',
+    shareImage: job.share_image || '',
     companyId: job.company_id,
     status: job.status,
   };

@@ -11,6 +11,7 @@ const {
   renderSitemapXml,
   renderRobotsTxt,
 } = require('./utils/seo');
+const { resolveOgImageFromSources, resolveOgImageUrl } = require('./utils/ogImages');
 const {
   mapPublicJobCard,
   mapPublicJobDetail,
@@ -696,6 +697,7 @@ function mapCompanyJob(job) {
     startDate: job.start_date ? new Date(job.start_date).toISOString().slice(0, 10) : '',
     duration: job.duration || '',
     workersRequired: job.workers_required || 1,
+    shareImage: job.share_image || '',
   };
 }
 
@@ -1245,6 +1247,8 @@ async function renderJobDetailPage(req, res, segment) {
     path: job.url,
     title: `${job.title} in ${job.location} | SiteCrew`,
     description: `${job.trade} role at ${job.companyName} in ${job.location}. ${job.rate}. Apply on SiteCrew.`,
+    ogImage: resolveOgImageFromSources([job.shareImage, job.companyLogo]),
+    ogImageAlt: `${job.title} at ${job.companyName}`,
     jsonLd: [
       getBreadcrumbSchema([
         { name: 'Home', path: '/' },
@@ -1493,6 +1497,8 @@ app.get('/blog/:slug', (req, res) => {
       title: `${post.title} | SiteCrew Blog`,
       description: post.description,
       ogType: 'article',
+      ogImage: resolveOgImageUrl(post.ogImage),
+      ogImageAlt: post.ogImageAlt || post.title,
       jsonLd: [
         getBreadcrumbSchema([
           { name: 'Home', path: '/' },
