@@ -10,6 +10,14 @@ const {
   EMAIL_PROVIDERS,
   JOB_TITLES,
   JOB_DESCRIPTIONS,
+  CERTIFICATES,
+  QUALIFICATIONS,
+  NATIVE_LANGUAGES,
+  ENGLISH_LEVELS,
+  LANGUAGE_PREFERENCES,
+  LAST_COMPANIES,
+  BIO_TEMPLATES,
+  FEED_POST_CAPTIONS,
   pick,
   pickIndex,
   slugify,
@@ -97,6 +105,83 @@ function buildJobBundle(city, trade, jobIndex) {
   };
 }
 
+function buildWorkerProfileData(index, city, primaryTrade, secondaryTrade) {
+  const yearsExperience = randomInt(2, 15);
+  const isEnglishNative = index % 4 === 0;
+  const nativeLanguage = isEnglishNative ? 'English' : pick(NATIVE_LANGUAGES.filter((lang) => lang !== 'English'));
+  const englishLevel = isEnglishNative ? 'Native' : pick(ENGLISH_LEVELS.filter((level) => level !== 'Native'));
+  const hasCar = index % 2 === 0;
+  const canUseCarForWork = hasCar && index % 3 !== 0;
+  const hasHealthIssues = index % 17 === 0;
+  const verificationStatus = pick(['approved', 'approved', 'approved', 'pending']);
+  const qualificationBadgeColor = pick(['green', 'green', 'blue', 'gold']);
+  const nearbyCities = pickUniqueFrom(
+    UK_CITIES.map(([name]) => name).filter((name) => name !== city),
+    2
+  );
+
+  const bioTemplate = pick(BIO_TEMPLATES);
+  const bio = bioTemplate
+    .replace('{trade}', primaryTrade.toLowerCase())
+    .replace('{years}', String(yearsExperience))
+    .replace('{city}', city);
+
+  return {
+    phone: `+44 7${randomInt(100, 999)} ${randomInt(100000, 999999)}`,
+    trades: [primaryTrade, secondaryTrade],
+    tradeInterests: [primaryTrade, secondaryTrade],
+    experience: `${yearsExperience} years`,
+    certificates: pickUniqueFrom(CERTIFICATES, randomInt(2, 4)),
+    city,
+    workingRadius: `${randomInt(10, 40)} miles`,
+    availabilityStatus: pick(['Available Now', 'Available Soon', 'Open to offers']),
+    expectedRate: `£${randomInt(18, 32)}/hour`,
+    bio,
+    workLocations: [city, ...nearbyCities],
+    yearsExperience,
+    lastCompanies: pickUniqueFrom(LAST_COMPANIES, 3),
+    qualifications: pickUniqueFrom(QUALIFICATIONS, randomInt(2, 3)),
+    hasUkWorkPermit: true,
+    isEnglishNative,
+    nativeLanguage,
+    englishLevel,
+    hasCar,
+    canUseCarForWork,
+    hasHealthIssues,
+    healthIssuesDetails: hasHealthIssues ? 'Minor back strain — no restrictions on site duties.' : null,
+    languagePreference: isEnglishNative ? 'en' : pick(LANGUAGE_PREFERENCES.filter((code) => code !== 'en')),
+    verificationStatus,
+    qualificationBadgeColor,
+  };
+}
+
+function buildFeedPostCaption(city, trade) {
+  return pick(FEED_POST_CAPTIONS)
+    .replace('{city}', city)
+    .replace('{trade}', trade.toLowerCase());
+}
+
+async function createWorkerFeedPosts(client, userId, city, trade) {
+  const postTypes = pickUniqueFrom(['work_completed', 'progress', 'skills', 'certification'], 2);
+  for (const postType of postTypes) {
+    await client.query(
+      `INSERT INTO feed_posts (
+         author_id, created_by_user_id, post_type, caption, media_urls, tags, location, project_size, duration, moderation_status
+       )
+       VALUES ($1, $1, $2, $3, '{}', $4, $5, $6, $7, 'visible')`,
+      [
+        userId,
+        postType,
+        buildFeedPostCaption(city, trade),
+        [trade.toLowerCase(), 'site-work'],
+        city,
+        pick(['Small', 'Medium', 'Large']),
+        pick(['2 days', '1 week', '3 weeks', '6 weeks']),
+      ]
+    );
+  }
+}
+
 async function createWorker(client, passwordHash, index) {
   const fullName = buildWorkerName();
   const [city, postcode] = pickIndex(UK_CITIES, index);
@@ -104,6 +189,7 @@ async function createWorker(client, passwordHash, index) {
   const secondaryTrade = pick(TRADES.filter((trade) => trade !== primaryTrade));
   const provider = `${pick(EMAIL_PROVIDERS)}.fpd`;
   const email = await buildUniqueEmail(client, buildWorkerEmailLocal(fullName), provider);
+  const profile = buildWorkerProfileData(index, city, primaryTrade, secondaryTrade);
 
   const userResult = await client.query(
     `INSERT INTO users (email, password_hash, role, status)
@@ -115,29 +201,52 @@ async function createWorker(client, passwordHash, index) {
 
   await client.query(
     `INSERT INTO worker_profiles (
-       user_id, full_name, phone, trades, trade_interests, city, postcode,
-       working_radius, availability_status, expected_rate, bio, years_experience,
-       verification_status, has_uk_work_permit, data_consent
+       user_id, full_name, phone, profile_photo, trades, trade_interests, experience, certificates,
+       city, postcode, working_radius, availability_status, expected_rate, bio, work_locations,
+       years_experience, last_companies, qualifications, has_uk_work_permit, is_english_native,
+       native_language, english_level, has_car, can_use_car_for_work, has_health_issues,
+       health_issues_details, data_consent, language_preference, verification_status,
+       qualification_badge_color
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, TRUE, TRUE)`,
+     VALUES (
+       $1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+       $18, $19, $20, $21, $22, $23, $24, $25, TRUE, $26, $27, $28
+     )`,
     [
       userId,
       fullName,
-      `+44 7${randomInt(100, 999)} ${randomInt(100000, 999999)}`,
-      [primaryTrade, secondaryTrade],
-      [primaryTrade, secondaryTrade],
-      city,
+      profile.phone,
+      profile.trades,
+      profile.tradeInterests,
+      profile.experience,
+      profile.certificates,
+      profile.city,
       postcode,
-      `${randomInt(10, 40)} miles`,
-      pick(['Available Now', 'Available Soon', 'Open to offers']),
-      `£${randomInt(18, 32)}/hour`,
-      `${primaryTrade} with site experience across ${city} and surrounding areas.`,
-      randomInt(2, 15),
-      pick(['approved', 'approved', 'pending']),
+      profile.workingRadius,
+      profile.availabilityStatus,
+      profile.expectedRate,
+      profile.bio,
+      profile.workLocations,
+      profile.yearsExperience,
+      profile.lastCompanies,
+      profile.qualifications,
+      profile.hasUkWorkPermit,
+      profile.isEnglishNative,
+      profile.nativeLanguage,
+      profile.englishLevel,
+      profile.hasCar,
+      profile.canUseCarForWork,
+      profile.hasHealthIssues,
+      profile.healthIssuesDetails,
+      profile.languagePreference,
+      profile.verificationStatus,
+      profile.qualificationBadgeColor,
     ]
   );
 
-  return { id: userId, email, fullName, city, trades: [primaryTrade, secondaryTrade] };
+  await createWorkerFeedPosts(client, userId, city, primaryTrade);
+
+  return { id: userId, email, fullName, city, trades: profile.trades };
 }
 
 async function createCompanyWithJobs(client, passwordHash, index) {

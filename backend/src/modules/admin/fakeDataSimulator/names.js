@@ -63,6 +63,40 @@ const JOB_DESCRIPTIONS = [
   'Residential and commercial mix. Good team, consistent hours, paid weekly through SiteCrew.',
 ];
 
+const CERTIFICATES = [
+  'CSCS Green', 'CSCS Blue', 'CSCS Gold', 'CSCS Black', 'First Aid at Work', 'IPAF', 'PASMA',
+  'ECS Gold Card', 'NVQ Level 2', 'NVQ Level 3', 'Asbestos Awareness', 'Manual Handling',
+];
+
+const QUALIFICATIONS = ['CSCS', 'ECS', 'NVQ Level 2', 'NVQ Level 3', 'First Aid', 'IPAF', 'City & Guilds'];
+
+const NATIVE_LANGUAGES = ['English', 'Romanian', 'Polish', 'Bulgarian', 'Lithuanian', 'Portuguese', 'Spanish', 'Russian'];
+
+const ENGLISH_LEVELS = ['Basic', 'Conversational', 'Good', 'Fluent', 'Native'];
+
+const LANGUAGE_PREFERENCES = ['en', 'ro', 'pl', 'bg', 'lt', 'pt', 'es', 'ru'];
+
+const LAST_COMPANIES = [
+  'Alderstone Construction', 'Bluebrick Developments', 'Cedarline Contractors', 'Delta Site Works',
+  'ForgeBuild Group', 'Harbour Fit-Out', 'IronGate Construction', 'Keystone Projects',
+  'MetroBuild Services', 'Northstar Facades', 'Oakfield Contractors', 'Pioneer Site Solutions',
+  'Riverside Developments', 'Summit Build Partners', 'Union Trade Contractors', 'Vector Construction',
+];
+
+const BIO_TEMPLATES = [
+  '{trade} with {years} years on commercial and residential sites across {city}. Reliable, CSCS certified, and happy to travel within my radius.',
+  'Experienced {trade} based in {city}. Strong references from main contractors and fit-out specialists. Available for day rate or long-term contracts.',
+  'Site-ready {trade} covering {city} and surrounding areas. Punctual, safety-focused, and comfortable working in busy live environments.',
+];
+
+const FEED_POST_CAPTIONS = [
+  'Finished first fix on a {city} office refurbishment — clean containment and testing signed off.',
+  'Completed snagging and handover on a residential block in {city}. Client signed off with no punch list.',
+  'Week on site as {trade}: metal stud partitions, boarding, and fire stopping to spec.',
+  'Certification day complete — refreshed CSCS and updated site paperwork for upcoming projects.',
+  'Progress update from a live commercial fit-out in {city}. Team hit programme milestones ahead of schedule.',
+];
+
 function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -92,6 +126,14 @@ module.exports = {
   EMAIL_PROVIDERS,
   JOB_TITLES,
   JOB_DESCRIPTIONS,
+  CERTIFICATES,
+  QUALIFICATIONS,
+  NATIVE_LANGUAGES,
+  ENGLISH_LEVELS,
+  LANGUAGE_PREFERENCES,
+  LAST_COMPANIES,
+  BIO_TEMPLATES,
+  FEED_POST_CAPTIONS,
   pick,
   pickIndex,
   slugify,
