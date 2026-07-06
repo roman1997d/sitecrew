@@ -160,6 +160,7 @@ app.use((req, res, next) => {
   if (isAdminHost(req) && !req.path.startsWith('/admin') && !req.path.startsWith('/api')) {
     const publicAsset = req.path.startsWith('/uploads/')
       || req.path.startsWith('/assets/')
+      || req.path.startsWith('/images/')
       || req.path.startsWith('/css/')
       || req.path.startsWith('/js/')
       || req.path === '/favicon.ico';

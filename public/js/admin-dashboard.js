@@ -2452,7 +2452,13 @@
     };
   }
 
-  let cachedBlogOgPresets = [];
+  function getOgPreviewImageSrc(preset = {}) {
+    if (preset.url) return preset.url;
+    const path = String(preset.path || '').trim();
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path)) return path;
+    return `${PUBLIC_SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  }
 
   function getBlogOgImageUrl(imagePath = '') {
     const value = String(imagePath || '').trim();
@@ -2485,7 +2491,7 @@
     }
 
     preview.hidden = false;
-    previewImg.src = normalized;
+    previewImg.src = getOgPreviewImageSrc({ path: normalized });
     previewImg.alt = document.getElementById('adminBlogOgImageAlt')?.value?.trim() || 'Social share preview';
   }
 
@@ -2507,7 +2513,7 @@
 
     container.innerHTML = cachedBlogOgPresets.map((preset) => `
       <button type="button" class="admin-og-preset-btn" data-blog-og-preset="${escapeHtml(preset.path)}" title="${escapeHtml(preset.label)}">
-        <img src="${escapeHtml(preset.path)}" alt="${escapeHtml(preset.label)}" loading="lazy">
+        <img src="${escapeHtml(getOgPreviewImageSrc(preset))}" alt="${escapeHtml(preset.label)}" loading="lazy">
         <span>${escapeHtml(preset.label)}</span>
       </button>
     `).join('');
@@ -4089,7 +4095,7 @@
 
     grid.innerHTML = presets.map((preset) => `
       <article class="admin-share-preview-card">
-        <img src="${escapeHtml(preset.path)}" alt="${escapeHtml(preset.label || preset.filename)}" loading="lazy">
+        <img src="${escapeHtml(getOgPreviewImageSrc(preset))}" alt="${escapeHtml(preset.label || preset.filename)}" loading="lazy">
         <div class="admin-share-preview-card-body">
           <strong>${escapeHtml(preset.label || preset.filename)}</strong>
           <code>${escapeHtml(preset.path)}</code>
