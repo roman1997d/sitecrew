@@ -2565,6 +2565,11 @@
   font-size: 0.85rem;
 }
 
+.admin-email-control-card-auto-only .admin-email-auto-switch {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .admin-email-invite-visit-field {
   margin: 0;
 }

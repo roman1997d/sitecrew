@@ -461,6 +461,7 @@ async function resolveRecipients(modeKey, context = {}) {
       };
     }
     // Event-driven modes without target: empty for manual unless we have pending events
+    case 'welcome-worker':
     case 'company-contact':
     case 'job-invite':
     case 'application-status':
@@ -475,7 +476,9 @@ async function resolveRecipients(modeKey, context = {}) {
         recipients: [],
         meta: {
           eventDriven: true,
-          note: 'This mode sends on live events. Enable Automat for real-time emails, or trigger an event to test.',
+          note: modeKey === 'welcome-worker'
+            ? 'Welcome emails send automatically when a worker registers (Automat must be ON). No manual blast.'
+            : 'This mode sends on live events. Enable Automat for real-time emails, or trigger an event to test.',
         },
       };
     default:

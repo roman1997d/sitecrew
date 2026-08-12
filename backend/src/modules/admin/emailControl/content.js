@@ -17,6 +17,21 @@ function buildEmailContent(modeKey, recipient, context = {}) {
     .map(formatJobLine);
 
   switch (modeKey) {
+    case 'welcome-worker':
+      return {
+        subject: 'Welcome to SiteCrew — find jobs and grow your impact',
+        intro: context.intro
+          || `Welcome to SiteCrew${recipient.name && recipient.name !== 'there' ? `, ${recipient.name}` : ''}! Here is how SiteCrew helps you find work and grow your impact.`,
+        details: [
+          'Complete your profile with a photo, trades and work locations so companies can find you',
+          'Browse open jobs matched to your skills and apply directly',
+          'Share posts about your work to attract company interest',
+          'Follow companies to see new job offers sooner',
+          'Keep your availability and expected rate up to date for better matching',
+        ],
+        ctaLabel: 'Open your dashboard',
+        ctaUrl: recipient.ctaUrl || dashboardUrl,
+      };
     case 'interests':
       return {
         subject: 'New jobs matching your interests on SiteCrew',

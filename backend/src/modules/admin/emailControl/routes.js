@@ -165,6 +165,12 @@ router.post(
     const { mode } = req.validated.params;
     const { dryRun = false, visitCount } = req.validated.body;
 
+    if (mode === 'welcome-worker') {
+      const error = new Error('Welcome mesaj has no manual send. Enable Automat to email workers on registration.');
+      error.statusCode = 400;
+      throw error;
+    }
+
     if (mode === 'invite-company-page-visits') {
       if (!visitCount || !Number.isInteger(visitCount) || visitCount < 1) {
         const error = new Error('Enter a positive visit count (X) before sending this email.');

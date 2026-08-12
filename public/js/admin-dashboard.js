@@ -5076,6 +5076,7 @@
   const adminEmailTestModeSaveBtn = document.getElementById('adminEmailTestModeSaveBtn');
   let emailTestModeState = { enabled: false, email: null, configuredEmail: null };
   const EMAIL_MODE_LABELS = {
+    'welcome-worker': 'Workeri · Welcome mesaj',
     interests: 'Workeri · joburi pe interese',
     location: 'Workeri · joburi pe locație',
     'interests-location': 'Workeri · interese + locație',

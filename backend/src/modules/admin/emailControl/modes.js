@@ -8,6 +8,15 @@
 
 const EMAIL_CONTROL_MODES = [
   {
+    key: 'welcome-worker',
+    audience: 'worker',
+    label: 'Welcome mesaj',
+    description: 'Email de bun venit după înregistrare, cu sfaturi pentru joburi și impact.',
+    trigger: 'user_registered',
+    countReady: true,
+    sendReady: true,
+  },
+  {
     key: 'interests',
     audience: 'worker',
     label: 'Joburi pe interese',

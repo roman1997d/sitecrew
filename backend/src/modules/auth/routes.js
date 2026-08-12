@@ -16,6 +16,7 @@ const {
   findValidResetToken,
   markResetTokenUsed,
 } = require('../../utils/passwordReset');
+const { queueAutoMode } = require('../admin/emailControl');
 
 const router = express.Router();
 
@@ -204,7 +205,10 @@ router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(asy
       ]
     );
     await client.query('COMMIT');
-    queueWelcomeEmail({ to: user.email, role: 'worker', name: fullName });
+    queueAutoMode('welcome-worker', {
+      targetUserId: user.id,
+      intro: `Welcome to SiteCrew, ${fullName}! Here is how SiteCrew helps you find work and grow your impact.`,
+    });
     sendAuthResponse(res, 201, user);
   } catch (error) {
     await client.query('ROLLBACK');
