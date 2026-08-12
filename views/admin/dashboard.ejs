@@ -697,19 +697,60 @@
       <section class="admin-section" id="adminSection-email-control" data-section="email-control" hidden>
         <p class="admin-section-lead">Trimite notificări către workeri despre joburile noi adăugate pe platformă.</p>
 
-        <div class="admin-email-control-actions">
-          <button type="button" class="admin-primary-btn" id="adminEmailNotifyByInterestsBtn">
-            <i class="bi bi-tags"></i>
-            Notifică workerii despre joburile noi adăugate pe platformă bazat pe interesele lor
-          </button>
-          <button type="button" class="admin-primary-btn" id="adminEmailNotifyByLocationBtn">
-            <i class="bi bi-geo-alt"></i>
-            Notifică workerii despre joburile noi adăugate pe platformă bazat pe locația lor
-          </button>
-          <button type="button" class="admin-primary-btn" id="adminEmailNotifyByInterestsAndLocationBtn">
-            <i class="bi bi-funnel"></i>
-            Notifică workerii despre joburile noi adăugate pe platformă bazat pe interese și locația lor
-          </button>
+        <div class="admin-email-control-grid">
+          <article class="admin-email-control-card">
+            <div class="admin-email-control-card-icon" aria-hidden="true">
+              <i class="bi bi-tags"></i>
+            </div>
+            <div class="admin-email-control-card-body">
+              <h2>Pe baza intereselor</h2>
+              <p>Notifică workerii despre joburile noi adăugate pe platformă, filtrând după interesele lor.</p>
+              <button
+                type="button"
+                class="admin-primary-btn"
+                id="adminEmailNotifyByInterestsBtn"
+                data-email-mode="interests"
+              >
+                Trimite notificări
+              </button>
+            </div>
+          </article>
+
+          <article class="admin-email-control-card">
+            <div class="admin-email-control-card-icon" aria-hidden="true">
+              <i class="bi bi-geo-alt"></i>
+            </div>
+            <div class="admin-email-control-card-body">
+              <h2>Pe baza locației</h2>
+              <p>Notifică workerii despre joburile noi adăugate pe platformă, filtrând după locația lor.</p>
+              <button
+                type="button"
+                class="admin-primary-btn"
+                id="adminEmailNotifyByLocationBtn"
+                data-email-mode="location"
+              >
+                Trimite notificări
+              </button>
+            </div>
+          </article>
+
+          <article class="admin-email-control-card">
+            <div class="admin-email-control-card-icon" aria-hidden="true">
+              <i class="bi bi-funnel"></i>
+            </div>
+            <div class="admin-email-control-card-body">
+              <h2>Interese și locație</h2>
+              <p>Notifică workerii despre joburile noi adăugate pe platformă, filtrând după interese și locație.</p>
+              <button
+                type="button"
+                class="admin-primary-btn"
+                id="adminEmailNotifyByInterestsAndLocationBtn"
+                data-email-mode="interests-location"
+              >
+                Trimite notificări
+              </button>
+            </div>
+          </article>
         </div>
       </section>
     </main>
@@ -1169,6 +1210,33 @@
       <div class="admin-modal-actions">
         <button type="button" class="admin-secondary-btn" data-sales-terms-close>Cancel</button>
         <button type="button" class="admin-primary-btn" id="adminSalesTermsSaveBtn">Save new version</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminEmailConfirmModal" hidden>
+    <div class="admin-modal-backdrop" data-email-confirm-close></div>
+    <div class="admin-modal-dialog admin-email-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="adminEmailConfirmModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">Email Control</p>
+          <h2 id="adminEmailConfirmModalTitle">Confirmă trimiterea</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-email-confirm-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="admin-email-confirm-body">
+        <p class="admin-email-confirm-message" id="adminEmailConfirmMessage">
+          Trimiți acest email la <strong id="adminEmailConfirmCount">0</strong> persoane
+        </p>
+        <p class="admin-email-confirm-mode" id="adminEmailConfirmModeLabel"></p>
+      </div>
+
+      <div class="admin-modal-actions">
+        <button type="button" class="admin-secondary-btn" data-email-confirm-close>Cancel</button>
+        <button type="button" class="admin-primary-btn" id="adminEmailConfirmYesBtn">Yes</button>
       </div>
     </div>
   </div>

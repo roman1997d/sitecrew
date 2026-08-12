@@ -5026,6 +5026,52 @@
     window.location.href = '/admin/login';
   });
 
+  const adminEmailConfirmModal = document.getElementById('adminEmailConfirmModal');
+  const adminEmailConfirmCount = document.getElementById('adminEmailConfirmCount');
+  const adminEmailConfirmModeLabel = document.getElementById('adminEmailConfirmModeLabel');
+  const adminEmailConfirmYesBtn = document.getElementById('adminEmailConfirmYesBtn');
+  const EMAIL_MODE_LABELS = {
+    interests: 'Filtru: interese',
+    location: 'Filtru: locație',
+    'interests-location': 'Filtru: interese și locație',
+  };
+  let pendingEmailMode = null;
+
+  function closeEmailConfirmModal() {
+    if (!adminEmailConfirmModal) return;
+    adminEmailConfirmModal.hidden = true;
+    pendingEmailMode = null;
+  }
+
+  function openEmailConfirmModal(mode) {
+    if (!adminEmailConfirmModal) return;
+    pendingEmailMode = mode;
+    // Placeholder until recipient-count API is wired
+    const recipientCount = 0;
+    if (adminEmailConfirmCount) {
+      adminEmailConfirmCount.textContent = String(recipientCount);
+    }
+    if (adminEmailConfirmModeLabel) {
+      adminEmailConfirmModeLabel.textContent = EMAIL_MODE_LABELS[mode] || '';
+    }
+    adminEmailConfirmModal.hidden = false;
+  }
+
+  document.querySelectorAll('[data-email-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      openEmailConfirmModal(button.dataset.emailMode);
+    });
+  });
+
+  adminEmailConfirmModal?.querySelectorAll('[data-email-confirm-close]').forEach((element) => {
+    element.addEventListener('click', closeEmailConfirmModal);
+  });
+
+  adminEmailConfirmYesBtn?.addEventListener('click', () => {
+    // Frontend-only confirm for now; send action comes later
+    closeEmailConfirmModal();
+  });
+
   guardAdminSession()
     .then(() => loadSection('metrics'))
     .catch(() => window.location.replace('/admin/login'));

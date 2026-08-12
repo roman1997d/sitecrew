@@ -2416,26 +2416,89 @@
   font-size: 15px;
 }
 
-.admin-email-control-actions {
+.admin-email-control-grid {
   display: grid;
-  gap: 12px;
-  max-width: 720px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.admin-email-control-actions .admin-primary-btn {
+.admin-email-control-card {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  text-align: left;
-  line-height: 1.4;
-  white-space: normal;
-  height: auto;
-  min-height: 48px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.admin-email-control-actions .admin-primary-btn i {
-  margin-top: 2px;
-  flex-shrink: 0;
+.admin-email-control-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #F1F5F9;
+  color: #0F172A;
+  font-size: 1.25rem;
+}
+
+.admin-email-control-card-body {
+  display: grid;
+  gap: 10px;
+  flex: 1;
+}
+
+.admin-email-control-card-body h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0F172A;
+}
+
+.admin-email-control-card-body p {
+  margin: 0;
+  color: #64748B;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.admin-email-control-card-body .admin-primary-btn {
+  margin-top: 6px;
+  justify-self: start;
+}
+
+.admin-email-confirm-dialog {
+  width: min(480px, 100%);
+}
+
+.admin-email-confirm-body {
+  padding: 18px 24px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-email-confirm-message {
+  margin: 0;
+  color: #0F172A;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.admin-email-confirm-mode {
+  margin: 0;
+  color: #64748B;
+  font-size: 0.92rem;
+}
+
+.admin-email-confirm-dialog .admin-modal-actions {
+  padding: 20px 24px 24px;
+}
+
+@media (max-width: 1100px) {
+  .admin-email-control-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 960px) {
