@@ -5035,7 +5035,41 @@
     location: 'Filtru: locație',
     'interests-location': 'Filtru: interese și locație',
   };
+  const EMAIL_AUTO_STORAGE_KEY = 'sitecrewAdminEmailAutoModes';
   let pendingEmailMode = null;
+
+  function getEmailAutoModes() {
+    try {
+      const raw = localStorage.getItem(EMAIL_AUTO_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return {
+        interests: Boolean(parsed.interests),
+        location: Boolean(parsed.location),
+        'interests-location': Boolean(parsed['interests-location']),
+      };
+    } catch (_error) {
+      return {
+        interests: false,
+        location: false,
+        'interests-location': false,
+      };
+    }
+  }
+
+  function saveEmailAutoModes(modes) {
+    localStorage.setItem(EMAIL_AUTO_STORAGE_KEY, JSON.stringify(modes));
+  }
+
+  function syncEmailAutoSwitchUi() {
+    const modes = getEmailAutoModes();
+    document.querySelectorAll('[data-email-auto-mode]').forEach((input) => {
+      const mode = input.dataset.emailAutoMode;
+      const enabled = Boolean(modes[mode]);
+      input.checked = enabled;
+      const card = document.querySelector(`[data-email-card="${mode}"]`);
+      card?.classList.toggle('is-auto-enabled', enabled);
+    });
+  }
 
   function closeEmailConfirmModal() {
     if (!adminEmailConfirmModal) return;
@@ -5063,6 +5097,15 @@
     });
   });
 
+  document.querySelectorAll('[data-email-auto-mode]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const modes = getEmailAutoModes();
+      modes[input.dataset.emailAutoMode] = input.checked;
+      saveEmailAutoModes(modes);
+      syncEmailAutoSwitchUi();
+    });
+  });
+
   adminEmailConfirmModal?.querySelectorAll('[data-email-confirm-close]').forEach((element) => {
     element.addEventListener('click', closeEmailConfirmModal);
   });
@@ -5071,6 +5114,8 @@
     // Frontend-only confirm for now; send action comes later
     closeEmailConfirmModal();
   });
+
+  syncEmailAutoSwitchUi();
 
   guardAdminSession()
     .then(() => loadSection('metrics'))

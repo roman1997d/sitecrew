@@ -698,7 +698,7 @@
         <p class="admin-section-lead">Trimite notificări către workeri despre joburile noi adăugate pe platformă.</p>
 
         <div class="admin-email-control-grid">
-          <article class="admin-email-control-card">
+          <article class="admin-email-control-card" data-email-card="interests">
             <div class="admin-email-control-card-icon" aria-hidden="true">
               <i class="bi bi-tags"></i>
             </div>
@@ -713,10 +713,24 @@
               >
                 Trimite notificări
               </button>
+              <label class="admin-email-auto-switch">
+                <input
+                  type="checkbox"
+                  id="adminEmailAutoInterests"
+                  data-email-auto-mode="interests"
+                >
+                <span class="admin-email-auto-switch-track" aria-hidden="true">
+                  <span class="admin-email-auto-switch-thumb"></span>
+                </span>
+                <span class="admin-email-auto-switch-copy">
+                  <strong>Automat</strong>
+                  Make this automatic after each update in database
+                </span>
+              </label>
             </div>
           </article>
 
-          <article class="admin-email-control-card">
+          <article class="admin-email-control-card" data-email-card="location">
             <div class="admin-email-control-card-icon" aria-hidden="true">
               <i class="bi bi-geo-alt"></i>
             </div>
@@ -731,10 +745,24 @@
               >
                 Trimite notificări
               </button>
+              <label class="admin-email-auto-switch">
+                <input
+                  type="checkbox"
+                  id="adminEmailAutoLocation"
+                  data-email-auto-mode="location"
+                >
+                <span class="admin-email-auto-switch-track" aria-hidden="true">
+                  <span class="admin-email-auto-switch-thumb"></span>
+                </span>
+                <span class="admin-email-auto-switch-copy">
+                  <strong>Automat</strong>
+                  Make this automatic after each update in database
+                </span>
+              </label>
             </div>
           </article>
 
-          <article class="admin-email-control-card">
+          <article class="admin-email-control-card" data-email-card="interests-location">
             <div class="admin-email-control-card-icon" aria-hidden="true">
               <i class="bi bi-funnel"></i>
             </div>
@@ -749,6 +777,20 @@
               >
                 Trimite notificări
               </button>
+              <label class="admin-email-auto-switch">
+                <input
+                  type="checkbox"
+                  id="adminEmailAutoInterestsLocation"
+                  data-email-auto-mode="interests-location"
+                >
+                <span class="admin-email-auto-switch-track" aria-hidden="true">
+                  <span class="admin-email-auto-switch-thumb"></span>
+                </span>
+                <span class="admin-email-auto-switch-copy">
+                  <strong>Automat</strong>
+                  Make this automatic after each update in database
+                </span>
+              </label>
             </div>
           </article>
         </div>
