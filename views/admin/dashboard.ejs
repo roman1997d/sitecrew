@@ -695,200 +695,246 @@
       </section>
 
       <section class="admin-section" id="adminSection-email-control" data-section="email-control" hidden>
-        <p class="admin-section-lead">Trimite notificări către workeri despre joburi, contacte, mesaje fără răspuns și prețuri.</p>
+        <p class="admin-section-lead">Controlează emailurile manuale și automate pentru workeri și companii.</p>
 
-        <div class="admin-email-control-grid">
-          <article class="admin-email-control-card" data-email-card="interests">
-            <div class="admin-email-control-card-icon" aria-hidden="true">
-              <i class="bi bi-tags"></i>
-            </div>
-            <div class="admin-email-control-card-body">
-              <h2>Pe baza intereselor</h2>
-              <p>Notifică workerii despre joburile noi adăugate pe platformă, filtrând după interesele lor.</p>
-              <button
-                type="button"
-                class="admin-primary-btn"
-                id="adminEmailNotifyByInterestsBtn"
-                data-email-mode="interests"
-              >
-                Trimite notificări
-              </button>
+        <div class="admin-email-control-group">
+          <header class="admin-email-control-group-head">
+            <h2>Notificări workeri</h2>
+            <p>Joburi noi, contacte, mesaje și prețuri.</p>
+          </header>
+          <div class="admin-email-control-grid">
+            <article class="admin-email-control-card" data-email-card="interests">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-tags"></i></div>
+                <div>
+                  <h3>Joburi pe interese</h3>
+                  <p>Joburi noi după interesele workerului.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="interests">Trimite</button>
               <label class="admin-email-auto-switch">
-                <input
-                  type="checkbox"
-                  id="adminEmailAutoInterests"
-                  data-email-auto-mode="interests"
-                >
-                <span class="admin-email-auto-switch-track" aria-hidden="true">
-                  <span class="admin-email-auto-switch-thumb"></span>
-                </span>
-                <span class="admin-email-auto-switch-copy">
-                  <strong>Automat</strong>
-                  Make this automatic after each update in database
-                </span>
+                <input type="checkbox" data-email-auto-mode="interests">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
               </label>
-            </div>
-          </article>
+            </article>
 
-          <article class="admin-email-control-card" data-email-card="location">
-            <div class="admin-email-control-card-icon" aria-hidden="true">
-              <i class="bi bi-geo-alt"></i>
-            </div>
-            <div class="admin-email-control-card-body">
-              <h2>Pe baza locației</h2>
-              <p>Notifică workerii despre joburile noi adăugate pe platformă, filtrând după locația lor.</p>
-              <button
-                type="button"
-                class="admin-primary-btn"
-                id="adminEmailNotifyByLocationBtn"
-                data-email-mode="location"
-              >
-                Trimite notificări
-              </button>
+            <article class="admin-email-control-card" data-email-card="location">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-geo-alt"></i></div>
+                <div>
+                  <h3>Joburi pe locație</h3>
+                  <p>Joburi noi după locația workerului.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="location">Trimite</button>
               <label class="admin-email-auto-switch">
-                <input
-                  type="checkbox"
-                  id="adminEmailAutoLocation"
-                  data-email-auto-mode="location"
-                >
-                <span class="admin-email-auto-switch-track" aria-hidden="true">
-                  <span class="admin-email-auto-switch-thumb"></span>
-                </span>
-                <span class="admin-email-auto-switch-copy">
-                  <strong>Automat</strong>
-                  Make this automatic after each update in database
-                </span>
+                <input type="checkbox" data-email-auto-mode="location">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
               </label>
-            </div>
-          </article>
+            </article>
 
-          <article class="admin-email-control-card" data-email-card="interests-location">
-            <div class="admin-email-control-card-icon" aria-hidden="true">
-              <i class="bi bi-funnel"></i>
-            </div>
-            <div class="admin-email-control-card-body">
-              <h2>Interese și locație</h2>
-              <p>Notifică workerii despre joburile noi adăugate pe platformă, filtrând după interese și locație.</p>
-              <button
-                type="button"
-                class="admin-primary-btn"
-                id="adminEmailNotifyByInterestsAndLocationBtn"
-                data-email-mode="interests-location"
-              >
-                Trimite notificări
-              </button>
+            <article class="admin-email-control-card" data-email-card="interests-location">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-funnel"></i></div>
+                <div>
+                  <h3>Interese + locație</h3>
+                  <p>Joburi noi după interese și locație.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="interests-location">Trimite</button>
               <label class="admin-email-auto-switch">
-                <input
-                  type="checkbox"
-                  id="adminEmailAutoInterestsLocation"
-                  data-email-auto-mode="interests-location"
-                >
-                <span class="admin-email-auto-switch-track" aria-hidden="true">
-                  <span class="admin-email-auto-switch-thumb"></span>
-                </span>
-                <span class="admin-email-auto-switch-copy">
-                  <strong>Automat</strong>
-                  Make this automatic after each update in database
-                </span>
+                <input type="checkbox" data-email-auto-mode="interests-location">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
               </label>
-            </div>
-          </article>
+            </article>
 
-          <article class="admin-email-control-card" data-email-card="company-contact">
-            <div class="admin-email-control-card-icon" aria-hidden="true">
-              <i class="bi bi-chat-dots"></i>
-            </div>
-            <div class="admin-email-control-card-body">
-              <h2>Contact de la companii</h2>
-              <p>Notifică workerii când aceștia sunt contactați de companii.</p>
-              <button
-                type="button"
-                class="admin-primary-btn"
-                id="adminEmailNotifyCompanyContactBtn"
-                data-email-mode="company-contact"
-              >
-                Trimite notificări
-              </button>
+            <article class="admin-email-control-card" data-email-card="company-contact">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-chat-dots"></i></div>
+                <div>
+                  <h3>Contact de la companii</h3>
+                  <p>Când o companie contactează workerul.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-contact">Trimite</button>
               <label class="admin-email-auto-switch">
-                <input
-                  type="checkbox"
-                  id="adminEmailAutoCompanyContact"
-                  data-email-auto-mode="company-contact"
-                >
-                <span class="admin-email-auto-switch-track" aria-hidden="true">
-                  <span class="admin-email-auto-switch-thumb"></span>
-                </span>
-                <span class="admin-email-auto-switch-copy">
-                  <strong>Automat</strong>
-                  Make this automatic after each update in database
-                </span>
+                <input type="checkbox" data-email-auto-mode="company-contact">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
               </label>
-            </div>
-          </article>
+            </article>
 
-          <article class="admin-email-control-card" data-email-card="unread-12h">
-            <div class="admin-email-control-card-icon" aria-hidden="true">
-              <i class="bi bi-clock-history"></i>
-            </div>
-            <div class="admin-email-control-card-body">
-              <h2>Mesaje fără răspuns (12h)</h2>
-              <p>Notifică workerii când aceștia nu au răspuns la mesaje mai mult de 12 ore.</p>
-              <button
-                type="button"
-                class="admin-primary-btn"
-                id="adminEmailNotifyUnread12hBtn"
-                data-email-mode="unread-12h"
-              >
-                Trimite notificări
-              </button>
+            <article class="admin-email-control-card" data-email-card="unread-12h">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-clock-history"></i></div>
+                <div>
+                  <h3>Mesaje fără răspuns 12h</h3>
+                  <p>Workeri care nu au răspuns peste 12 ore.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="unread-12h">Trimite</button>
               <label class="admin-email-auto-switch">
-                <input
-                  type="checkbox"
-                  id="adminEmailAutoUnread12h"
-                  data-email-auto-mode="unread-12h"
-                >
-                <span class="admin-email-auto-switch-track" aria-hidden="true">
-                  <span class="admin-email-auto-switch-thumb"></span>
-                </span>
-                <span class="admin-email-auto-switch-copy">
-                  <strong>Automat</strong>
-                  Make this automatic after each update in database
-                </span>
+                <input type="checkbox" data-email-auto-mode="unread-12h">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
               </label>
-            </div>
-          </article>
+            </article>
 
-          <article class="admin-email-control-card" data-email-card="job-prices-interests">
-            <div class="admin-email-control-card-icon" aria-hidden="true">
-              <i class="bi bi-currency-pound"></i>
-            </div>
-            <div class="admin-email-control-card-body">
-              <h2>Prețuri joburi pe interese — astăzi</h2>
-              <p>Notifică workerii cu prețurile la joburi de astăzi, bazat pe interesele lor.</p>
-              <button
-                type="button"
-                class="admin-primary-btn"
-                id="adminEmailNotifyJobPricesInterestsBtn"
-                data-email-mode="job-prices-interests"
-              >
-                Trimite notificări
-              </button>
+            <article class="admin-email-control-card" data-email-card="job-prices-interests">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-currency-pound"></i></div>
+                <div>
+                  <h3>Prețuri joburi — astăzi</h3>
+                  <p>Prețurile joburilor de azi după interese.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="job-prices-interests">Trimite</button>
               <label class="admin-email-auto-switch">
-                <input
-                  type="checkbox"
-                  id="adminEmailAutoJobPricesInterests"
-                  data-email-auto-mode="job-prices-interests"
-                >
-                <span class="admin-email-auto-switch-track" aria-hidden="true">
-                  <span class="admin-email-auto-switch-thumb"></span>
-                </span>
-                <span class="admin-email-auto-switch-copy">
-                  <strong>Automat</strong>
-                  Make this automatic after each update in database
-                </span>
+                <input type="checkbox" data-email-auto-mode="job-prices-interests">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
               </label>
-            </div>
-          </article>
+            </article>
+          </div>
+        </div>
+
+        <div class="admin-email-control-group">
+          <header class="admin-email-control-group-head">
+            <h2>Notificări companii</h2>
+            <p>Aplicații, matching, mesaje, verificare și plan.</p>
+          </header>
+          <div class="admin-email-control-grid">
+            <article class="admin-email-control-card" data-email-card="company-new-applications">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></div>
+                <div>
+                  <h3>Aplicații noi</h3>
+                  <p>Când workeri aplică la joburile deschise.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-new-applications">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-new-applications">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="company-matched-workers">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
+                <div>
+                  <h3>Workeri potriviți</h3>
+                  <p>Workeri disponibili după trade / locație.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-matched-workers">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-matched-workers">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="company-worker-contact">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-chat-left-text"></i></div>
+                <div>
+                  <h3>Contact de la workeri</h3>
+                  <p>Când un worker contactează compania.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-worker-contact">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-worker-contact">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="company-unread-12h">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-hourglass-split"></i></div>
+                <div>
+                  <h3>Mesaje fără răspuns 12h</h3>
+                  <p>Companii care nu au răspuns peste 12 ore.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-unread-12h">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-unread-12h">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="company-application-withdrawn">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-person-dash"></i></div>
+                <div>
+                  <h3>Aplicație retrasă</h3>
+                  <p>Când un candidat își retrage aplicația.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-application-withdrawn">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-application-withdrawn">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="company-verification">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></div>
+                <div>
+                  <h3>Status verificare</h3>
+                  <p>Update la verificarea contului companiei.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-verification">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-verification">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="company-plan-expiry">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-credit-card"></i></div>
+                <div>
+                  <h3>Expirare plan</h3>
+                  <p>Reminder când planul se apropie de expirare.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-plan-expiry">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-plan-expiry">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="company-rates-digest">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-graph-up"></i></div>
+                <div>
+                  <h3>Rate & disponibilitate — azi</h3>
+                  <p>Digest zilnic cu rate/disponibilitate pe trade.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="company-rates-digest">Trimite</button>
+              <label class="admin-email-auto-switch">
+                <input type="checkbox" data-email-auto-mode="company-rates-digest">
+                <span class="admin-email-auto-switch-track" aria-hidden="true"><span class="admin-email-auto-switch-thumb"></span></span>
+                <span class="admin-email-auto-switch-copy"><strong>Automat</strong> after each DB update</span>
+              </label>
+            </article>
+          </div>
         </div>
       </section>
     </main>

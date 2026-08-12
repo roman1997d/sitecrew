@@ -5031,38 +5031,38 @@
   const adminEmailConfirmModeLabel = document.getElementById('adminEmailConfirmModeLabel');
   const adminEmailConfirmYesBtn = document.getElementById('adminEmailConfirmYesBtn');
   const EMAIL_MODE_LABELS = {
-    interests: 'Filtru: interese',
-    location: 'Filtru: locație',
-    'interests-location': 'Filtru: interese și locație',
-    'company-contact': 'Filtru: contact de la companii',
-    'unread-12h': 'Filtru: mesaje fără răspuns 12h',
-    'job-prices-interests': 'Filtru: prețuri joburi pe interese — astăzi',
+    interests: 'Workeri · joburi pe interese',
+    location: 'Workeri · joburi pe locație',
+    'interests-location': 'Workeri · interese + locație',
+    'company-contact': 'Workeri · contact de la companii',
+    'unread-12h': 'Workeri · mesaje fără răspuns 12h',
+    'job-prices-interests': 'Workeri · prețuri joburi — astăzi',
+    'company-new-applications': 'Companii · aplicații noi',
+    'company-matched-workers': 'Companii · workeri potriviți',
+    'company-worker-contact': 'Companii · contact de la workeri',
+    'company-unread-12h': 'Companii · mesaje fără răspuns 12h',
+    'company-application-withdrawn': 'Companii · aplicație retrasă',
+    'company-verification': 'Companii · status verificare',
+    'company-plan-expiry': 'Companii · expirare plan',
+    'company-rates-digest': 'Companii · rate & disponibilitate — azi',
   };
   const EMAIL_AUTO_STORAGE_KEY = 'sitecrewAdminEmailAutoModes';
   let pendingEmailMode = null;
 
   function getEmailAutoModes() {
+    const modes = {};
+    let parsed = {};
     try {
       const raw = localStorage.getItem(EMAIL_AUTO_STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      return {
-        interests: Boolean(parsed.interests),
-        location: Boolean(parsed.location),
-        'interests-location': Boolean(parsed['interests-location']),
-        'company-contact': Boolean(parsed['company-contact']),
-        'unread-12h': Boolean(parsed['unread-12h']),
-        'job-prices-interests': Boolean(parsed['job-prices-interests']),
-      };
+      parsed = raw ? JSON.parse(raw) : {};
     } catch (_error) {
-      return {
-        interests: false,
-        location: false,
-        'interests-location': false,
-        'company-contact': false,
-        'unread-12h': false,
-        'job-prices-interests': false,
-      };
+      parsed = {};
     }
+    document.querySelectorAll('[data-email-auto-mode]').forEach((input) => {
+      const mode = input.dataset.emailAutoMode;
+      modes[mode] = Boolean(parsed[mode]);
+    });
+    return modes;
   }
 
   function saveEmailAutoModes(modes) {
