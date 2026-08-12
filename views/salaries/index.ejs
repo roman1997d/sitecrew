@@ -3,10 +3,10 @@
 <section class="section salaries-page">
   <div class="salaries-hero">
     <div class="site-container salaries-hero-inner">
-      <span class="section-eyebrow">Salary guide</span>
-      <h1 class="section-title">Discover your earning potential</h1>
+      <span class="section-eyebrow">UK trade rates</span>
+      <h1 class="section-title">Know what your trade pays on site</h1>
       <p class="section-desc">
-        Explore UK construction day rates and estimated annual earnings by trade — then find open jobs on SiteCrew.
+        Clear SiteCrew day-rate benchmarks for UK construction trades — plus a simple yearly estimate — so you can compare roles and apply with confidence.
       </p>
 
       <form class="salaries-search" method="get" action="/salaries" role="search">
@@ -17,11 +17,11 @@
             type="search"
             name="q"
             value="<%= filters.q || '' %>"
-            placeholder="Start your search here! e.g. Electrician"
+            placeholder="Search a trade, e.g. Electrician"
             autocomplete="off"
           >
         </label>
-        <button type="submit" class="btn-sc btn-sc-blue salaries-search-btn">Search</button>
+        <button type="submit" class="btn-sc btn-sc-blue salaries-search-btn">Search rates</button>
       </form>
     </div>
   </div>
@@ -30,13 +30,13 @@
     <div class="site-container">
       <div class="salaries-toolbar">
         <div>
-          <h2 class="salaries-subtitle">Browse top-paying construction trades</h2>
-          <p class="salaries-note">Day rates from SiteCrew market averages. Annual figure assumes <%= workingDays %> working days.</p>
+          <h2 class="salaries-subtitle">Construction trades ranked by day rate</h2>
+          <p class="salaries-note">Benchmarks from SiteCrew market averages. Yearly estimate uses <%= workingDays %> working days.</p>
         </div>
 
         <form class="salaries-trade-filter" method="get" action="/salaries">
           <% if (filters.q) { %><input type="hidden" name="q" value="<%= filters.q %>"><% } %>
-          <label for="salariesTradeSelect">Choose a trade</label>
+          <label for="salariesTradeSelect">Filter by trade</label>
           <select id="salariesTradeSelect" name="trade" onchange="this.form.submit()">
             <option value="">All trades</option>
             <% tradeOptions.forEach(function(trade) { %>
@@ -49,7 +49,7 @@
       <% if (!salaries.length) { %>
         <div class="public-jobs-empty">
           <h2>No matching trades found</h2>
-          <p>Try another trade name, or browse all construction salary guides.</p>
+          <p>Try another trade name, or view the full SiteCrew rate list.</p>
           <a href="/salaries" class="btn-sc btn-sc-blue btn-sc-sm">Clear search</a>
         </div>
       <% } else { %>
@@ -59,26 +59,26 @@
               <h3><%= item.trade %></h3>
               <% if (item.dayRateLabel) { %>
                 <a class="salaries-card-rate" href="<%= item.jobsPath %>">
-                  Average day rate <%= item.dayRateLabel %>
+                  Typical day rate <%= item.dayRateLabel %>
                   <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </a>
               <% } else if (item.hourlyRateLabel) { %>
                 <a class="salaries-card-rate" href="<%= item.jobsPath %>">
-                  Average hourly rate <%= item.hourlyRateLabel %>
+                  Typical hourly rate <%= item.hourlyRateLabel %>
                   <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </a>
               <% } %>
               <% if (item.annualEstimateLabel) { %>
-                <p class="salaries-card-annual">≈ <%= item.annualEstimateLabel %> per year</p>
+                <p class="salaries-card-annual">≈ <%= item.annualEstimateLabel %> a year on site</p>
               <% } %>
-              <a class="salaries-card-jobs" href="<%= item.jobsPath %>">Job openings</a>
+              <a class="salaries-card-jobs" href="<%= item.jobsPath %>">See open roles</a>
             </article>
           <% }); %>
         </div>
       <% } %>
 
       <div class="public-jobs-cta salaries-cta">
-        <p>Ready to earn on site? Create a free worker profile and apply to verified UK companies.</p>
+        <p>Got your rate in mind? Join SiteCrew free and apply straight to verified UK companies.</p>
         <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-cta">Join as worker</a>
       </div>
     </div>

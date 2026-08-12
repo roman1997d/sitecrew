@@ -1590,7 +1590,7 @@ app.get('/salaries', async (req, res) => {
   const itemListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'UK construction trade day rates on SiteCrew',
+    name: 'UK construction trade day-rate benchmarks on SiteCrew',
     numberOfItems: salaries.length,
     itemListElement: salaries.map((item, index) => ({
       '@type': 'ListItem',
@@ -1605,7 +1605,7 @@ app.get('/salaries', async (req, res) => {
         estimatedSalary: item.dayRate != null
           ? {
               '@type': 'MonetaryAmountDistribution',
-              name: 'Average day rate',
+              name: 'Typical day rate',
               currency: 'GBP',
               duration: 'P1D',
               median: item.dayRate,
@@ -1622,22 +1622,22 @@ app.get('/salaries', async (req, res) => {
     seo: buildSeo({
       path: pagePath,
       title: filters.trade || filters.q
-        ? `${filters.trade || filters.q} Day Rates UK | SiteCrew Salary Guide`
-        : 'Construction Day Rates & Salary Guide UK | SiteCrew',
+        ? `${filters.trade || filters.q} Day Rates in the UK | SiteCrew`
+        : 'UK Construction Day Rates by Trade | SiteCrew',
       description: filters.trade || filters.q
-        ? `Check ${filters.trade || filters.q} day rates in the UK and find open construction jobs on SiteCrew.`
-        : 'Discover your earning potential in UK construction. Browse SiteCrew day rates by trade, estimated yearly pay, and open job listings — no agencies.',
+        ? `See typical ${filters.trade || filters.q} day rates in UK construction on SiteCrew, then browse open roles from verified companies.`
+        : 'Know what UK construction trades pay on site. Compare SiteCrew day-rate benchmarks by trade, view yearly estimates, and apply directly to verified companies.',
       robots: 'index, follow',
       jsonLd: [
         getBreadcrumbSchema([
           { name: 'Home', path: '/' },
-          { name: 'Salary guide', path: '/salaries' },
+          { name: 'Trade rates', path: '/salaries' },
         ]),
         {
           '@context': 'https://schema.org',
           '@type': 'WebPage',
-          name: 'Discover your earning potential',
-          description: 'UK construction salary guide with day rates by trade on SiteCrew.',
+          name: 'Know what your trade pays on site',
+          description: 'SiteCrew UK construction day-rate benchmarks by trade, with yearly estimates and links to open roles.',
           url: buildSeo({ path: pagePath }).canonical,
         },
         itemListSchema,
