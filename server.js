@@ -1173,13 +1173,14 @@ async function fetchPublicCompanyById(companyId) {
   }
 }
 
-function buildJobsListPath(filters = {}) {
+function buildJobsListPath(filters = {}, basePath = '/jobs') {
   const params = new URLSearchParams();
   if (filters.q) params.set('q', filters.q);
   if (filters.trade) params.set('trade', filters.trade);
   if (filters.city) params.set('city', filters.city);
   const query = params.toString();
-  return query ? `/jobs?${query}` : '/jobs';
+  const root = basePath.startsWith('/') ? basePath : `/${basePath}`;
+  return query ? `${root}?${query}` : root;
 }
 
 function setPublicHtmlCache(res, profile = 'dynamic') {
@@ -1198,16 +1199,38 @@ async function renderPublicJobsPage(req, res, options = {}) {
     city: String(options.filters?.city ?? req.query.city ?? '').trim(),
   };
   const landing = options.landing || null;
+  const variant = options.variant === 'sitejobs' ? 'sitejobs' : 'jobs';
+  const basePath = variant === 'sitejobs' ? '/sitejobs' : '/jobs';
   const jobs = await fetchFilteredPublicJobs(filters);
 
   let pageMeta;
   if (landing) {
     pageMeta = getLandingSeo(landing, jobs.length);
+  } else if (variant === 'sitejobs') {
+    const hasFilters = Boolean(filters.q || filters.trade || filters.city);
+    const filterLabel = [filters.trade, filters.city, filters.q].filter(Boolean).join(' · ');
+    pageMeta = {
+      path: buildJobsListPath(filters, basePath),
+      formAction: basePath,
+      eyebrow: hasFilters ? 'Search results' : 'Find work',
+      heading: hasFilters ? `Find construction jobs: ${filterLabel}` : 'Find Construction Jobs in the UK',
+      intro: hasFilters
+        ? `Search results for ${filterLabel}. Find construction jobs from verified UK companies and apply directly on SiteCrew.`
+        : 'Find construction jobs in the UK from verified companies. Compare live site roles, day rates and locations — then apply with a free SiteCrew worker account.',
+      title: hasFilters
+        ? `Find ${filterLabel} construction jobs in the UK | SiteCrew`
+        : 'Find Construction Jobs in the UK | SiteCrew',
+      description: hasFilters
+        ? `Find construction jobs matching ${filterLabel} across the UK on SiteCrew. Browse verified employers and apply directly — no agencies.`
+        : 'Find construction jobs in the UK on SiteCrew. Browse live site roles from verified companies, check rates and locations, and apply directly as a tradesperson.',
+      breadcrumbName: 'Find Construction Jobs',
+    };
   } else {
     const hasFilters = Boolean(filters.q || filters.trade || filters.city);
     const filterLabel = [filters.trade, filters.city, filters.q].filter(Boolean).join(' · ');
     pageMeta = {
-      path: buildJobsListPath(filters),
+      path: buildJobsListPath(filters, basePath),
+      formAction: basePath,
       eyebrow: hasFilters ? 'Search results' : 'Open roles',
       heading: hasFilters ? `Construction jobs: ${filterLabel}` : 'Construction jobs in the UK',
       intro: 'Browse live site roles posted by verified companies on SiteCrew. Create a free worker account to apply.',
@@ -1217,16 +1240,35 @@ async function renderPublicJobsPage(req, res, options = {}) {
       description: hasFilters
         ? `Browse construction jobs matching ${filterLabel} on SiteCrew. Apply directly as a worker or post roles as a company.`
         : 'Browse open construction jobs posted by verified UK companies on SiteCrew. Apply directly as a worker or post your own roles as a company.',
+      breadcrumbName: 'Jobs',
     };
   }
 
   const listSchema = getJobItemListSchema(jobs, pageMeta.heading);
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: pageMeta.breadcrumbName || 'Jobs', path: basePath },
+    ...(landing ? [{ name: pageMeta.heading, path: pageMeta.path }] : []),
+  ];
+  const webPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: pageMeta.heading,
+    description: pageMeta.description,
+    url: buildSeo({ path: pageMeta.path }).canonical,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'SiteCrew',
+      url: buildSeo({ path: '/' }).siteUrl,
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'UK construction jobs',
+    },
+  };
   const jsonLd = [
-    getBreadcrumbSchema([
-      { name: 'Home', path: '/' },
-      { name: 'Jobs', path: '/jobs' },
-      ...(landing ? [{ name: pageMeta.heading, path: pageMeta.path }] : []),
-    ]),
+    getBreadcrumbSchema(breadcrumbItems),
+    webPageSchema,
     ...(listSchema ? [listSchema] : []),
   ];
 
@@ -1237,6 +1279,7 @@ async function renderPublicJobsPage(req, res, options = {}) {
       path: pageMeta.path,
       title: pageMeta.title,
       description: pageMeta.description,
+      robots: 'index, follow',
       jsonLd,
     }),
     jobs,
@@ -1459,6 +1502,8 @@ app.get('/', async (req, res) => {
 });
 
 app.get('/jobs', async (req, res) => renderPublicJobsPage(req, res));
+
+app.get('/sitejobs', async (req, res) => renderPublicJobsPage(req, res, { variant: 'sitejobs' }));
 
 app.get('/jobs/:segment', async (req, res) => {
   const { segment } = req.params;

@@ -8,7 +8,7 @@
       <p class="section-desc"><%= page.intro || 'Browse live site roles posted by verified companies on SiteCrew. Create a free worker account to apply.' %></p>
     </div>
 
-    <form class="public-jobs-search" method="get" action="/jobs">
+    <form class="public-jobs-search" method="get" action="<%= page.formAction || '/jobs' %>">
       <div class="public-jobs-search-grid">
         <label class="public-jobs-search-field">
           <span>Search</span>
