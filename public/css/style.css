@@ -78,6 +78,48 @@ main { flex: 1; }
   filter: invert(1);
 }
 
+/* Mobile menu: solid panel so links don't sit on hero content */
+@media (max-width: 991.98px) {
+  .navbar-sitecrew {
+    height: auto;
+    min-height: var(--nav-h);
+    background: #0B1F3B;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .navbar-sitecrew .container {
+    height: auto;
+    min-height: var(--nav-h);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .navbar-sitecrew .navbar-collapse {
+    width: 100%;
+    background: #0B1F3B;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 12px;
+    padding: 8px 0 16px;
+  }
+
+  .navbar-sitecrew .navbar-nav {
+    width: 100%;
+    gap: 2px;
+  }
+
+  .navbar-sitecrew .nav-link {
+    padding: 12px 4px !important;
+  }
+
+  .navbar-sitecrew .navbar-nav .nav-item.ms-lg-2 {
+    margin-top: 12px !important;
+  }
+}
+
 /* ---- Buttons ---- */
 .btn-sc {
   display: inline-flex;
