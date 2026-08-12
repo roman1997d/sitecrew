@@ -122,7 +122,8 @@ async function getAutoModeMap() {
   }
   for (const row of result.rows) {
     if (Object.prototype.hasOwnProperty.call(map, row.mode_key)) {
-      map[row.mode_key] = Boolean(row.auto_enabled);
+      const value = row.auto_enabled;
+      map[row.mode_key] = value === true || value === 't' || value === 'true' || value === 1 || value === '1';
     }
   }
   return map;
@@ -164,8 +165,20 @@ async function setAutoModes(partialModes, actorId = null) {
 }
 
 async function isAutoModeEnabled(modeKey) {
-  const map = await getAutoModeMap();
-  return Boolean(map[modeKey]);
+  await ensureEmailControlSettingsTable();
+  const result = await pool.query(
+    `SELECT auto_enabled
+     FROM email_control_settings
+     WHERE mode_key = $1
+     LIMIT 1`,
+    [modeKey]
+  );
+  if (!result.rowCount) {
+    return false;
+  }
+  // Accept real booleans and common PG/driver string forms.
+  const value = result.rows[0].auto_enabled;
+  return value === true || value === 't' || value === 'true' || value === 1 || value === '1';
 }
 
 module.exports = {

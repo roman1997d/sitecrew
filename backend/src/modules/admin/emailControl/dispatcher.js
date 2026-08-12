@@ -142,25 +142,50 @@ async function runModeCampaign(modeKey, {
 }
 
 function queueAutoMode(modeKey, context = {}) {
-  if (!isEmailConfigured()) return;
+  if (!isEmailConfigured()) {
+    console.warn(`[email-control] auto "${modeKey}" skipped: SMTP not configured`);
+    return;
+  }
 
   (async () => {
     try {
       const enabled = await isAutoModeEnabled(modeKey);
-      if (!enabled) return;
+      if (!enabled) {
+        console.log(`[email-control] auto "${modeKey}" skipped: Automat OFF`);
+        return;
+      }
 
       if (context.targetUserId) {
         const resolved = await resolveRecipients(modeKey, context);
-        if (!resolved.recipients.length) return;
+        if (!resolved.recipients.length) {
+          console.warn(`[email-control] auto "${modeKey}" skipped: no recipient for user ${context.targetUserId}`);
+          return;
+        }
         await deliverToRecipient(modeKey, resolved.recipients[0], context);
+        console.log(`[email-control] auto "${modeKey}" sent to ${resolved.recipients[0].email}`);
         return;
       }
 
       await runModeCampaign(modeKey, { context });
     } catch (error) {
-      console.error(`Email Control auto mode "${modeKey}" failed:`, error.message);
+      console.error(`[email-control] auto "${modeKey}" failed:`, error.message);
     }
   })();
+}
+
+/**
+ * Worker welcome after registration.
+ * Sends ONLY when Email Control → Welcome mesaj → Automat is ON at registration time.
+ */
+function queueWelcomeWorkerIfEnabled({ userId, name } = {}) {
+  if (!userId) return;
+
+  queueAutoMode('welcome-worker', {
+    targetUserId: Number(userId),
+    intro: name
+      ? `Welcome to SiteCrew, ${name}! Here is how SiteCrew helps you find work and grow your impact.`
+      : 'Welcome to SiteCrew! Here is how SiteCrew helps you find work and grow your impact.',
+  });
 }
 
 function queueJobCreatedEmails({ job, companyId, companyName, excludeUserId = null }) {
@@ -236,6 +261,7 @@ async function runScheduledEmailControlJobs() {
 module.exports = {
   runModeCampaign,
   queueAutoMode,
+  queueWelcomeWorkerIfEnabled,
   queueJobCreatedEmails,
   runScheduledEmailControlJobs,
   deliverToRecipient,

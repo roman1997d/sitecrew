@@ -11,6 +11,7 @@ const {
 const { listEmailControlModes, getEmailControlMode } = require('./modes');
 const {
   queueAutoMode,
+  queueWelcomeWorkerIfEnabled,
   queueJobCreatedEmails,
   runScheduledEmailControlJobs,
 } = require('./dispatcher');
@@ -27,6 +28,7 @@ module.exports = {
   listEmailControlModes,
   getEmailControlMode,
   queueAutoMode,
+  queueWelcomeWorkerIfEnabled,
   queueJobCreatedEmails,
   runScheduledEmailControlJobs,
 };

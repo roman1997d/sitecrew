@@ -16,7 +16,6 @@ const {
   findValidResetToken,
   markResetTokenUsed,
 } = require('../../utils/passwordReset');
-const { queueAutoMode } = require('../admin/emailControl');
 
 const router = express.Router();
 
@@ -205,10 +204,14 @@ router.post('/register-worker', validate(workerRegisterSchema), asyncHandler(asy
       ]
     );
     await client.query('COMMIT');
-    queueAutoMode('welcome-worker', {
-      targetUserId: user.id,
-      intro: `Welcome to SiteCrew, ${fullName}! Here is how SiteCrew helps you find work and grow your impact.`,
-    });
+    // Welcome email is controlled by Email Control → Welcome mesaj → Automat.
+    // ON at registration time → send; OFF → do not send.
+    try {
+      const { queueWelcomeWorkerIfEnabled } = require('../admin/emailControl/dispatcher');
+      queueWelcomeWorkerIfEnabled({ userId: user.id, name: fullName });
+    } catch (error) {
+      console.error('[email-control] failed to queue welcome-worker:', error.message);
+    }
     sendAuthResponse(res, 201, user);
   } catch (error) {
     await client.query('ROLLBACK');
