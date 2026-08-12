@@ -532,6 +532,19 @@
   flex: 1 1 320px;
 }
 
+.admin-logs-autoclean-field {
+  flex: 1 1 380px;
+}
+
+.admin-logs-autoclean-field select {
+  min-width: 88px;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  background: #fff;
+}
+
 .admin-audit-autodelete-field {
   flex: 1 1 420px;
 }

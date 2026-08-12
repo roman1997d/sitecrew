@@ -624,6 +624,10 @@ INSERT INTO ai_scan_settings (key, value)
 VALUES ('audit_auto_delete', '{"enabled": false, "retentionDays": 90}'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 
+INSERT INTO ai_scan_settings (key, value)
+VALUES ('api_logs_auto_clean', '{"enabled": false, "retentionHours": 24}'::jsonb)
+ON CONFLICT (key) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS company_account_history (
   id SERIAL PRIMARY KEY,
   company_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

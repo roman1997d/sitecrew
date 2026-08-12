@@ -1598,6 +1598,9 @@ router.patch('/reports/:id/status', validate(reportStatusSchema), asyncHandler(a
 }));
 
 router.get('/api-logs', asyncHandler(async (req, res) => {
+  const { purgeApiLogsByAutoCleanSettings } = require('../../utils/apiLogMaintenance');
+  await purgeApiLogsByAutoCleanSettings();
+
   const limit = Math.min(Number(req.query.limit) || 100, 500);
   const problemsOnly = req.query.problemsOnly === 'true';
   const filters = problemsOnly ? 'WHERE l.status_code >= 400' : '';
@@ -1611,6 +1614,45 @@ router.get('/api-logs', asyncHandler(async (req, res) => {
     [limit]
   );
   res.json({ logs: result.rows, problemsOnly });
+}));
+
+router.get('/api-logs/auto-clean', asyncHandler(async (req, res) => {
+  const { getApiLogsAutoCleanSettings } = require('../../utils/apiLogMaintenance');
+  const settings = await getApiLogsAutoCleanSettings();
+  res.json(settings);
+}));
+
+router.patch('/api-logs/auto-clean', asyncHandler(async (req, res) => {
+  const {
+    setApiLogsAutoCleanSettings,
+    purgeApiLogsByAutoCleanSettings,
+  } = require('../../utils/apiLogMaintenance');
+
+  const settings = await setApiLogsAutoCleanSettings({
+    autoCleanEnabled: req.body?.autoCleanEnabled,
+    retentionHours: req.body?.retentionHours,
+  });
+
+  const purge = settings.autoCleanEnabled
+    ? await purgeApiLogsByAutoCleanSettings()
+    : { deletedCount: 0 };
+
+  await logAudit({
+    actorId: req.user.id,
+    action: 'api_logs.auto_clean_updated',
+    entityType: 'api_log',
+    entityId: null,
+    metadata: {
+      autoCleanEnabled: settings.autoCleanEnabled,
+      retentionHours: settings.retentionHours,
+      purgedCount: purge.deletedCount,
+    },
+  });
+
+  res.json({
+    ...settings,
+    purgedCount: purge.deletedCount,
+  });
 }));
 
 router.delete('/api-logs/older-than', validate(deleteApiLogsOlderSchema), asyncHandler(async (req, res) => {

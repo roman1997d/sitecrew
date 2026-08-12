@@ -1749,6 +1749,9 @@
   const adminApiLogsOlderHours = document.getElementById('adminApiLogsOlderHours');
   const adminApiLogsDeleteOlderBtn = document.getElementById('adminApiLogsDeleteOlderBtn');
   const adminApiLogsCleanAllBtn = document.getElementById('adminApiLogsCleanAllBtn');
+  const adminApiLogsAutoCleanEnabled = document.getElementById('adminApiLogsAutoCleanEnabled');
+  const adminApiLogsAutoCleanHours = document.getElementById('adminApiLogsAutoCleanHours');
+  const adminApiLogsAutoCleanSaveBtn = document.getElementById('adminApiLogsAutoCleanSaveBtn');
   const adminApiLogsResultsMeta = document.getElementById('adminApiLogsResultsMeta');
 
   function updateApiLogsResultsMeta(logs = []) {
@@ -1759,9 +1762,60 @@
       : `No ${modeLabel} to display.`;
   }
 
+  function renderApiLogsAutoCleanSettings(settings = {}) {
+    if (adminApiLogsAutoCleanEnabled) {
+      adminApiLogsAutoCleanEnabled.checked = Boolean(settings.autoCleanEnabled);
+    }
+    if (adminApiLogsAutoCleanHours && settings.retentionHours) {
+      adminApiLogsAutoCleanHours.value = String(settings.retentionHours);
+    }
+  }
+
+  async function saveApiLogsAutoCleanSettings() {
+    const autoCleanEnabled = Boolean(adminApiLogsAutoCleanEnabled?.checked);
+    const retentionHours = Number(adminApiLogsAutoCleanHours?.value);
+
+    if (![1, 6, 12, 24].includes(retentionHours)) {
+      showAlert('Select 1h, 6h, 12h or 24h for auto clean.');
+      return;
+    }
+
+    if (adminApiLogsAutoCleanSaveBtn) {
+      adminApiLogsAutoCleanSaveBtn.disabled = true;
+    }
+
+    try {
+      const result = await apiRequest('/api/admin/api-logs/auto-clean', {
+        method: 'PATCH',
+        body: JSON.stringify({ autoCleanEnabled, retentionHours }),
+      });
+      renderApiLogsAutoCleanSettings(result);
+      await loadApiLogsSection();
+      const purgeMessage = result.purgedCount
+        ? ` Removed ${result.purgedCount} old log(s).`
+        : '';
+      showAlert(
+        autoCleanEnabled
+          ? `Auto clean enabled: logs older than ${retentionHours}h are deleted.${purgeMessage}`
+          : `Auto clean disabled.${purgeMessage}`,
+        'success'
+      );
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      if (adminApiLogsAutoCleanSaveBtn) {
+        adminApiLogsAutoCleanSaveBtn.disabled = false;
+      }
+    }
+  }
+
   async function loadApiLogsSection() {
     const query = showApiLogsProblemsOnly ? '?limit=150&problemsOnly=true' : '?limit=150';
-    const data = await apiRequest(`/api/admin/api-logs${query}`);
+    const [settingsData, data] = await Promise.all([
+      apiRequest('/api/admin/api-logs/auto-clean'),
+      apiRequest(`/api/admin/api-logs${query}`),
+    ]);
+    renderApiLogsAutoCleanSettings(settingsData);
     updateApiLogsResultsMeta(data.logs);
     renderApiLogsTable(
       data.logs,
@@ -4750,6 +4804,8 @@
       showAlert(error.message);
     }
   });
+
+  adminApiLogsAutoCleanSaveBtn?.addEventListener('click', saveApiLogsAutoCleanSettings);
 
   adminApiLogsDeleteOlderBtn?.addEventListener('click', async () => {
     const hours = Number(adminApiLogsOlderHours?.value);

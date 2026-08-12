@@ -611,6 +611,23 @@
               Show only problems
             </button>
 
+            <label class="admin-toolbar-field admin-logs-autoclean-field">
+              <span>Auto clean logs after</span>
+              <div class="admin-inline-field">
+                <label class="admin-checkbox-field">
+                  <input type="checkbox" id="adminApiLogsAutoCleanEnabled">
+                  <span>Enabled</span>
+                </label>
+                <select id="adminApiLogsAutoCleanHours" aria-label="Auto clean after hours">
+                  <option value="1">1h</option>
+                  <option value="6">6h</option>
+                  <option value="12">12h</option>
+                  <option value="24" selected>24h</option>
+                </select>
+                <button type="button" class="admin-secondary-btn" id="adminApiLogsAutoCleanSaveBtn">Save</button>
+              </div>
+            </label>
+
             <label class="admin-toolbar-field admin-logs-delete-field">
               <span>Delete logs older than</span>
               <div class="admin-inline-field">
