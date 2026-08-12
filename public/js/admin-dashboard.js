@@ -5098,11 +5098,26 @@
     'company-verification': 'Companii · status verificare',
     'company-plan-expiry': 'Companii · expirare plan',
     'company-rates-digest': 'Companii · rate & disponibilitate — azi',
+    'invite-company-first-job': 'Invitații · primul job offer',
+    'invite-company-explore': 'Invitații · explorează SiteCrew',
+    'invite-worker-first-post': 'Invitații · prima postare worker',
+    'invite-worker-follow-companies': 'Invitații · follow companii',
+    'invite-company-page-visits': 'Invitații · vizite pagină companie',
   };
   let pendingEmailMode = null;
   let pendingEmailRecipientCount = 0;
+  let pendingEmailVisitCount = null;
   let emailAutoModesState = {};
   let emailControlLoaded = false;
+
+  function readInviteVisitCount() {
+    const input = document.getElementById('adminEmailInviteVisitCount');
+    const raw = String(input?.value || '').trim();
+    if (!raw) return null;
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < 1) return null;
+    return value;
+  }
 
   function syncEmailAutoSwitchUi(modes = emailAutoModesState) {
     emailAutoModesState = { ...modes };
@@ -5196,16 +5211,18 @@
     adminEmailConfirmModal.hidden = true;
     pendingEmailMode = null;
     pendingEmailRecipientCount = 0;
+    pendingEmailVisitCount = null;
     if (adminEmailConfirmYesBtn) {
       adminEmailConfirmYesBtn.disabled = false;
       adminEmailConfirmYesBtn.textContent = 'Yes';
     }
   }
 
-  async function openEmailConfirmModal(mode) {
+  async function openEmailConfirmModal(mode, options = {}) {
     if (!adminEmailConfirmModal) return;
     pendingEmailMode = mode;
     pendingEmailRecipientCount = 0;
+    pendingEmailVisitCount = options.visitCount != null ? options.visitCount : null;
 
     if (adminEmailConfirmCount) {
       adminEmailConfirmCount.textContent = '…';
@@ -5233,6 +5250,9 @@
       }
       if (adminEmailConfirmNote) {
         const parts = [];
+        if (pendingEmailVisitCount != null) {
+          parts.push(`X (visits) = ${pendingEmailVisitCount}.`);
+        }
         if (data.note) parts.push(data.note);
         if (data.estimated) parts.push('Count is based on current matching audience.');
         if (data.testMode?.enabled) {
@@ -5254,7 +5274,18 @@
 
   document.querySelectorAll('[data-email-mode]').forEach((button) => {
     button.addEventListener('click', () => {
-      openEmailConfirmModal(button.dataset.emailMode).catch((error) => showAlert(error.message));
+      const mode = button.dataset.emailMode;
+      const options = {};
+      if (mode === 'invite-company-page-visits') {
+        const visitCount = readInviteVisitCount();
+        if (!visitCount) {
+          showAlert('Enter a positive visit count (X) before sending.');
+          document.getElementById('adminEmailInviteVisitCount')?.focus();
+          return;
+        }
+        options.visitCount = visitCount;
+      }
+      openEmailConfirmModal(mode, options).catch((error) => showAlert(error.message));
     });
   });
 
@@ -5354,17 +5385,26 @@
   adminEmailConfirmYesBtn?.addEventListener('click', async () => {
     if (!pendingEmailMode) return;
     const mode = pendingEmailMode;
+    const visitCount = pendingEmailVisitCount;
+    const recipientCount = pendingEmailRecipientCount;
     adminEmailConfirmYesBtn.disabled = true;
     adminEmailConfirmYesBtn.textContent = 'Sending…';
     try {
+      const body = { confirm: true, dryRun: false };
+      if (mode === 'invite-company-page-visits') {
+        if (!visitCount) {
+          throw new Error('Enter a positive visit count (X) before sending.');
+        }
+        body.visitCount = visitCount;
+      }
       const result = await apiRequest(`/api/admin/email-control/modes/${encodeURIComponent(mode)}/send`, {
         method: 'POST',
-        body: JSON.stringify({ confirm: true, dryRun: false }),
+        body: JSON.stringify(body),
       });
       closeEmailConfirmModal();
       showAlert(
-        result.message || `Email request recorded for ${pendingEmailRecipientCount} recipients.`,
-        result.status === 'sent' ? 'success' : 'success'
+        result.message || `Email request recorded for ${recipientCount} recipients.`,
+        'success'
       );
     } catch (error) {
       adminEmailConfirmYesBtn.disabled = false;

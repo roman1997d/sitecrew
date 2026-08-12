@@ -2565,6 +2565,15 @@
   font-size: 0.85rem;
 }
 
+.admin-email-invite-visit-field {
+  margin: 0;
+}
+
+.admin-email-invite-visit-field input {
+  width: 100%;
+  max-width: 140px;
+}
+
 .admin-email-control-card.is-auto-enabled {
   border-color: #94A3B8;
   background: #F8FAFC;

@@ -393,6 +393,73 @@ async function resolveRecipients(modeKey, context = {}) {
         meta: {},
       };
     }
+    case 'invite-company-first-job': {
+      const result = await pool.query(
+        `SELECT u.id, u.email, cp.company_name
+         FROM users u
+         JOIN company_profiles cp ON cp.user_id = u.id
+         WHERE u.role = 'company'
+           AND u.status = 'active'
+           AND NOT EXISTS (
+             SELECT 1 FROM jobs j WHERE j.company_id = u.id
+           )`
+      );
+      return {
+        mode,
+        recipients: result.rows.map((row) => mapCompanyRecipient(row, {
+          ctaUrl: siteUrl('/company/dashboard'),
+        })),
+        meta: {},
+      };
+    }
+    case 'invite-company-explore':
+    case 'invite-company-page-visits': {
+      const companies = await listActiveCompanies();
+      return {
+        mode,
+        recipients: companies.map((company) => mapCompanyRecipient(company, {
+          ctaUrl: siteUrl('/company/dashboard'),
+          visitCount: context.visitCount || null,
+        })),
+        meta: context.visitCount
+          ? { visitCount: context.visitCount }
+          : (modeKey === 'invite-company-page-visits'
+            ? { note: 'Set the visit count (X) on the card before sending.' }
+            : {}),
+      };
+    }
+    case 'invite-worker-first-post': {
+      const result = await pool.query(
+        `SELECT u.id, u.email, wp.full_name
+         FROM users u
+         JOIN worker_profiles wp ON wp.user_id = u.id
+         WHERE u.role = 'worker'
+           AND u.status = 'active'
+           AND NOT EXISTS (
+             SELECT 1
+             FROM feed_posts fp
+             WHERE fp.author_id = u.id
+                OR fp.created_by_user_id = u.id
+           )`
+      );
+      return {
+        mode,
+        recipients: result.rows.map((row) => mapWorkerRecipient(row, {
+          ctaUrl: siteUrl('/worker/dashboard'),
+        })),
+        meta: {},
+      };
+    }
+    case 'invite-worker-follow-companies': {
+      const workers = await listActiveWorkers();
+      return {
+        mode,
+        recipients: workers.map((worker) => mapWorkerRecipient(worker, {
+          ctaUrl: siteUrl('/worker/dashboard'),
+        })),
+        meta: {},
+      };
+    }
     // Event-driven modes without target: empty for manual unless we have pending events
     case 'company-contact':
     case 'job-invite':

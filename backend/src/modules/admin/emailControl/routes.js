@@ -64,6 +64,16 @@ const sendSchema = z.object({
   body: z.object({
     confirm: z.literal(true),
     dryRun: z.boolean().optional(),
+    visitCount: z.number().int().positive().optional(),
+  }).superRefine((value, ctx) => {
+    // Validated against mode in the handler; keep schema flexible here.
+    if (value.visitCount != null && (!Number.isInteger(value.visitCount) || value.visitCount < 1)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'visitCount must be a positive integer.',
+        path: ['visitCount'],
+      });
+    }
   }),
 });
 
@@ -153,10 +163,25 @@ router.post(
   validate(sendSchema),
   asyncHandler(async (req, res) => {
     const { mode } = req.validated.params;
-    const { dryRun = false } = req.validated.body;
+    const { dryRun = false, visitCount } = req.validated.body;
+
+    if (mode === 'invite-company-page-visits') {
+      if (!visitCount || !Number.isInteger(visitCount) || visitCount < 1) {
+        const error = new Error('Enter a positive visit count (X) before sending this email.');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+
+    const context = {};
+    if (visitCount != null) {
+      context.visitCount = visitCount;
+    }
+
     const result = await sendModeCampaign(mode, {
       actorId: req.user.id,
       dryRun,
+      context,
     });
 
     await logAudit({
@@ -169,6 +194,7 @@ router.post(
         status: result.status,
         recipientCount: result.recipientCount,
         sentCount: result.sentCount,
+        visitCount: visitCount || null,
       },
     });
 

@@ -199,6 +199,71 @@ function buildEmailContent(modeKey, recipient, context = {}) {
         ctaLabel: 'Open dashboard',
         ctaUrl: dashboardUrl,
       };
+    case 'invite-company-first-job':
+      return {
+        subject: 'Post your first job offer on SiteCrew',
+        intro: 'Your company has not posted a job offer yet. Post your first role to start receiving applications from workers on SiteCrew.',
+        details: [
+          'Create a clear job title and description',
+          'Set the trade, location and rate',
+          'Start attracting verified UK workers',
+        ],
+        ctaLabel: 'Post your first job',
+        ctaUrl: recipient.ctaUrl || dashboardUrl,
+      };
+    case 'invite-company-explore':
+      return {
+        subject: 'Explore SiteCrew and grow your business',
+        intro: 'Come in and explore SiteCrew — see how the platform helps companies find reliable workers and develop their business.',
+        details: [
+          'Browse matched workers by trade and location',
+          'Post job offers and manage applications in one place',
+          'Build visibility with your company profile',
+        ],
+        ctaLabel: 'Explore SiteCrew',
+        ctaUrl: recipient.ctaUrl || dashboardUrl,
+      };
+    case 'invite-worker-first-post':
+      return {
+        subject: 'Share your first post on SiteCrew',
+        intro: 'You have not posted yet. Share your work to attract interest from companies hiring on SiteCrew.',
+        details: [
+          'Show completed projects, skills or certifications',
+          'Help companies discover your profile',
+          'Build credibility with a strong first post',
+        ],
+        ctaLabel: 'Create your first post',
+        ctaUrl: recipient.ctaUrl || dashboardUrl,
+      };
+    case 'invite-worker-follow-companies':
+      return {
+        subject: 'Follow companies on SiteCrew for more impact',
+        intro: 'Follow companies on the platform to see their updates and job offers sooner — and increase your impact.',
+        details: [
+          'Get notified when followed companies post jobs',
+          'Stay visible to employers looking for workers',
+          'Build a stronger network on SiteCrew',
+        ],
+        ctaLabel: 'Discover companies',
+        ctaUrl: recipient.ctaUrl || dashboardUrl,
+      };
+    case 'invite-company-page-visits': {
+      const visitCount = Number(context.visitCount || recipient.visitCount || 0);
+      const visitLabel = Number.isFinite(visitCount) && visitCount > 0
+        ? String(visitCount)
+        : 'several';
+      return {
+        subject: `This week, ${visitLabel} people visited your company page on SiteCrew`,
+        intro: `This week, ${visitLabel} people visited your company page on SiteCrew.`,
+        details: [
+          'Keep your company profile up to date',
+          'Post job offers to turn visits into applications',
+          'Reply quickly to interested workers',
+        ],
+        ctaLabel: 'Open company page',
+        ctaUrl: recipient.ctaUrl || dashboardUrl,
+      };
+    }
     default:
       return {
         subject: 'SiteCrew notification',

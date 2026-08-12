@@ -1083,6 +1083,80 @@
             </article>
           </div>
         </div>
+
+        <div class="admin-email-control-group">
+          <header class="admin-email-control-group-head">
+            <h2>Invitații</h2>
+            <p>Campanii de activare pentru companii și workeri — trimise manual.</p>
+          </header>
+          <div class="admin-email-control-grid">
+            <article class="admin-email-control-card" data-email-card="invite-company-first-job">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-briefcase"></i></div>
+                <div>
+                  <h3>Primul job offer</h3>
+                  <p>Trimite invitație de a posta primul job offer către companiile care au 0 job offer postări.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="invite-company-first-job">Trimite</button>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="invite-company-explore">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-building"></i></div>
+                <div>
+                  <h3>Explorează SiteCrew</h3>
+                  <p>Trimite invitații la toate companiile de a intra și explora SiteCrew și cum ajută la dezvoltarea afacerii.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="invite-company-explore">Trimite</button>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="invite-worker-first-post">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-image"></i></div>
+                <div>
+                  <h3>Prima postare worker</h3>
+                  <p>Trimite invitații la toți workerii care nu au postări să posteze pentru a atrage interes față de companii.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="invite-worker-first-post">Trimite</button>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="invite-worker-follow-companies">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></div>
+                <div>
+                  <h3>Follow companii</h3>
+                  <p>Trimite invitații la workeri de a da follow la companii de pe platformă pentru impact.</p>
+                </div>
+              </div>
+              <button type="button" class="admin-primary-btn" data-email-mode="invite-worker-follow-companies">Trimite</button>
+            </article>
+
+            <article class="admin-email-control-card" data-email-card="invite-company-page-visits">
+              <div class="admin-email-control-card-top">
+                <div class="admin-email-control-card-icon" aria-hidden="true"><i class="bi bi-eye"></i></div>
+                <div>
+                  <h3>Vizite pagină companie</h3>
+                  <p>Trimite email la toate companiile: „This week, X people visited your company page on SiteCrew”.</p>
+                </div>
+              </div>
+              <label class="admin-field admin-email-invite-visit-field">
+                <span>Valoare X (vizite)</span>
+                <input
+                  type="number"
+                  id="adminEmailInviteVisitCount"
+                  min="1"
+                  step="1"
+                  inputmode="numeric"
+                  placeholder="ex. 42"
+                >
+              </label>
+              <button type="button" class="admin-primary-btn" data-email-mode="invite-company-page-visits">Trimite</button>
+            </article>
+          </div>
+        </div>
       </section>
     </main>
   </div>
