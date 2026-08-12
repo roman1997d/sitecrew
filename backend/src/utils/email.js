@@ -375,10 +375,88 @@ async function sendContactFormEmail({ to, name, email, subject, message }) {
   });
 }
 
+async function sendNotificationEmail({
+  to,
+  name,
+  subject,
+  intro,
+  details = [],
+  ctaLabel = 'Open SiteCrew',
+  ctaUrl,
+}) {
+  const from = `"${env.emailFromName}" <${env.emailFrom}>`;
+  const safeName = escapeHtml(name || 'there');
+  const safeSubject = escapeHtml(subject);
+  const safeIntro = escapeHtml(intro || '');
+  const actionUrl = ctaUrl || env.publicUrl.replace(/\/$/, '');
+  const safeCtaUrl = escapeHtml(actionUrl);
+  const safeCtaLabel = escapeHtml(ctaLabel);
+  const detailsHtml = (details || [])
+    .filter(Boolean)
+    .map((line) => `<li style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#334155;">${escapeHtml(line)}</li>`)
+    .join('');
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f4f7fb;font-family:Inter,Arial,sans-serif;color:#0f172a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="padding:28px 28px 8px;background:linear-gradient(135deg,#0b1f3b,#2563eb);color:#ffffff;">
+                <div style="font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">SiteCrew</div>
+                <h1 style="margin:10px 0 0;font-size:26px;line-height:1.25;">${safeSubject}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px;">
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155;">Hi ${safeName},</p>
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155;">${safeIntro}</p>
+                ${detailsHtml ? `<ul style="margin:0 0 24px;padding-left:20px;">${detailsHtml}</ul>` : ''}
+                <p style="margin:0 0 28px;text-align:center;">
+                  <a href="${safeCtaUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 24px;border-radius:12px;">
+                    ${safeCtaLabel}
+                  </a>
+                </p>
+                <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;">
+                  If the button does not work, copy this link: ${safeCtaUrl}
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const text = [
+    subject,
+    '',
+    `Hi ${name || 'there'},`,
+    '',
+    intro || '',
+    ...(details || []).map((line) => `- ${line}`),
+    '',
+    `${ctaLabel}: ${actionUrl}`,
+  ].join('\n');
+
+  await getTransporter().sendMail({
+    from,
+    to,
+    subject,
+    text,
+    html,
+  });
+}
+
 module.exports = {
   isEmailConfigured,
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendNewJobAlertEmail,
   sendContactFormEmail,
+  sendNotificationEmail,
 };

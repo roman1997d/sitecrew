@@ -7,6 +7,11 @@ const {
   sendModeCampaign,
 } = require('./service');
 const { listEmailControlModes, getEmailControlMode } = require('./modes');
+const {
+  queueAutoMode,
+  queueJobCreatedEmails,
+  runScheduledEmailControlJobs,
+} = require('./dispatcher');
 
 module.exports = {
   router,
@@ -17,4 +22,7 @@ module.exports = {
   sendModeCampaign,
   listEmailControlModes,
   getEmailControlMode,
+  queueAutoMode,
+  queueJobCreatedEmails,
+  runScheduledEmailControlJobs,
 };

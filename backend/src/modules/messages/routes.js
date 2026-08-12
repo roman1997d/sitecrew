@@ -9,6 +9,7 @@ const {
   logContentScan,
   getRecentMessageTexts,
 } = require('../../utils/contentModeration');
+const { queueAutoMode } = require('../admin/emailControl');
 
 const router = express.Router();
 
@@ -239,6 +240,23 @@ router.post('/:id/messages', requireAuth, validate(messageSchema), asyncHandler(
        VALUES ($1, 'message', 'New message', 'You received a new message.', 'conversation', $2)`,
       [recipientId, req.params.id]
     );
+
+    const preview = String(messageBody || '').slice(0, 140);
+    if (Number(recipientId) === Number(conversation.worker_id)) {
+      queueAutoMode('company-contact', {
+        targetUserId: conversation.worker_id,
+        companyName: 'A company',
+        preview,
+        intro: 'A company sent you a new message on SiteCrew.',
+      });
+    } else if (Number(recipientId) === Number(conversation.company_id)) {
+      queueAutoMode('company-worker-contact', {
+        targetUserId: conversation.company_id,
+        workerName: 'A worker',
+        preview,
+        intro: 'A worker sent your company a new message on SiteCrew.',
+      });
+    }
   }
 
   res.status(201).json({

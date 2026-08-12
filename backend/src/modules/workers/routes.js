@@ -13,6 +13,7 @@ const {
   buildReviewScanText,
   getRecentWorkerReviewTexts,
 } = require('../../utils/contentModeration');
+const { queueAutoMode } = require('../admin/emailControl');
 
 const VISIBLE_REVIEW_FILTER = `COALESCE(moderation_status, 'visible') <> 'hidden'`;
 
@@ -410,6 +411,19 @@ router.post('/:id/reviews', requireAuth, requireRole('company'), validate(review
     moderationStatus: moderation.moderationStatus,
     scan: moderation.scan,
   });
+
+  if (moderation.moderationStatus !== 'hidden') {
+    const company = await pool.query(
+      'SELECT company_name FROM company_profiles WHERE user_id = $1',
+      [req.user.id]
+    );
+    queueAutoMode('new-review', {
+      targetUserId: Number(req.params.id),
+      companyName: company.rows[0]?.company_name || 'A company',
+      rating,
+      intro: `${company.rows[0]?.company_name || 'A company'} left a review on your profile.`,
+    });
+  }
 
   const payload = {
     review,

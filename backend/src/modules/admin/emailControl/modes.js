@@ -14,7 +14,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Joburi noi după interesele workerului.',
     trigger: 'job_created',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'location',
@@ -23,7 +23,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Joburi noi după locația workerului.',
     trigger: 'job_created',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'interests-location',
@@ -32,7 +32,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Joburi noi după interese și locație.',
     trigger: 'job_created',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'company-contact',
@@ -40,8 +40,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Contact de la companii',
     description: 'Când o companie contactează workerul.',
     trigger: 'message_created',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'unread-12h',
@@ -49,8 +49,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Mesaje fără răspuns 12h',
     description: 'Workeri care nu au răspuns peste 12 ore.',
     trigger: 'schedule',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'job-prices-interests',
@@ -59,7 +59,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Prețurile joburilor de azi după interese.',
     trigger: 'schedule',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'job-invite',
@@ -67,8 +67,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Invitație la job',
     description: 'Când o companie invită workerul la un job.',
     trigger: 'invite_created',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'application-status',
@@ -76,8 +76,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Status aplicație',
     description: 'Acceptat, respins sau schimbare pe aplicație.',
     trigger: 'application_updated',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'verification-status',
@@ -85,8 +85,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Status verificare',
     description: 'Update la verificarea profilului workerului.',
     trigger: 'verification_updated',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'new-review',
@@ -94,8 +94,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Recenzie nouă',
     description: 'Când o companie lasă rating / feedback.',
     trigger: 'review_created',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'profile-incomplete',
@@ -104,7 +104,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Reminder pentru poză, interese sau date lipsă.',
     trigger: 'schedule',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'availability-reminder',
@@ -112,8 +112,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Disponibilitate neactualizată',
     description: 'Nudge dacă statusul e vechi (Busy / Available Soon).',
     trigger: 'schedule',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'followed-company-jobs',
@@ -122,7 +122,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Joburi noi de la companiile pe care le urmărește.',
     trigger: 'job_created',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'expected-rate-missing',
@@ -131,7 +131,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Reminder să seteze expected rate pentru matching.',
     trigger: 'schedule',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'company-new-applications',
@@ -139,8 +139,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Aplicații noi',
     description: 'Când workeri aplică la joburile deschise.',
     trigger: 'application_created',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'company-matched-workers',
@@ -149,7 +149,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Workeri disponibili după trade / locație.',
     trigger: 'schedule',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'company-worker-contact',
@@ -157,8 +157,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Contact de la workeri',
     description: 'Când un worker contactează compania.',
     trigger: 'message_created',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'company-unread-12h',
@@ -166,8 +166,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Mesaje fără răspuns 12h',
     description: 'Companii care nu au răspuns peste 12 ore.',
     trigger: 'schedule',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'company-application-withdrawn',
@@ -175,8 +175,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Aplicație retrasă',
     description: 'Când un candidat își retrage aplicația.',
     trigger: 'application_withdrawn',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'company-verification',
@@ -184,8 +184,8 @@ const EMAIL_CONTROL_MODES = [
     label: 'Status verificare',
     description: 'Update la verificarea contului companiei.',
     trigger: 'verification_updated',
-    countReady: false,
-    sendReady: false,
+    countReady: true,
+    sendReady: true,
   },
   {
     key: 'company-plan-expiry',
@@ -194,7 +194,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Reminder când planul se apropie de expirare.',
     trigger: 'schedule',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
   {
     key: 'company-rates-digest',
@@ -203,7 +203,7 @@ const EMAIL_CONTROL_MODES = [
     description: 'Digest zilnic cu rate/disponibilitate pe trade.',
     trigger: 'schedule',
     countReady: true,
-    sendReady: false,
+    sendReady: true,
   },
 ];
 

@@ -5,6 +5,7 @@ const requireAuth = require('../../middleware/auth');
 const requireRole = require('../../middleware/requireRole');
 const validate = require('../../middleware/validate');
 const asyncHandler = require('../../utils/asyncHandler');
+const { queueAutoMode } = require('../admin/emailControl');
 
 const router = express.Router();
 
@@ -71,6 +72,24 @@ router.patch('/:id/status', requireAuth, validate(statusSchema), asyncHandler(as
      VALUES ($1, 'application', 'Application updated', $2, 'application', $3)`,
     [row.worker_id, `Your application was ${status}.`, req.params.id]
   );
+
+  const jobMeta = await pool.query('SELECT title FROM jobs WHERE id = $1', [row.job_id]);
+  const jobTitle = jobMeta.rows[0]?.title || 'your job';
+
+  queueAutoMode('application-status', {
+    targetUserId: row.worker_id,
+    status,
+    jobTitle,
+    intro: `Your application status is now: ${status}.`,
+  });
+
+  if (status === 'withdrawn') {
+    queueAutoMode('company-application-withdrawn', {
+      targetUserId: row.company_id,
+      jobTitle,
+      intro: 'A worker withdrew their application from your job.',
+    });
+  }
 
   res.json({ application: result.rows[0] });
 }));

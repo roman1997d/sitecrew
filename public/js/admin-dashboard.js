@@ -5093,12 +5093,12 @@
     const enabledCount = Object.values(data.autoModes || {}).filter(Boolean).length;
     if (data.emailConfigured) {
       setEmailControlStatus(
-        `SMTP configured. ${enabledCount} automatic mode(s) enabled. Manual send is connected to /api/admin/email-control.`,
+        `SMTP ready. ${enabledCount} automatic mode(s) enabled. Manual Trimite sends now; Automat runs on events + hourly schedule.`,
         'ready'
       );
     } else {
       setEmailControlStatus(
-        `SMTP is not configured yet. Auto toggles still save to the database (${enabledCount} enabled). Configure SMTP before live sends.`,
+        `SMTP is not configured. Auto toggles still save (${enabledCount} enabled), but emails cannot be delivered until SMTP_* / EMAIL_FROM are set.`,
         'warning'
       );
     }
@@ -5147,9 +5147,8 @@
       if (adminEmailConfirmNote) {
         const parts = [];
         if (data.note) parts.push(data.note);
-        if (data.estimated) parts.push('Count is an audience estimate.');
-        if (!data.sendReady) parts.push('Send pipeline for this mode is prepared, not live yet.');
-        if (!data.emailConfigured) parts.push('SMTP is not configured.');
+        if (data.estimated) parts.push('Count is based on current matching audience.');
+        if (!data.emailConfigured) parts.push('SMTP is not configured — emails cannot be sent yet.');
         adminEmailConfirmNote.textContent = parts.join(' ');
         adminEmailConfirmNote.hidden = parts.length === 0;
       }

@@ -18,6 +18,7 @@ const {
   isWorkerApplyableJob,
 } = require('../../utils/jobVisibility');
 const { queueJobAlertEmails } = require('../../utils/jobAlertEmails');
+const { queueAutoMode } = require('../admin/emailControl');
 const { normalizeOgImagePath } = require('../../../../utils/ogImages');
 const { savePublicOgImage } = require('../../utils/publicOgImage');
 const upload = require('../../middleware/upload');
@@ -470,6 +471,12 @@ router.post('/:id/apply', requireAuth, requireRole('worker'), validate(applySche
     [job.rows[0].company_id, req.params.id]
   );
 
+  queueAutoMode('company-new-applications', {
+    targetUserId: job.rows[0].company_id,
+    jobTitle: job.rows[0].title,
+    intro: 'A worker applied to one of your open jobs.',
+  });
+
   res.status(201).json({ application: result.rows[0] });
 }));
 
@@ -512,6 +519,14 @@ router.post('/:id/invite', requireAuth, requireRole('company'), validate(inviteS
       req.params.id,
     ]
   );
+
+  queueAutoMode('job-invite', {
+    targetUserId: req.validated.body.workerId,
+    companyName: job.rows[0].company_name,
+    jobTitle: job.rows[0].title,
+    jobId: req.params.id,
+    intro: `${job.rows[0].company_name} invited you to a job on SiteCrew.`,
+  });
 
   res.status(201).json({ notification: notification.rows[0] });
 }));

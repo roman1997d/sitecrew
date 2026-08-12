@@ -35,6 +35,7 @@ const {
 const { rescanAllContent } = require('../../utils/aiScanBackfill');
 const { addNotAllowedTermsAndRescan, updateNotAllowedTermRiskScoreAndRescan } = require('../../utils/notAllowedTerms');
 const { getModerationHealth } = require('../../utils/moderationHealth');
+const { queueAutoMode } = require('./emailControl');
 const {
   getServerOverview,
   checkServerPanic,
@@ -1101,6 +1102,12 @@ router.patch('/companies/:id/verify', validate(verifySchema), asyncHandler(async
     [req.params.id, `Your company verification is ${req.validated.body.verificationStatus}.`]
   );
 
+  queueAutoMode('company-verification', {
+    targetUserId: Number(req.params.id),
+    status: req.validated.body.verificationStatus,
+    intro: `Your company verification status is now: ${req.validated.body.verificationStatus}.`,
+  });
+
   await logAudit({
     actorId: req.user.id,
     action: 'company.verification_updated',
@@ -1150,6 +1157,12 @@ router.patch('/workers/:id/verify', validate(updateWorkerAdminSchema), asyncHand
        VALUES ($1, 'worker_verification', 'Verification updated', $2, 'worker', $1)`,
       [req.params.id, `Your profile verification is ${verificationStatus}.`]
     );
+
+    queueAutoMode('verification-status', {
+      targetUserId: Number(req.params.id),
+      status: verificationStatus,
+      intro: `Your worker verification status is now: ${verificationStatus}.`,
+    });
   }
 
   await logAudit({
