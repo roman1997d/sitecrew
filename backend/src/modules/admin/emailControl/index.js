@@ -5,6 +5,8 @@ const {
   isAutoModeEnabled,
   getRecipientEstimate,
   sendModeCampaign,
+  setEmailTestMode,
+  getEmailTestMode,
 } = require('./service');
 const { listEmailControlModes, getEmailControlMode } = require('./modes');
 const {
@@ -20,6 +22,8 @@ module.exports = {
   isAutoModeEnabled,
   getRecipientEstimate,
   sendModeCampaign,
+  setEmailTestMode,
+  getEmailTestMode,
   listEmailControlModes,
   getEmailControlMode,
   queueAutoMode,

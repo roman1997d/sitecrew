@@ -5264,8 +5264,8 @@
     if (emailTestModeState.enabled) {
       adminEmailTestModeToggleBtn.disabled = true;
       try {
-        const data = await apiRequest('/api/admin/email-control/test-mode', {
-          method: 'PUT',
+          const data = await apiRequest('/api/admin/email-control/test-mode', {
+          method: 'POST',
           body: JSON.stringify({ enabled: false }),
         });
         syncEmailTestModeUi(data.testMode);
@@ -5302,7 +5302,7 @@
 
     try {
       const data = await apiRequest('/api/admin/email-control/test-mode', {
-        method: 'PUT',
+        method: 'POST',
         body: JSON.stringify({ enabled: true, email }),
       });
       syncEmailTestModeUi(data.testMode);
@@ -5344,6 +5344,14 @@
   });
 
   guardAdminSession()
-    .then(() => loadSection('metrics'))
+    .then(async () => {
+      const params = new URLSearchParams(window.location.search);
+      const requestedSection = params.get('section');
+      const initialSection = SECTION_TITLES[requestedSection] ? requestedSection : 'metrics';
+      if (requestedSection && SECTION_TITLES[requestedSection]) {
+        setActiveSection(requestedSection);
+      }
+      await loadSection(initialSection);
+    })
     .catch(() => window.location.replace('/admin/login'));
 })();

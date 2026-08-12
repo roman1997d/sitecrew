@@ -67,32 +67,39 @@ const sendSchema = z.object({
   }),
 });
 
-router.get('/overview', asyncHandler(async (req, res) => {
+async function handleOverview(req, res) {
   const data = await getOverview();
   res.json(data);
+}
+
+async function handleTestModeUpdate(req, res) {
+  const { enabled, email = null } = req.validated.body;
+  const testMode = await setEmailTestMode({ enabled, email }, req.user.id);
+
+  await logAudit({
+    actorId: req.user.id,
+    action: enabled ? 'email_control.test_mode_enabled' : 'email_control.test_mode_disabled',
+    entityType: 'email_control',
+    entityId: null,
+    metadata: {
+      enabled: testMode.enabled,
+      testEmail: testMode.configuredEmail || null,
+    },
+  });
+
+  res.json({ ok: true, testMode });
+}
+
+router.get('/', asyncHandler(handleOverview));
+router.get('/overview', asyncHandler(handleOverview));
+
+router.get('/test-mode', asyncHandler(async (req, res) => {
+  const data = await getOverview();
+  res.json({ ok: true, testMode: data.testMode });
 }));
 
-router.put(
-  '/test-mode',
-  validate(testModeSchema),
-  asyncHandler(async (req, res) => {
-    const { enabled, email = null } = req.validated.body;
-    const testMode = await setEmailTestMode({ enabled, email }, req.user.id);
-
-    await logAudit({
-      actorId: req.user.id,
-      action: enabled ? 'email_control.test_mode_enabled' : 'email_control.test_mode_disabled',
-      entityType: 'email_control',
-      entityId: null,
-      metadata: {
-        enabled: testMode.enabled,
-        testEmail: testMode.configuredEmail || null,
-      },
-    });
-
-    res.json({ ok: true, testMode });
-  })
-);
+router.put('/test-mode', validate(testModeSchema), asyncHandler(handleTestModeUpdate));
+router.post('/test-mode', validate(testModeSchema), asyncHandler(handleTestModeUpdate));
 
 router.get(
   '/modes/:mode/recipients',

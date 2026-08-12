@@ -2555,4 +2555,16 @@ router.use('/fake-simulator', fakeDataSimulator.router);
 const emailControl = require('./emailControl');
 router.use('/email-control', emailControl.router);
 
+// Compatibility aliases in case a reverse-proxy strips nested mounts
+router.get('/email-control-overview', asyncHandler(async (req, res) => {
+  const data = await emailControl.getOverview();
+  res.json(data);
+}));
+router.post('/email-control-test-mode', asyncHandler(async (req, res) => {
+  const enabled = Boolean(req.body?.enabled);
+  const email = req.body?.email || null;
+  const testMode = await emailControl.setEmailTestMode({ enabled, email }, req.user.id);
+  res.json({ ok: true, testMode });
+}));
+
 module.exports = router;
