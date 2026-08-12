@@ -19,6 +19,9 @@ const marketRoutes = require('./modules/market/routes');
 const marketplaceRoutes = require('./modules/marketplace/routes');
 const contactRoutes = require('./modules/contact/routes');
 const apiLogger = require('./middleware/apiLogger');
+const requireAuth = require('./middleware/auth');
+const requireRole = require('./middleware/requireRole');
+const emailControl = require('./modules/admin/emailControl');
 const adminRoutes = require('./modules/admin/routes');
 const { isEmailConfigured } = require('./utils/email');
 const { isRecaptchaConfigured, getRecaptchaPublicConfig } = require('./utils/recaptcha');
@@ -47,8 +50,26 @@ app.get('/api/health', (req, res) => {
     ok: true,
     service: 'sitecrew-backend',
     emailConfigured: isEmailConfigured(),
+    emailControl: true,
     recaptcha: getRecaptchaPublicConfig(),
     publicUrl: env.publicUrl,
+  });
+});
+
+// Public probe so deploys can verify Email Control routes without admin auth
+app.get('/api/health/email-control', (req, res) => {
+  res.json({
+    ok: true,
+    mounted: true,
+    routes: [
+      'GET /api/admin/email-control/overview',
+      'GET /api/admin/email-control/test-mode',
+      'POST /api/admin/email-control/test-mode',
+      'PUT /api/admin/email-control/test-mode',
+      'GET /api/admin/email-control/modes/:mode/recipients',
+      'PUT /api/admin/email-control/modes/:mode/auto',
+      'POST /api/admin/email-control/modes/:mode/send',
+    ],
   });
 });
 
@@ -66,6 +87,15 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/contact', contactRoutes);
+
+// Mount Email Control directly (auth here) so it cannot be missed by nested admin router order
+app.use(
+  '/api/admin/email-control',
+  requireAuth,
+  requireRole('admin', 'superadmin'),
+  emailControl.router
+);
+
 app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
