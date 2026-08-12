@@ -5034,6 +5034,7 @@
     interests: 'Filtru: interese',
     location: 'Filtru: locație',
     'interests-location': 'Filtru: interese și locație',
+    'company-contact': 'Filtru: contact de la companii',
   };
   const EMAIL_AUTO_STORAGE_KEY = 'sitecrewAdminEmailAutoModes';
   let pendingEmailMode = null;
@@ -5046,12 +5047,14 @@
         interests: Boolean(parsed.interests),
         location: Boolean(parsed.location),
         'interests-location': Boolean(parsed['interests-location']),
+        'company-contact': Boolean(parsed['company-contact']),
       };
     } catch (_error) {
       return {
         interests: false,
         location: false,
         'interests-location': false,
+        'company-contact': false,
       };
     }
   }
