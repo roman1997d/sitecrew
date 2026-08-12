@@ -25,7 +25,7 @@ const env = {
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
   emailFrom: process.env.EMAIL_FROM || '',
-  emailFromName: process.env.EMAIL_FROM_NAME || 'SiteCrew',
+  emailFromName: process.env.EMAIL_FROM_NAME || 'SiteCrew.uk',
   passwordResetTtlMinutes: Number(process.env.PASSWORD_RESET_TTL_MINUTES || 60),
   contactEmail: process.env.CONTACT_EMAIL || 'info@sitecrew.uk',
   recaptchaSiteKey: (process.env.RECAPTCHA_SITE_KEY || '').trim(),
