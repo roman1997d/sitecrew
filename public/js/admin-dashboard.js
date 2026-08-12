@@ -5036,7 +5036,7 @@
     'interests-location': 'Filtru: interese și locație',
     'company-contact': 'Filtru: contact de la companii',
     'unread-12h': 'Filtru: mesaje fără răspuns 12h',
-    'job-prices-interests': 'Filtru: prețuri joburi pe interese',
+    'job-prices-interests': 'Filtru: prețuri joburi pe interese — astăzi',
   };
   const EMAIL_AUTO_STORAGE_KEY = 'sitecrewAdminEmailAutoModes';
   let pendingEmailMode = null;
