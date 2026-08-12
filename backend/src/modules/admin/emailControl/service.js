@@ -9,6 +9,8 @@ const {
   setAutoMode,
   setAutoModes,
   isAutoModeEnabled,
+  getEmailTestMode,
+  setEmailTestMode,
 } = require('./settings');
 const { resolveRecipients } = require('./recipients');
 const { runModeCampaign } = require('./dispatcher');
@@ -21,7 +23,20 @@ async function getRecipientEstimate(modeKey, context = {}) {
     throw error;
   }
 
-  const resolved = await resolveRecipients(modeKey, context);
+  const [resolved, testMode] = await Promise.all([
+    resolveRecipients(modeKey, context),
+    getEmailTestMode(),
+  ]);
+
+  const notes = [];
+  if (resolved.meta?.note) notes.push(resolved.meta.note);
+  if (resolved.meta?.eventDriven) {
+    notes.push('Event-driven mode: manual send is empty unless a target event is provided. Automat sends live.');
+  }
+  if (testMode.enabled) {
+    notes.push(`TEST MODE ON — every email is delivered only to ${testMode.email}.`);
+  }
+
   return {
     mode: mode.key,
     audience: mode.audience,
@@ -31,16 +46,17 @@ async function getRecipientEstimate(modeKey, context = {}) {
     estimated: Boolean(resolved.meta?.jobsConsidered != null),
     countReady: true,
     sendReady: true,
-    note: resolved.meta?.note
-      || (resolved.meta?.eventDriven
-        ? 'Event-driven mode: manual send is empty unless a target event is provided. Automat sends live.'
-        : null),
+    note: notes.length ? notes.join(' ') : null,
     emailConfigured: isEmailConfigured(),
+    testMode,
   };
 }
 
 async function getOverview() {
-  const autoModes = await getAutoModeMap();
+  const [autoModes, testMode] = await Promise.all([
+    getAutoModeMap(),
+    getEmailTestMode(),
+  ]);
   const modes = listEmailControlModes().map((mode) => ({
     ...mode,
     autoEnabled: Boolean(autoModes[mode.key]),
@@ -53,6 +69,7 @@ async function getOverview() {
     emailConfigured: isEmailConfigured(),
     modes,
     autoModes,
+    testMode,
   };
 }
 
@@ -69,4 +86,6 @@ module.exports = {
   getRecipientEstimate,
   sendModeCampaign,
   isAutoModeEnabled,
+  getEmailTestMode,
+  setEmailTestMode,
 };

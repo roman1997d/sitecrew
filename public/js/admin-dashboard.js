@@ -5037,6 +5037,14 @@
   const adminEmailConfirmYesBtn = document.getElementById('adminEmailConfirmYesBtn');
   const adminEmailControlStatus = document.getElementById('adminEmailControlStatus');
   const adminEmailControlStatusText = document.getElementById('adminEmailControlStatusText');
+  const adminEmailTestModeBar = document.getElementById('adminEmailTestModeBar');
+  const adminEmailTestModeSummary = document.getElementById('adminEmailTestModeSummary');
+  const adminEmailTestModeToggleBtn = document.getElementById('adminEmailTestModeToggleBtn');
+  const adminEmailTestModeModal = document.getElementById('adminEmailTestModeModal');
+  const adminEmailTestModeForm = document.getElementById('adminEmailTestModeForm');
+  const adminEmailTestModeInput = document.getElementById('adminEmailTestModeInput');
+  const adminEmailTestModeSaveBtn = document.getElementById('adminEmailTestModeSaveBtn');
+  let emailTestModeState = { enabled: false, email: null, configuredEmail: null };
   const EMAIL_MODE_LABELS = {
     interests: 'Workeri · joburi pe interese',
     location: 'Workeri · joburi pe locație',
@@ -5085,13 +5093,62 @@
     adminEmailControlStatusText.textContent = message;
   }
 
+  function syncEmailTestModeUi(testMode = emailTestModeState) {
+    emailTestModeState = {
+      enabled: Boolean(testMode?.enabled),
+      email: testMode?.email || null,
+      configuredEmail: testMode?.configuredEmail || testMode?.email || null,
+    };
+
+    const active = emailTestModeState.enabled && Boolean(emailTestModeState.email);
+    adminEmailTestModeBar?.classList.toggle('is-active', active);
+
+    if (adminEmailTestModeSummary) {
+      adminEmailTestModeSummary.textContent = active
+        ? `ON — all emails go only to ${emailTestModeState.email}`
+        : emailTestModeState.configuredEmail
+          ? `Off — last saved test email: ${emailTestModeState.configuredEmail}`
+          : 'Off — emails go to real recipients.';
+    }
+
+    if (adminEmailTestModeToggleBtn) {
+      adminEmailTestModeToggleBtn.textContent = active ? 'Dezactivează Test Mode' : 'Activează Test Mode';
+      adminEmailTestModeToggleBtn.classList.toggle('admin-primary-btn', !active);
+      adminEmailTestModeToggleBtn.classList.toggle('admin-secondary-btn', active);
+    }
+
+    if (adminEmailTestModeInput && emailTestModeState.configuredEmail) {
+      adminEmailTestModeInput.value = emailTestModeState.configuredEmail;
+    }
+  }
+
+  function openEmailTestModeModal() {
+    if (!adminEmailTestModeModal) return;
+    if (adminEmailTestModeInput) {
+      adminEmailTestModeInput.value = emailTestModeState.configuredEmail || '';
+      adminEmailTestModeInput.focus();
+    }
+    adminEmailTestModeModal.hidden = false;
+  }
+
+  function closeEmailTestModeModal() {
+    if (!adminEmailTestModeModal) return;
+    adminEmailTestModeModal.hidden = true;
+  }
+
   async function loadEmailControlSection() {
     const data = await apiRequest('/api/admin/email-control/overview');
     emailControlLoaded = true;
     syncEmailAutoSwitchUi(data.autoModes || {});
+    syncEmailTestModeUi(data.testMode || { enabled: false, email: null });
 
     const enabledCount = Object.values(data.autoModes || {}).filter(Boolean).length;
-    if (data.emailConfigured) {
+    if (data.testMode?.enabled) {
+      setEmailControlStatus(
+        `TEST MODE ON — every platform email is redirected to ${data.testMode.email}. ${enabledCount} automatic mode(s) enabled.`,
+        'warning'
+      );
+    } else if (data.emailConfigured) {
       setEmailControlStatus(
         `SMTP ready. ${enabledCount} automatic mode(s) enabled. Manual Trimite sends now; Automat runs on events + hourly schedule.`,
         'ready'
@@ -5148,6 +5205,9 @@
         const parts = [];
         if (data.note) parts.push(data.note);
         if (data.estimated) parts.push('Count is based on current matching audience.');
+        if (data.testMode?.enabled) {
+          parts.push(`TEST MODE: delivery only to ${data.testMode.email}.`);
+        }
         if (!data.emailConfigured) parts.push('SMTP is not configured — emails cannot be sent yet.');
         adminEmailConfirmNote.textContent = parts.join(' ');
         adminEmailConfirmNote.hidden = parts.length === 0;
@@ -5198,6 +5258,67 @@
 
   adminEmailConfirmModal?.querySelectorAll('[data-email-confirm-close]').forEach((element) => {
     element.addEventListener('click', closeEmailConfirmModal);
+  });
+
+  adminEmailTestModeToggleBtn?.addEventListener('click', async () => {
+    if (emailTestModeState.enabled) {
+      adminEmailTestModeToggleBtn.disabled = true;
+      try {
+        const data = await apiRequest('/api/admin/email-control/test-mode', {
+          method: 'PUT',
+          body: JSON.stringify({ enabled: false }),
+        });
+        syncEmailTestModeUi(data.testMode);
+        showAlert('Test Mode disabled. Emails go to real recipients again.', 'success');
+        if (emailControlLoaded) {
+          await loadEmailControlSection();
+        }
+      } catch (error) {
+        showAlert(error.message);
+      } finally {
+        adminEmailTestModeToggleBtn.disabled = false;
+      }
+      return;
+    }
+    openEmailTestModeModal();
+  });
+
+  adminEmailTestModeModal?.querySelectorAll('[data-email-test-mode-close]').forEach((element) => {
+    element.addEventListener('click', closeEmailTestModeModal);
+  });
+
+  adminEmailTestModeForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = String(adminEmailTestModeInput?.value || '').trim();
+    if (!email) {
+      showAlert('Enter a test email address.');
+      return;
+    }
+
+    if (adminEmailTestModeSaveBtn) {
+      adminEmailTestModeSaveBtn.disabled = true;
+      adminEmailTestModeSaveBtn.textContent = 'Saving…';
+    }
+
+    try {
+      const data = await apiRequest('/api/admin/email-control/test-mode', {
+        method: 'PUT',
+        body: JSON.stringify({ enabled: true, email }),
+      });
+      syncEmailTestModeUi(data.testMode);
+      closeEmailTestModeModal();
+      showAlert(`Test Mode enabled. All emails go only to ${data.testMode.email}.`, 'success');
+      if (emailControlLoaded) {
+        await loadEmailControlSection();
+      }
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      if (adminEmailTestModeSaveBtn) {
+        adminEmailTestModeSaveBtn.disabled = false;
+        adminEmailTestModeSaveBtn.textContent = 'Save this email for test';
+      }
+    }
   });
 
   adminEmailConfirmYesBtn?.addEventListener('click', async () => {

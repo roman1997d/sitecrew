@@ -27,6 +27,28 @@ function getTransporter() {
   return transporter;
 }
 
+async function sendMail(mailOptions = {}) {
+  const { resolveOutboundEmail } = require('../modules/admin/emailControl/settings');
+  const routed = await resolveOutboundEmail(mailOptions.to);
+  const payload = {
+    ...mailOptions,
+    to: routed.to,
+  };
+
+  if (routed.testMode) {
+    const original = routed.originalTo || 'unknown';
+    payload.subject = `[TEST → ${original}] ${mailOptions.subject || ''}`.trim();
+    if (typeof payload.text === 'string') {
+      payload.text = `TEST MODE: originally to ${original}\n\n${payload.text}`;
+    }
+    if (typeof payload.html === 'string') {
+      payload.html = `<p style="margin:0 0 16px;padding:10px 12px;background:#FEF3C7;color:#92400E;border-radius:8px;font-size:13px;">TEST MODE — originally to <strong>${escapeHtml(String(original))}</strong></p>${payload.html}`;
+    }
+  }
+
+  return getTransporter().sendMail(payload);
+}
+
 function escapeHtml(value = '') {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -95,7 +117,7 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
     'If you did not request this, you can safely ignore this email.',
   ].join('\n');
 
-  await getTransporter().sendMail({
+  await sendMail({
     from,
     to,
     subject,
@@ -203,7 +225,7 @@ async function sendWelcomeEmail({ to, role, name }) {
     `Need help? Contact us at ${env.emailFrom}.`,
   ].join('\n');
 
-  await getTransporter().sendMail({
+  await sendMail({
     from,
     to,
     subject,
@@ -306,7 +328,7 @@ async function sendNewJobAlertEmail({
     `Visit SiteCrew: ${env.publicUrl.replace(/\/$/, '')}`,
   ].join('\n');
 
-  await getTransporter().sendMail({
+  await sendMail({
     from,
     to,
     subject,
@@ -365,7 +387,7 @@ async function sendContactFormEmail({ to, name, email, subject, message }) {
     message,
   ].join('\n');
 
-  await getTransporter().sendMail({
+  await sendMail({
     from,
     to,
     replyTo: email,
@@ -443,7 +465,7 @@ async function sendNotificationEmail({
     `${ctaLabel}: ${actionUrl}`,
   ].join('\n');
 
-  await getTransporter().sendMail({
+  await sendMail({
     from,
     to,
     subject,

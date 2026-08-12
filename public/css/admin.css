@@ -2424,6 +2424,51 @@
   background: #F8FAFC;
 }
 
+.admin-email-test-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  background: #FFFFFF;
+}
+
+.admin-email-test-mode-bar.is-active {
+  border-color: #F59E0B;
+  background: #FFFBEB;
+}
+
+.admin-email-test-mode-copy h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0F172A;
+}
+
+.admin-email-test-mode-copy p {
+  margin: 4px 0 0;
+  color: #64748B;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.admin-email-test-mode-bar.is-active .admin-email-test-mode-copy p {
+  color: #92400E;
+}
+
+.admin-email-test-mode-actions {
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .admin-email-test-mode-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .admin-email-control-status p {
   margin: 0;
   color: #334155;

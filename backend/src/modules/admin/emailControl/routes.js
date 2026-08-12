@@ -10,9 +10,25 @@ const {
   setAutoMode,
   setAutoModes,
   sendModeCampaign,
+  setEmailTestMode,
 } = require('./service');
 
 const router = express.Router();
+
+const testModeSchema = z.object({
+  body: z.object({
+    enabled: z.boolean(),
+    email: z.string().email().optional().nullable(),
+  }).superRefine((value, ctx) => {
+    if (value.enabled && !value.email) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Test email is required when enabling test mode.',
+        path: ['email'],
+      });
+    }
+  }),
+});
 
 const modeParamSchema = z.object({
   params: z.object({
@@ -55,6 +71,28 @@ router.get('/overview', asyncHandler(async (req, res) => {
   const data = await getOverview();
   res.json(data);
 }));
+
+router.put(
+  '/test-mode',
+  validate(testModeSchema),
+  asyncHandler(async (req, res) => {
+    const { enabled, email = null } = req.validated.body;
+    const testMode = await setEmailTestMode({ enabled, email }, req.user.id);
+
+    await logAudit({
+      actorId: req.user.id,
+      action: enabled ? 'email_control.test_mode_enabled' : 'email_control.test_mode_disabled',
+      entityType: 'email_control',
+      entityId: null,
+      metadata: {
+        enabled: testMode.enabled,
+        testEmail: testMode.configuredEmail || null,
+      },
+    });
+
+    res.json({ ok: true, testMode });
+  })
+);
 
 router.get(
   '/modes/:mode/recipients',

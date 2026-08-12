@@ -515,6 +515,18 @@ CREATE TABLE IF NOT EXISTS email_control_settings (
   updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS email_control_config (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  test_mode_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  test_email TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+);
+
+INSERT INTO email_control_config (id, test_mode_enabled, test_email)
+VALUES (1, FALSE, NULL)
+ON CONFLICT (id) DO NOTHING;
+
 CREATE INDEX IF NOT EXISTS idx_api_logs_created ON api_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_trails_created ON audit_trails(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_feed_posts_moderation ON feed_posts(moderation_status, created_at DESC);

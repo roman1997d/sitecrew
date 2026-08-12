@@ -701,6 +701,18 @@
           <p id="adminEmailControlStatusText">Loading email control...</p>
         </div>
 
+        <div class="admin-email-test-mode-bar" id="adminEmailTestModeBar">
+          <div class="admin-email-test-mode-copy">
+            <h3>Test Mode</h3>
+            <p id="adminEmailTestModeSummary">Off — emails go to real recipients.</p>
+          </div>
+          <div class="admin-email-test-mode-actions">
+            <button type="button" class="admin-secondary-btn" id="adminEmailTestModeToggleBtn">
+              Activează Test Mode
+            </button>
+          </div>
+        </div>
+
         <div class="admin-email-control-group">
           <header class="admin-email-control-group-head">
             <h2>Notificări workeri</h2>
@@ -1555,6 +1567,42 @@
         <button type="button" class="admin-secondary-btn" data-email-confirm-close>Cancel</button>
         <button type="button" class="admin-primary-btn" id="adminEmailConfirmYesBtn">Yes</button>
       </div>
+    </div>
+  </div>
+
+  <div class="admin-modal admin-status-reason-modal" id="adminEmailTestModeModal" hidden>
+    <div class="admin-modal-backdrop" data-email-test-mode-close></div>
+    <div class="admin-modal-dialog admin-email-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="adminEmailTestModeModalTitle">
+      <header class="admin-modal-header">
+        <div>
+          <p class="admin-modal-kicker">Email Control</p>
+          <h2 id="adminEmailTestModeModalTitle">Activează Test Mode</h2>
+        </div>
+        <button type="button" class="admin-modal-close" data-email-test-mode-close aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <form id="adminEmailTestModeForm" class="admin-email-confirm-body">
+        <p class="admin-email-confirm-mode">
+          Când Test Mode e activ, <strong>toate emailurile</strong> se trimit doar la adresa de test.
+        </p>
+        <label class="admin-field">
+          <span>Email address for test</span>
+          <input
+            type="email"
+            id="adminEmailTestModeInput"
+            name="testEmail"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+          >
+        </label>
+        <div class="admin-modal-actions">
+          <button type="button" class="admin-secondary-btn" data-email-test-mode-close>Cancel</button>
+          <button type="submit" class="admin-primary-btn" id="adminEmailTestModeSaveBtn">Save this email for test</button>
+        </div>
+      </form>
     </div>
   </div>
 
