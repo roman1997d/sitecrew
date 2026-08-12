@@ -5035,6 +5035,8 @@
     location: 'Filtru: locație',
     'interests-location': 'Filtru: interese și locație',
     'company-contact': 'Filtru: contact de la companii',
+    'unread-12h': 'Filtru: mesaje fără răspuns 12h',
+    'job-prices-interests': 'Filtru: prețuri joburi pe interese',
   };
   const EMAIL_AUTO_STORAGE_KEY = 'sitecrewAdminEmailAutoModes';
   let pendingEmailMode = null;
@@ -5048,6 +5050,8 @@
         location: Boolean(parsed.location),
         'interests-location': Boolean(parsed['interests-location']),
         'company-contact': Boolean(parsed['company-contact']),
+        'unread-12h': Boolean(parsed['unread-12h']),
+        'job-prices-interests': Boolean(parsed['job-prices-interests']),
       };
     } catch (_error) {
       return {
@@ -5055,6 +5059,8 @@
         location: false,
         'interests-location': false,
         'company-contact': false,
+        'unread-12h': false,
+        'job-prices-interests': false,
       };
     }
   }

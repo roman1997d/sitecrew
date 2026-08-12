@@ -695,7 +695,7 @@
       </section>
 
       <section class="admin-section" id="adminSection-email-control" data-section="email-control" hidden>
-        <p class="admin-section-lead">Trimite notificări către workeri despre joburi noi și contacte din partea companiilor.</p>
+        <p class="admin-section-lead">Trimite notificări către workeri despre joburi, contacte, mesaje fără răspuns și prețuri.</p>
 
         <div class="admin-email-control-grid">
           <article class="admin-email-control-card" data-email-card="interests">
@@ -814,6 +814,70 @@
                   type="checkbox"
                   id="adminEmailAutoCompanyContact"
                   data-email-auto-mode="company-contact"
+                >
+                <span class="admin-email-auto-switch-track" aria-hidden="true">
+                  <span class="admin-email-auto-switch-thumb"></span>
+                </span>
+                <span class="admin-email-auto-switch-copy">
+                  <strong>Automat</strong>
+                  Make this automatic after each update in database
+                </span>
+              </label>
+            </div>
+          </article>
+
+          <article class="admin-email-control-card" data-email-card="unread-12h">
+            <div class="admin-email-control-card-icon" aria-hidden="true">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="admin-email-control-card-body">
+              <h2>Mesaje fără răspuns (12h)</h2>
+              <p>Notifică workerii când aceștia nu au răspuns la mesaje mai mult de 12 ore.</p>
+              <button
+                type="button"
+                class="admin-primary-btn"
+                id="adminEmailNotifyUnread12hBtn"
+                data-email-mode="unread-12h"
+              >
+                Trimite notificări
+              </button>
+              <label class="admin-email-auto-switch">
+                <input
+                  type="checkbox"
+                  id="adminEmailAutoUnread12h"
+                  data-email-auto-mode="unread-12h"
+                >
+                <span class="admin-email-auto-switch-track" aria-hidden="true">
+                  <span class="admin-email-auto-switch-thumb"></span>
+                </span>
+                <span class="admin-email-auto-switch-copy">
+                  <strong>Automat</strong>
+                  Make this automatic after each update in database
+                </span>
+              </label>
+            </div>
+          </article>
+
+          <article class="admin-email-control-card" data-email-card="job-prices-interests">
+            <div class="admin-email-control-card-icon" aria-hidden="true">
+              <i class="bi bi-currency-pound"></i>
+            </div>
+            <div class="admin-email-control-card-body">
+              <h2>Prețuri joburi pe interese</h2>
+              <p>Notifică workerii cu prețurile la joburi bazat pe interesele lor.</p>
+              <button
+                type="button"
+                class="admin-primary-btn"
+                id="adminEmailNotifyJobPricesInterestsBtn"
+                data-email-mode="job-prices-interests"
+              >
+                Trimite notificări
+              </button>
+              <label class="admin-email-auto-switch">
+                <input
+                  type="checkbox"
+                  id="adminEmailAutoJobPricesInterests"
+                  data-email-auto-mode="job-prices-interests"
                 >
                 <span class="admin-email-auto-switch-track" aria-hidden="true">
                   <span class="admin-email-auto-switch-thumb"></span>
