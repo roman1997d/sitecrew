@@ -115,7 +115,10 @@
             <article class="job-card">
               <div class="job-card-header <%= job.theme %>">
                 <h4><%= job.title %></h4>
-                <div class="job-loc"><i class="bi bi-geo-alt"></i> <%= job.location %></div>
+                <div class="job-loc">
+                  <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                  <span><%= job.location %></span>
+                </div>
               </div>
               <div class="job-card-body">
                 <p class="public-job-company"><%= job.companyName %></p>
