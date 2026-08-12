@@ -697,6 +697,10 @@
       <section class="admin-section" id="adminSection-email-control" data-section="email-control" hidden>
         <p class="admin-section-lead">Controlează emailurile manuale și automate pentru workeri și companii.</p>
 
+        <div class="admin-email-control-status" id="adminEmailControlStatus" hidden>
+          <p id="adminEmailControlStatusText">Loading email control...</p>
+        </div>
+
         <div class="admin-email-control-group">
           <header class="admin-email-control-group-head">
             <h2>Notificări workeri</h2>
@@ -1541,9 +1545,10 @@
 
       <div class="admin-email-confirm-body">
         <p class="admin-email-confirm-message" id="adminEmailConfirmMessage">
-          Trimiți acest email la <strong id="adminEmailConfirmCount">0</strong> persoane
+          Trimiți acest email la <strong id="adminEmailConfirmCount">…</strong> persoane
         </p>
         <p class="admin-email-confirm-mode" id="adminEmailConfirmModeLabel"></p>
+        <p class="admin-email-confirm-note" id="adminEmailConfirmNote" hidden></p>
       </div>
 
       <div class="admin-modal-actions">

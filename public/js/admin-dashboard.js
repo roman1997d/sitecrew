@@ -3239,6 +3239,10 @@
     }
     if (section === 'server') {
       await loadServerSection();
+      return;
+    }
+    if (section === 'email-control') {
+      await loadEmailControlSection();
     }
   }
 
@@ -5029,7 +5033,10 @@
   const adminEmailConfirmModal = document.getElementById('adminEmailConfirmModal');
   const adminEmailConfirmCount = document.getElementById('adminEmailConfirmCount');
   const adminEmailConfirmModeLabel = document.getElementById('adminEmailConfirmModeLabel');
+  const adminEmailConfirmNote = document.getElementById('adminEmailConfirmNote');
   const adminEmailConfirmYesBtn = document.getElementById('adminEmailConfirmYesBtn');
+  const adminEmailControlStatus = document.getElementById('adminEmailControlStatus');
+  const adminEmailControlStatusText = document.getElementById('adminEmailControlStatusText');
   const EMAIL_MODE_LABELS = {
     interests: 'Workeri · joburi pe interese',
     location: 'Workeri · joburi pe locație',
@@ -5054,72 +5061,139 @@
     'company-plan-expiry': 'Companii · expirare plan',
     'company-rates-digest': 'Companii · rate & disponibilitate — azi',
   };
-  const EMAIL_AUTO_STORAGE_KEY = 'sitecrewAdminEmailAutoModes';
   let pendingEmailMode = null;
+  let pendingEmailRecipientCount = 0;
+  let emailAutoModesState = {};
+  let emailControlLoaded = false;
 
-  function getEmailAutoModes() {
-    const modes = {};
-    let parsed = {};
-    try {
-      const raw = localStorage.getItem(EMAIL_AUTO_STORAGE_KEY);
-      parsed = raw ? JSON.parse(raw) : {};
-    } catch (_error) {
-      parsed = {};
-    }
-    document.querySelectorAll('[data-email-auto-mode]').forEach((input) => {
-      const mode = input.dataset.emailAutoMode;
-      modes[mode] = Boolean(parsed[mode]);
-    });
-    return modes;
-  }
-
-  function saveEmailAutoModes(modes) {
-    localStorage.setItem(EMAIL_AUTO_STORAGE_KEY, JSON.stringify(modes));
-  }
-
-  function syncEmailAutoSwitchUi() {
-    const modes = getEmailAutoModes();
+  function syncEmailAutoSwitchUi(modes = emailAutoModesState) {
+    emailAutoModesState = { ...modes };
     document.querySelectorAll('[data-email-auto-mode]').forEach((input) => {
       const mode = input.dataset.emailAutoMode;
       const enabled = Boolean(modes[mode]);
       input.checked = enabled;
+      input.disabled = false;
       const card = document.querySelector(`[data-email-card="${mode}"]`);
       card?.classList.toggle('is-auto-enabled', enabled);
     });
+  }
+
+  function setEmailControlStatus(message, state = 'warning') {
+    if (!adminEmailControlStatus || !adminEmailControlStatusText) return;
+    adminEmailControlStatus.hidden = false;
+    adminEmailControlStatus.dataset.state = state;
+    adminEmailControlStatusText.textContent = message;
+  }
+
+  async function loadEmailControlSection() {
+    const data = await apiRequest('/api/admin/email-control/overview');
+    emailControlLoaded = true;
+    syncEmailAutoSwitchUi(data.autoModes || {});
+
+    const enabledCount = Object.values(data.autoModes || {}).filter(Boolean).length;
+    if (data.emailConfigured) {
+      setEmailControlStatus(
+        `SMTP configured. ${enabledCount} automatic mode(s) enabled. Manual send is connected to /api/admin/email-control.`,
+        'ready'
+      );
+    } else {
+      setEmailControlStatus(
+        `SMTP is not configured yet. Auto toggles still save to the database (${enabledCount} enabled). Configure SMTP before live sends.`,
+        'warning'
+      );
+    }
   }
 
   function closeEmailConfirmModal() {
     if (!adminEmailConfirmModal) return;
     adminEmailConfirmModal.hidden = true;
     pendingEmailMode = null;
+    pendingEmailRecipientCount = 0;
+    if (adminEmailConfirmYesBtn) {
+      adminEmailConfirmYesBtn.disabled = false;
+      adminEmailConfirmYesBtn.textContent = 'Yes';
+    }
   }
 
-  function openEmailConfirmModal(mode) {
+  async function openEmailConfirmModal(mode) {
     if (!adminEmailConfirmModal) return;
     pendingEmailMode = mode;
-    // Placeholder until recipient-count API is wired
-    const recipientCount = 0;
+    pendingEmailRecipientCount = 0;
+
     if (adminEmailConfirmCount) {
-      adminEmailConfirmCount.textContent = String(recipientCount);
+      adminEmailConfirmCount.textContent = '…';
     }
     if (adminEmailConfirmModeLabel) {
-      adminEmailConfirmModeLabel.textContent = EMAIL_MODE_LABELS[mode] || '';
+      adminEmailConfirmModeLabel.textContent = EMAIL_MODE_LABELS[mode] || mode;
+    }
+    if (adminEmailConfirmNote) {
+      adminEmailConfirmNote.hidden = true;
+      adminEmailConfirmNote.textContent = '';
+    }
+    if (adminEmailConfirmYesBtn) {
+      adminEmailConfirmYesBtn.disabled = true;
+      adminEmailConfirmYesBtn.textContent = 'Loading…';
     }
     adminEmailConfirmModal.hidden = false;
+
+    try {
+      const data = await apiRequest(`/api/admin/email-control/modes/${encodeURIComponent(mode)}/recipients`);
+      if (pendingEmailMode !== mode) return;
+
+      pendingEmailRecipientCount = Number(data.recipientCount) || 0;
+      if (adminEmailConfirmCount) {
+        adminEmailConfirmCount.textContent = String(pendingEmailRecipientCount);
+      }
+      if (adminEmailConfirmNote) {
+        const parts = [];
+        if (data.note) parts.push(data.note);
+        if (data.estimated) parts.push('Count is an audience estimate.');
+        if (!data.sendReady) parts.push('Send pipeline for this mode is prepared, not live yet.');
+        if (!data.emailConfigured) parts.push('SMTP is not configured.');
+        adminEmailConfirmNote.textContent = parts.join(' ');
+        adminEmailConfirmNote.hidden = parts.length === 0;
+      }
+      if (adminEmailConfirmYesBtn) {
+        adminEmailConfirmYesBtn.disabled = false;
+        adminEmailConfirmYesBtn.textContent = 'Yes';
+      }
+    } catch (error) {
+      closeEmailConfirmModal();
+      showAlert(error.message);
+    }
   }
 
   document.querySelectorAll('[data-email-mode]').forEach((button) => {
     button.addEventListener('click', () => {
-      openEmailConfirmModal(button.dataset.emailMode);
+      openEmailConfirmModal(button.dataset.emailMode).catch((error) => showAlert(error.message));
     });
   });
 
   document.querySelectorAll('[data-email-auto-mode]').forEach((input) => {
-    input.addEventListener('change', () => {
-      const modes = getEmailAutoModes();
-      modes[input.dataset.emailAutoMode] = input.checked;
-      saveEmailAutoModes(modes);
-      syncEmailAutoSwitchUi();
+    input.addEventListener('change', async () => {
+      const mode = input.dataset.emailAutoMode;
+      const enabled = input.checked;
+      input.disabled = true;
+      try {
+        const data = await apiRequest(`/api/admin/email-control/modes/${encodeURIComponent(mode)}/auto`, {
+          method: 'PUT',
+          body: JSON.stringify({ enabled }),
+        });
+        syncEmailAutoSwitchUi(data.autoModes || { ...emailAutoModesState, [mode]: enabled });
+        showAlert(
+          enabled ? `Automatic mode enabled: ${EMAIL_MODE_LABELS[mode] || mode}` : `Automatic mode disabled: ${EMAIL_MODE_LABELS[mode] || mode}`,
+          'success'
+        );
+        if (emailControlLoaded) {
+          await loadEmailControlSection();
+        }
+      } catch (error) {
+        input.checked = !enabled;
+        syncEmailAutoSwitchUi(emailAutoModesState);
+        showAlert(error.message);
+      } finally {
+        input.disabled = false;
+      }
     });
   });
 
@@ -5127,12 +5201,27 @@
     element.addEventListener('click', closeEmailConfirmModal);
   });
 
-  adminEmailConfirmYesBtn?.addEventListener('click', () => {
-    // Frontend-only confirm for now; send action comes later
-    closeEmailConfirmModal();
+  adminEmailConfirmYesBtn?.addEventListener('click', async () => {
+    if (!pendingEmailMode) return;
+    const mode = pendingEmailMode;
+    adminEmailConfirmYesBtn.disabled = true;
+    adminEmailConfirmYesBtn.textContent = 'Sending…';
+    try {
+      const result = await apiRequest(`/api/admin/email-control/modes/${encodeURIComponent(mode)}/send`, {
+        method: 'POST',
+        body: JSON.stringify({ confirm: true, dryRun: false }),
+      });
+      closeEmailConfirmModal();
+      showAlert(
+        result.message || `Email request recorded for ${pendingEmailRecipientCount} recipients.`,
+        result.status === 'sent' ? 'success' : 'success'
+      );
+    } catch (error) {
+      adminEmailConfirmYesBtn.disabled = false;
+      adminEmailConfirmYesBtn.textContent = 'Yes';
+      showAlert(error.message);
+    }
   });
-
-  syncEmailAutoSwitchUi();
 
   guardAdminSession()
     .then(() => loadSection('metrics'))

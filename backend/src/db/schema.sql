@@ -508,6 +508,13 @@ CREATE TABLE IF NOT EXISTS audit_trails (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS email_control_settings (
+  mode_key TEXT PRIMARY KEY,
+  auto_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_api_logs_created ON api_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_trails_created ON audit_trails(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_feed_posts_moderation ON feed_posts(moderation_status, created_at DESC);

@@ -2539,4 +2539,7 @@ router.delete('/blog/:slug', asyncHandler(async (req, res) => {
 const fakeDataSimulator = require('./fakeDataSimulator');
 router.use('/fake-simulator', fakeDataSimulator.router);
 
+const emailControl = require('./emailControl');
+router.use('/email-control', emailControl.router);
+
 module.exports = router;
