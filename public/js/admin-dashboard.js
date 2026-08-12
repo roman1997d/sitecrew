@@ -12,6 +12,7 @@
     'api-logs': 'API Logs',
     audit: 'Audit Trails',
     server: 'Server',
+    'email-control': 'Email Control',
   };
 
   let activeSection = 'metrics';
