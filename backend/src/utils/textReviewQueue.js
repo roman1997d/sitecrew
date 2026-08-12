@@ -608,6 +608,100 @@ async function approveTextReview({ scanId, entityType, entityId }) {
   };
 }
 
+/** Approve pending AI Scan items authored by demo (.fpd) users/companies. */
+async function approveAllDemoFpdTextReviews() {
+  const demoEmail = '%.fpd';
+
+  const feedPosts = await pool.query(
+    `UPDATE feed_posts fp
+     SET ai_review_status = 'approved_safe',
+         moderation_status = 'visible',
+         updated_at = CURRENT_TIMESTAMP
+     FROM users u
+     WHERE fp.ai_review_status = 'pending'
+       AND u.id = COALESCE(fp.created_by_user_id, fp.author_id)
+       AND u.email ILIKE $1
+     RETURNING fp.id`,
+    [demoEmail]
+  );
+
+  const feedComments = await pool.query(
+    `UPDATE feed_comments fc
+     SET ai_review_status = 'approved_safe',
+         moderation_status = 'visible'
+     FROM users u
+     WHERE fc.ai_review_status = 'pending'
+       AND u.id = fc.user_id
+       AND u.email ILIKE $1
+     RETURNING fc.id`,
+    [demoEmail]
+  );
+
+  const jobs = await pool.query(
+    `UPDATE jobs j
+     SET ai_review_status = 'approved_safe',
+         moderation_status = 'visible',
+         updated_at = CURRENT_TIMESTAMP
+     FROM users u
+     WHERE j.ai_review_status = 'pending'
+       AND u.id = COALESCE(j.created_by_user_id, j.company_id)
+       AND u.email ILIKE $1
+     RETURNING j.id`,
+    [demoEmail]
+  );
+
+  const messages = await pool.query(
+    `UPDATE messages m
+     SET ai_review_status = 'approved_safe',
+         moderation_status = 'visible'
+     FROM users u
+     WHERE m.ai_review_status = 'pending'
+       AND u.id = m.sender_id
+       AND u.email ILIKE $1
+     RETURNING m.id`,
+    [demoEmail]
+  );
+
+  const workerReviews = await pool.query(
+    `UPDATE worker_reviews wr
+     SET ai_review_status = 'approved_safe',
+         moderation_status = 'visible',
+         updated_at = CURRENT_TIMESTAMP
+     FROM users u
+     WHERE wr.ai_review_status = 'pending'
+       AND u.id = wr.company_id
+       AND u.email ILIKE $1
+     RETURNING wr.id`,
+    [demoEmail]
+  );
+
+  const companyReviews = await pool.query(
+    `UPDATE company_reviews cr
+     SET ai_review_status = 'approved_safe',
+         moderation_status = 'visible',
+         updated_at = CURRENT_TIMESTAMP
+     FROM users u
+     WHERE cr.ai_review_status = 'pending'
+       AND u.id = cr.worker_id
+       AND u.email ILIKE $1
+     RETURNING cr.id`,
+    [demoEmail]
+  );
+
+  const byType = {
+    feed_post: feedPosts.rowCount,
+    feed_comment: feedComments.rowCount,
+    job: jobs.rowCount,
+    message: messages.rowCount,
+    worker_review: workerReviews.rowCount,
+    company_review: companyReviews.rowCount,
+  };
+
+  const total = Object.values(byType).reduce((sum, n) => sum + n, 0);
+
+  return { approved: true, total, byType };
+}
+
 async function rejectTextReview({
   scanId,
   entityType,
@@ -716,5 +810,6 @@ module.exports = {
   getTextReviewStats,
   getNextTextReviewItem,
   approveTextReview,
+  approveAllDemoFpdTextReviews,
   rejectTextReview,
 };

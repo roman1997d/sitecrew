@@ -26,6 +26,7 @@ const {
   getTextReviewStats,
   getNextTextReviewItem,
   approveTextReview,
+  approveAllDemoFpdTextReviews,
   rejectTextReview,
   getLearnModeEnabled,
   setLearnModeEnabled,
@@ -1458,6 +1459,18 @@ router.post('/text-review/approve', asyncHandler(async (req, res) => {
     action: 'text_review.approved',
     entityType: data.entityType,
     entityId: data.entityId,
+  });
+  res.json(data);
+}));
+
+router.post('/text-review/approve-demo-fpd', asyncHandler(async (req, res) => {
+  const data = await approveAllDemoFpdTextReviews();
+  await logAudit({
+    actorId: req.user.id,
+    action: 'text_review.approve_demo_fpd',
+    entityType: 'content_scan',
+    entityId: null,
+    metadata: { total: data.total, byType: data.byType },
   });
   res.json(data);
 }));

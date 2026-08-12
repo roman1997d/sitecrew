@@ -55,6 +55,7 @@
   const adminTextReviewRiskOnlyBtn = document.getElementById('adminTextReviewRiskOnlyBtn');
   const adminTextReviewLearnModeBtn = document.getElementById('adminTextReviewLearnModeBtn');
   const adminTextReviewRescanBtn = document.getElementById('adminTextReviewRescanBtn');
+  const adminTextReviewApproveDemoBtn = document.getElementById('adminTextReviewApproveDemoBtn');
   const adminTextReviewLearnHint = document.getElementById('adminTextReviewLearnHint');
   const adminTextReviewLearnedTermsMeta = document.getElementById('adminTextReviewLearnedTermsMeta');
   const adminTextReviewLearnModal = document.getElementById('adminTextReviewLearnModal');
@@ -4235,6 +4236,34 @@
     }
   }
 
+  async function handleTextReviewApproveAllDemo() {
+    if (textReviewBusy) {
+      return;
+    }
+
+    if (!window.confirm('Approve all pending AI Scan items from demo users/companies (email ends with .fpd)?')) {
+      return;
+    }
+
+    textReviewBusy = true;
+    if (adminTextReviewApproveDemoBtn) {
+      adminTextReviewApproveDemoBtn.disabled = true;
+    }
+
+    try {
+      const data = await apiRequest('/api/admin/text-review/approve-demo-fpd', { method: 'POST' });
+      await loadAiScanSection();
+      showAlert(`Approved ${data.total || 0} demo record(s).`, 'success');
+    } catch (error) {
+      showAlert(error.message);
+    } finally {
+      textReviewBusy = false;
+      if (adminTextReviewApproveDemoBtn) {
+        adminTextReviewApproveDemoBtn.disabled = false;
+      }
+    }
+  }
+
   async function toggleTextReviewLearnMode() {
     try {
       const data = await apiRequest('/api/admin/text-review/settings', {
@@ -4374,6 +4403,7 @@
   });
   adminTextReviewLearnModeBtn?.addEventListener('click', toggleTextReviewLearnMode);
   adminTextReviewRescanBtn?.addEventListener('click', handleTextReviewRescanAll);
+  adminTextReviewApproveDemoBtn?.addEventListener('click', handleTextReviewApproveAllDemo);
   adminTextReviewLearnedListBtn?.addEventListener('click', openLearnedTermsListModal);
   adminTextReviewLearnedAddForm?.addEventListener('submit', saveCustomLearnedTerms);
   adminTextReviewLearnedListModal?.querySelectorAll('[data-text-review-learned-list-close]').forEach((element) => {
