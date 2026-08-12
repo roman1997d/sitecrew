@@ -58,41 +58,6 @@
   </div>
 </section>
 
-<!-- How it works -->
-<section class="section section-how" id="how-it-works">
-  <div class="site-container">
-    <div class="section-header">
-      <span class="section-eyebrow">Simple process</span>
-      <h2 class="section-title">How SiteCrew works</h2>
-      <p class="section-desc">Two paths. One platform. Get started in minutes.</p>
-    </div>
-    <div class="row g-4">
-      <div class="col-md-6">
-        <div class="how-card how-card-worker">
-          <div class="how-card-icon"><i class="bi bi-person-hard-hat"></i></div>
-          <h3>For Workers</h3>
-          <ul class="how-steps">
-            <li><span class="step-num">1</span> Create your profile</li>
-            <li><span class="step-num">2</span> Set your availability</li>
-            <li><span class="step-num">3</span> Get hired</li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="how-card how-card-company">
-          <div class="how-card-icon"><i class="bi bi-building"></i></div>
-          <h3>For Companies</h3>
-          <ul class="how-steps">
-            <li><span class="step-num">1</span> Post a job or project</li>
-            <li><span class="step-num">2</span> Find matched workers</li>
-            <li><span class="step-num">3</span> Hire instantly</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- Latest Jobs -->
 <section class="section section-jobs" id="jobs">
   <div class="site-container">
@@ -137,6 +102,50 @@
     </div>
     <div class="text-center">
       <a href="/jobs" class="btn-sc btn-sc-outline">View all jobs <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="section section-how" id="how-it-works">
+  <div class="how-bg" aria-hidden="true"></div>
+  <div class="site-container">
+    <div class="section-header how-header how-reveal" data-how-reveal>
+      <span class="section-eyebrow">Simple process</span>
+      <h2 class="section-title">How SiteCrew works</h2>
+      <p class="section-desc">Two clear paths. One platform. Get started in minutes — no agencies, no waiting.</p>
+    </div>
+
+    <div class="how-grid">
+      <article class="how-card how-card-worker how-reveal" data-how-reveal style="--how-delay: 0.08s">
+        <div class="how-card-top">
+          <div class="how-card-icon" aria-hidden="true"><i class="bi bi-person-hard-hat"></i></div>
+          <p class="how-card-kicker">Workers</p>
+          <h3>For Workers</h3>
+          <p class="how-card-lead">Show your trade, stay available, and get hired directly by UK companies.</p>
+        </div>
+        <ol class="how-steps">
+          <li style="--step: 1"><span class="step-num">1</span><span class="step-copy"><strong>Create your profile</strong><em>Add trade, certificates and locations.</em></span></li>
+          <li style="--step: 2"><span class="step-num">2</span><span class="step-copy"><strong>Set your availability</strong><em>Let companies know when you can start.</em></span></li>
+          <li style="--step: 3"><span class="step-num">3</span><span class="step-copy"><strong>Get hired</strong><em>Apply to roles and connect directly.</em></span></li>
+        </ol>
+        <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-blue btn-sc-sm how-card-cta">Join as Worker</a>
+      </article>
+
+      <article class="how-card how-card-company how-reveal" data-how-reveal style="--how-delay: 0.18s">
+        <div class="how-card-top">
+          <div class="how-card-icon" aria-hidden="true"><i class="bi bi-building"></i></div>
+          <p class="how-card-kicker">Companies</p>
+          <h3>For Companies</h3>
+          <p class="how-card-lead">Post roles, review matched workers, and hire the right people faster.</p>
+        </div>
+        <ol class="how-steps">
+          <li style="--step: 1"><span class="step-num">1</span><span class="step-copy"><strong>Post a job or project</strong><em>Set trade, location, rate and start date.</em></span></li>
+          <li style="--step: 2"><span class="step-num">2</span><span class="step-copy"><strong>Find matched workers</strong><em>See profiles that fit your requirements.</em></span></li>
+          <li style="--step: 3"><span class="step-num">3</span><span class="step-copy"><strong>Hire instantly</strong><em>Message and confirm — no middlemen.</em></span></li>
+        </ol>
+        <a href="/login?mode=register&role=company" class="btn-sc btn-sc-cta btn-sc-sm how-card-cta">Join as Company</a>
+      </article>
     </div>
   </div>
 </section>

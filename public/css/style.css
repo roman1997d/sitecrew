@@ -397,88 +397,284 @@ main { flex: 1; }
 }
 
 /* How it works */
-.section-how { background: var(--surface); }
+.section-how {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #071525 0%, #0B1F3B 45%, #102848 100%);
+  color: #E2E8F0;
+}
+
+.section-how .how-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 15% 20%, rgba(37, 99, 235, 0.22), transparent 60%),
+    radial-gradient(ellipse 45% 40% at 88% 70%, rgba(245, 158, 11, 0.16), transparent 55%);
+}
+
+.section-how .site-container {
+  position: relative;
+  z-index: 1;
+}
+
+.section-how .section-eyebrow {
+  color: #93C5FD;
+  background: rgba(37, 99, 235, 0.18);
+  border: 1px solid rgba(147, 197, 253, 0.2);
+}
+
+.section-how .section-title {
+  color: #fff;
+}
+
+.section-how .section-desc {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
 
 .how-card {
-  border-radius: 20px;
-  padding: 36px 32px;
+  border-radius: 22px;
+  padding: 32px 28px 28px;
   height: 100%;
   position: relative;
   overflow: hidden;
-  transition: transform 0.25s, box-shadow 0.25s;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.how-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), transparent 42%);
+  pointer-events: none;
 }
 
 .how-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+  transform: translateY(-8px);
+  box-shadow:
+    0 26px 56px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .how-card-worker {
-  background: linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 100%);
-  border: 1px solid rgba(37, 99, 235, 0.15);
+  background: linear-gradient(160deg, #12263f 0%, #0d1f38 55%, #0a1830 100%);
+}
+
+.how-card-worker:hover {
+  border-color: rgba(96, 165, 250, 0.45);
 }
 
 .how-card-company {
-  background: linear-gradient(160deg, #FFFBEB 0%, #FEF3C7 100%);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: linear-gradient(160deg, #2a1c0a 0%, #1c160c 55%, #14100a 100%);
+}
+
+.how-card-company:hover {
+  border-color: rgba(251, 191, 36, 0.45);
+}
+
+.how-card-top {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 22px;
 }
 
 .how-card-icon {
-  width: 56px; height: 56px;
+  width: 58px;
+  height: 58px;
   border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 26px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+}
+
+.how-card.is-visible .how-card-icon {
+  animation: howIconPop 0.55s ease both;
+  animation-delay: var(--how-delay, 0s);
 }
 
 .how-card-worker .how-card-icon {
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  background: linear-gradient(135deg, #1d4ed8, #2563eb 55%, #06b6d4);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.4);
 }
 
 .how-card-company .how-card-icon {
-  background: linear-gradient(135deg, var(--orange), var(--orange-hot));
-  color: var(--navy);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #d97706, #f59e0b 55%, #fbbf24);
+  color: #0B1F3B;
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.35);
+}
+
+.how-card-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.55);
 }
 
 .how-card h3 {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--navy);
-  margin-bottom: 24px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
 }
 
-.how-steps { list-style: none; padding: 0; margin: 0; }
+.how-card-lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.how-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+}
 
 .how-steps li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
-  margin-bottom: 16px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #E2E8F0;
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.how-card.is-visible .how-steps li {
+  animation: howStepIn 0.5s ease forwards;
+  animation-delay: calc(var(--how-delay, 0s) + (var(--step, 1) * 0.12s) + 0.12s);
 }
 
 .step-num {
-  width: 32px; height: 32px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 13px;
   font-weight: 800;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .how-card-worker .step-num {
-  background: var(--blue);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   color: #fff;
 }
 
 .how-card-company .step-num {
-  background: var(--orange);
-  color: var(--navy);
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #0B1F3B;
+}
+
+.step-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.step-copy strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.step-copy em {
+  font-style: normal;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(226, 232, 240, 0.62);
+}
+
+.how-card-cta {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.how-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--how-delay, 0s);
+}
+
+.how-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes howStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes howIconPop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  60% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .how-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .how-reveal,
+  .how-card,
+  .how-steps li,
+  .how-card-icon {
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 /* Jobs */
