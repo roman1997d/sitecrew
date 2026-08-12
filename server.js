@@ -1201,28 +1201,25 @@ async function renderPublicJobsPage(req, res, options = {}) {
   const landing = options.landing || null;
   const variant = options.variant === 'sitejobs' ? 'sitejobs' : 'jobs';
   const basePath = variant === 'sitejobs' ? '/sitejobs' : '/jobs';
-  const jobs = await fetchFilteredPublicJobs(filters);
+  // Sitejobs is a search landing: show live total, send searches to /jobs for results.
+  const jobs = variant === 'sitejobs'
+    ? await fetchFilteredPublicJobs()
+    : await fetchFilteredPublicJobs(filters);
 
   let pageMeta;
   if (landing) {
     pageMeta = getLandingSeo(landing, jobs.length);
   } else if (variant === 'sitejobs') {
-    const hasFilters = Boolean(filters.q || filters.trade || filters.city);
-    const filterLabel = [filters.trade, filters.city, filters.q].filter(Boolean).join(' · ');
     pageMeta = {
-      path: buildJobsListPath(filters, basePath),
-      formAction: basePath,
-      eyebrow: hasFilters ? 'Search results' : 'Find work',
-      heading: hasFilters ? `Find construction jobs: ${filterLabel}` : 'Find Construction Jobs in the UK',
-      intro: hasFilters
-        ? `Search results for ${filterLabel}. Find construction jobs from verified UK companies and apply directly on SiteCrew.`
-        : 'Find construction jobs in the UK from verified companies. Compare live site roles, day rates and locations — then apply with a free SiteCrew worker account.',
-      title: hasFilters
-        ? `Find ${filterLabel} construction jobs in the UK | SiteCrew`
-        : 'Find Construction Jobs in the UK | SiteCrew',
-      description: hasFilters
-        ? `Find construction jobs matching ${filterLabel} across the UK on SiteCrew. Browse verified employers and apply directly — no agencies.`
-        : 'Find construction jobs in the UK on SiteCrew. Browse live site roles from verified companies, check rates and locations, and apply directly as a tradesperson.',
+      path: basePath,
+      formAction: '/jobs',
+      hideJobListings: true,
+      jobOffersCount: jobs.length,
+      eyebrow: 'Find work',
+      heading: 'Find Construction Jobs in the UK',
+      intro: 'Use the search and filters below to find construction jobs in the UK. SiteCrew lists live site roles from verified companies — apply directly with a free worker account.',
+      title: 'Find Construction Jobs in the UK | SiteCrew',
+      description: 'Find construction jobs in the UK on SiteCrew. Search by trade and location, see how many offers are live right now, and apply directly — no agencies.',
       breadcrumbName: 'Find Construction Jobs',
     };
   } else {
@@ -1244,7 +1241,8 @@ async function renderPublicJobsPage(req, res, options = {}) {
     };
   }
 
-  const listSchema = getJobItemListSchema(jobs, pageMeta.heading);
+  const hideJobListings = Boolean(pageMeta.hideJobListings);
+  const listSchema = hideJobListings ? null : getJobItemListSchema(jobs, pageMeta.heading);
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: pageMeta.breadcrumbName || 'Jobs', path: basePath },
@@ -1265,6 +1263,15 @@ async function renderPublicJobsPage(req, res, options = {}) {
       '@type': 'Thing',
       name: 'UK construction jobs',
     },
+    ...(hideJobListings && Number.isFinite(pageMeta.jobOffersCount)
+      ? {
+          mainEntity: {
+            '@type': 'ItemList',
+            name: 'Open construction job offers on SiteCrew',
+            numberOfItems: pageMeta.jobOffersCount,
+          },
+        }
+      : {}),
   };
   const jsonLd = [
     getBreadcrumbSchema(breadcrumbItems),
@@ -1282,9 +1289,9 @@ async function renderPublicJobsPage(req, res, options = {}) {
       robots: 'index, follow',
       jsonLd,
     }),
-    jobs,
+    jobs: hideJobListings ? [] : jobs,
     page: pageMeta,
-    filters,
+    filters: hideJobListings ? { q: '', trade: '', city: '' } : filters,
     tradeLinks: options.showBrowseLinks === false ? [] : getTradeBrowseLinks(),
     cityLinks: options.showBrowseLinks === false ? [] : getCityBrowseLinks(),
   });

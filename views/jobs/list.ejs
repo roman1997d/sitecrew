@@ -44,7 +44,23 @@
       </div>
     <% } %>
 
-    <% if (!jobs.length) { %>
+    <% if (page.hideJobListings) { %>
+      <div class="sitejobs-brand-block">
+        <img
+          src="/assets/logo.png"
+          alt="SiteCrew"
+          class="sitejobs-logo"
+          width="220"
+          height="64"
+          loading="eager"
+          decoding="async"
+        >
+        <p class="sitejobs-offers-count">
+          <%= Number(page.jobOffersCount) || 0 %> job offer<%= Number(page.jobOffersCount) === 1 ? '' : 's' %> available at the moment
+        </p>
+        <a href="/jobs" class="btn-sc btn-sc-blue btn-sc-sm">Browse all jobs</a>
+      </div>
+    <% } else if (!jobs.length) { %>
       <div class="public-jobs-empty">
         <h2>No matching jobs right now</h2>
         <p>Try another trade or location, or register as a worker to get matched when new roles go live.</p>

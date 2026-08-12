@@ -1560,6 +1560,37 @@ main { flex: 1; }
   color: var(--text-muted);
 }
 
+.sitejobs-brand-block {
+  margin: 40px auto 16px;
+  max-width: 520px;
+  text-align: center;
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  padding: 36px 28px;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 0%, rgba(37, 99, 235, 0.12), transparent 60%),
+    linear-gradient(180deg, #FFFFFF 0%, #F4F7FB 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 32px rgba(11, 31, 59, 0.08);
+}
+
+.sitejobs-logo {
+  width: min(220px, 70%);
+  height: auto;
+  display: block;
+}
+
+.sitejobs-offers-count {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  line-height: 1.35;
+}
+
 .public-job-company a,
 .public-job-detail-head a {
   color: inherit;
