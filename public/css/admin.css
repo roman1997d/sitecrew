@@ -2416,6 +2416,28 @@
   font-size: 15px;
 }
 
+.admin-email-control-actions {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.admin-email-control-actions .admin-primary-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  line-height: 1.4;
+  white-space: normal;
+  height: auto;
+  min-height: 48px;
+}
+
+.admin-email-control-actions .admin-primary-btn i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 960px) {
   .admin-shell {
     grid-template-columns: 1fr;
