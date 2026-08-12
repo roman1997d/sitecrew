@@ -1558,8 +1558,7 @@ app.get('/companies', async (req, res) => {
   const hasFilters = Boolean(filters.q || filters.city);
 
   let companies = (await fetchPublicCompanyIndex())
-    .map(mapPublicCompanyCarouselItem)
-    .sort((a, b) => b.openJobCount - a.openJobCount || a.name.localeCompare(b.name));
+    .map(mapPublicCompanyCarouselItem);
 
   if (hasFilters) {
     companies = companies.filter((company) => {
@@ -1572,6 +1571,20 @@ app.get('/companies', async (req, res) => {
       return matchesQuery && matchesCity;
     });
   }
+
+  // Show only the top 9 companies, highest ratings first.
+  companies = companies
+    .sort((a, b) => {
+      const ratingA = a.ratingAverage != null ? Number(a.ratingAverage) : -1;
+      const ratingB = b.ratingAverage != null ? Number(b.ratingAverage) : -1;
+      if (ratingB !== ratingA) return ratingB - ratingA;
+      const reviewsA = Number(a.ratingCount || 0);
+      const reviewsB = Number(b.ratingCount || 0);
+      if (reviewsB !== reviewsA) return reviewsB - reviewsA;
+      if (b.openJobCount !== a.openJobCount) return b.openJobCount - a.openJobCount;
+      return a.name.localeCompare(b.name);
+    })
+    .slice(0, 9);
 
   const pagePath = (() => {
     const params = new URLSearchParams();
@@ -1586,9 +1599,9 @@ app.get('/companies', async (req, res) => {
     '@type': 'ItemList',
     name: hasFilters
       ? `Construction companies matching your search`
-      : 'Popular construction companies on SiteCrew',
+      : 'Top-rated construction companies on SiteCrew',
     numberOfItems: companies.length,
-    itemListElement: companies.slice(0, 24).map((company, index) => {
+    itemListElement: companies.map((company, index) => {
       const item = {
         '@type': 'ListItem',
         position: index + 1,
