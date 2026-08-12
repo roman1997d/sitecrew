@@ -1787,6 +1787,228 @@ main { flex: 1; }
   font-size: 0.92rem;
 }
 
+/* Salary guide (Indeed-style) */
+.salaries-page {
+  padding: 0;
+}
+
+.salaries-hero {
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(37, 99, 235, 0.35), transparent 55%),
+    linear-gradient(135deg, #0B1F3B 0%, #15325C 55%, #1d4ed8 120%);
+  color: #fff;
+  padding: calc(var(--nav-h) + 48px) 0 64px;
+  border-bottom-right-radius: 48px;
+}
+
+.salaries-hero-inner {
+  max-width: 760px;
+  text-align: left;
+}
+
+.salaries-hero .section-eyebrow {
+  color: #BFDBFE;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.salaries-hero .section-title {
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.salaries-hero .section-desc {
+  color: rgba(255, 255, 255, 0.86);
+  margin: 0 0 28px;
+  max-width: 560px;
+  text-align: left;
+}
+
+.salaries-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  max-width: 640px;
+}
+
+.salaries-search-field {
+  position: relative;
+  margin: 0;
+}
+
+.salaries-search-field i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748B;
+}
+
+.salaries-search-field input {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 16px 18px 16px 44px;
+  font: inherit;
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+}
+
+.salaries-search-field input:focus {
+  outline: 2px solid rgba(251, 191, 36, 0.7);
+  outline-offset: 2px;
+}
+
+.salaries-search-btn {
+  border-radius: 999px;
+  padding: 14px 24px;
+  white-space: nowrap;
+}
+
+.salaries-body {
+  background: #0a1220;
+  color: #E2E8F0;
+  padding: 48px 0 80px;
+  margin-top: -24px;
+}
+
+.salaries-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px 28px;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.salaries-subtitle {
+  margin: 0 0 8px;
+  font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+  font-weight: 800;
+  color: #F8FAFC;
+  letter-spacing: -0.02em;
+}
+
+.salaries-note {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.62);
+  font-size: 0.92rem;
+}
+
+.salaries-trade-filter {
+  display: grid;
+  gap: 6px;
+  min-width: min(280px, 100%);
+}
+
+.salaries-trade-filter label {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.salaries-trade-filter select {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: #111827;
+  color: #F8FAFC;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.salaries-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.salaries-card {
+  background: #fff;
+  color: var(--text);
+  border-radius: 16px;
+  padding: 22px 20px;
+  display: grid;
+  gap: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.salaries-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+}
+
+.salaries-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+}
+
+.salaries-card-rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #2563EB;
+  font-weight: 750;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.salaries-card-rate:hover {
+  text-decoration: underline;
+}
+
+.salaries-card-annual {
+  margin: 0;
+  color: #64748B;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.salaries-card-jobs {
+  margin-top: 6px;
+  color: #64748B;
+  font-size: 0.92rem;
+  font-weight: 650;
+  text-decoration: underline;
+}
+
+.salaries-card-jobs:hover {
+  color: var(--navy);
+}
+
+.salaries-cta {
+  margin-top: 48px;
+}
+
+.salaries-cta p {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+@media (max-width: 991px) {
+  .salaries-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .salaries-search {
+    grid-template-columns: 1fr;
+  }
+
+  .salaries-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .salaries-hero {
+    border-bottom-right-radius: 28px;
+    padding-top: calc(var(--nav-h) + 32px);
+  }
+}
+
 /* Find companies (Indeed-style hub) */
 .visually-hidden {
   position: absolute;

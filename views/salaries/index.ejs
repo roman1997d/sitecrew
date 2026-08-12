@@ -1,0 +1,88 @@
+<%- include('../partials/header', { seo: seo }) %>
+
+<section class="section salaries-page">
+  <div class="salaries-hero">
+    <div class="site-container salaries-hero-inner">
+      <span class="section-eyebrow">Salary guide</span>
+      <h1 class="section-title">Discover your earning potential</h1>
+      <p class="section-desc">
+        Explore UK construction day rates and estimated annual earnings by trade — then find open jobs on SiteCrew.
+      </p>
+
+      <form class="salaries-search" method="get" action="/salaries" role="search">
+        <label class="salaries-search-field">
+          <span class="visually-hidden">Trade or job title</span>
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input
+            type="search"
+            name="q"
+            value="<%= filters.q || '' %>"
+            placeholder="Start your search here! e.g. Electrician"
+            autocomplete="off"
+          >
+        </label>
+        <button type="submit" class="btn-sc btn-sc-blue salaries-search-btn">Search</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="salaries-body">
+    <div class="site-container">
+      <div class="salaries-toolbar">
+        <div>
+          <h2 class="salaries-subtitle">Browse top-paying construction trades</h2>
+          <p class="salaries-note">Day rates from SiteCrew market averages. Annual figure assumes <%= workingDays %> working days.</p>
+        </div>
+
+        <form class="salaries-trade-filter" method="get" action="/salaries">
+          <% if (filters.q) { %><input type="hidden" name="q" value="<%= filters.q %>"><% } %>
+          <label for="salariesTradeSelect">Choose a trade</label>
+          <select id="salariesTradeSelect" name="trade" onchange="this.form.submit()">
+            <option value="">All trades</option>
+            <% tradeOptions.forEach(function(trade) { %>
+              <option value="<%= trade %>" <%= filters.trade === trade ? 'selected' : '' %>><%= trade %></option>
+            <% }); %>
+          </select>
+        </form>
+      </div>
+
+      <% if (!salaries.length) { %>
+        <div class="public-jobs-empty">
+          <h2>No matching trades found</h2>
+          <p>Try another trade name, or browse all construction salary guides.</p>
+          <a href="/salaries" class="btn-sc btn-sc-blue btn-sc-sm">Clear search</a>
+        </div>
+      <% } else { %>
+        <div class="salaries-grid">
+          <% salaries.forEach(function(item) { %>
+            <article class="salaries-card">
+              <h3><%= item.trade %></h3>
+              <% if (item.dayRateLabel) { %>
+                <a class="salaries-card-rate" href="<%= item.jobsPath %>">
+                  Average day rate <%= item.dayRateLabel %>
+                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
+              <% } else if (item.hourlyRateLabel) { %>
+                <a class="salaries-card-rate" href="<%= item.jobsPath %>">
+                  Average hourly rate <%= item.hourlyRateLabel %>
+                  <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
+              <% } %>
+              <% if (item.annualEstimateLabel) { %>
+                <p class="salaries-card-annual">≈ <%= item.annualEstimateLabel %> per year</p>
+              <% } %>
+              <a class="salaries-card-jobs" href="<%= item.jobsPath %>">Job openings</a>
+            </article>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <div class="public-jobs-cta salaries-cta">
+        <p>Ready to earn on site? Create a free worker profile and apply to verified UK companies.</p>
+        <a href="/login?mode=register&role=worker" class="btn-sc btn-sc-cta">Join as worker</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

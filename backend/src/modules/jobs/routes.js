@@ -215,6 +215,16 @@ router.get('/trades/search', asyncHandler(async (req, res) => {
   res.json({ trades: result.rows });
 }));
 
+router.get('/trades/rates/public', asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    `SELECT trade_name, hourly_rate, day_rate, sqm_rate, source_label, updated_at
+     FROM construction_trade_rates
+     WHERE day_rate IS NOT NULL OR hourly_rate IS NOT NULL
+     ORDER BY COALESCE(day_rate, 0) DESC, trade_name ASC`
+  );
+  res.json({ rates: result.rows });
+}));
+
 router.get('/trades/rates', requireAuth, requireRole('worker', 'company', 'admin'), asyncHandler(async (req, res) => {
   const names = String(req.query.names || '')
     .split(',')

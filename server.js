@@ -39,6 +39,10 @@ const {
   mapPublicCompanyCarouselItem,
 } = require('./utils/publicCompanies');
 const {
+  WORKING_DAYS_PER_YEAR,
+  mapPublicSalaryCard,
+} = require('./utils/publicSalaries');
+const {
   loadBlogPosts,
   getBlogPostBySlug,
   getBlogSitemapEntries,
@@ -1545,6 +1549,104 @@ app.get('/trades', (req, res) => {
       ]),
     }),
     tradeLinks: getTradeBrowseLinks(),
+  });
+});
+
+async function fetchPublicTradeRates() {
+  try {
+    const response = await fetch(`${API_INTERNAL_URL}/api/jobs/trades/rates/public`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data.rates) ? data.rates : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+app.get('/salaries', async (req, res) => {
+  const filters = {
+    q: String(req.query.q || '').trim(),
+    trade: String(req.query.trade || '').trim(),
+  };
+  const queryLower = filters.q.toLowerCase();
+
+  let rates = await fetchPublicTradeRates();
+  const tradeOptions = rates.map((row) => row.trade_name).sort((a, b) => a.localeCompare(b));
+
+  if (filters.trade) {
+    rates = rates.filter((row) => String(row.trade_name) === filters.trade);
+  }
+  if (queryLower) {
+    rates = rates.filter((row) => String(row.trade_name || '').toLowerCase().includes(queryLower));
+  }
+
+  const salaries = rates.map(mapPublicSalaryCard);
+  const pageParams = new URLSearchParams();
+  if (filters.q) pageParams.set('q', filters.q);
+  if (filters.trade) pageParams.set('trade', filters.trade);
+  const pageQuery = pageParams.toString();
+  const pagePath = pageQuery ? `/salaries?${pageQuery}` : '/salaries';
+
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'UK construction trade day rates on SiteCrew',
+    numberOfItems: salaries.length,
+    itemListElement: salaries.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Occupation',
+        name: item.trade,
+        occupationLocation: {
+          '@type': 'Country',
+          name: 'United Kingdom',
+        },
+        estimatedSalary: item.dayRate != null
+          ? {
+              '@type': 'MonetaryAmountDistribution',
+              name: 'Average day rate',
+              currency: 'GBP',
+              duration: 'P1D',
+              median: item.dayRate,
+            }
+          : undefined,
+        url: buildSeo({ path: item.jobsPath }).canonical,
+      },
+    })),
+  };
+
+  setPublicHtmlCache(res, 'dynamic');
+
+  res.render('salaries/index', {
+    seo: buildSeo({
+      path: pagePath,
+      title: filters.trade || filters.q
+        ? `${filters.trade || filters.q} Day Rates UK | SiteCrew Salary Guide`
+        : 'Construction Day Rates & Salary Guide UK | SiteCrew',
+      description: filters.trade || filters.q
+        ? `Check ${filters.trade || filters.q} day rates in the UK and find open construction jobs on SiteCrew.`
+        : 'Discover your earning potential in UK construction. Browse SiteCrew day rates by trade, estimated yearly pay, and open job listings — no agencies.',
+      robots: 'index, follow',
+      jsonLd: [
+        getBreadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Salary guide', path: '/salaries' },
+        ]),
+        {
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'Discover your earning potential',
+          description: 'UK construction salary guide with day rates by trade on SiteCrew.',
+          url: buildSeo({ path: pagePath }).canonical,
+        },
+        itemListSchema,
+      ],
+    }),
+    salaries,
+    filters,
+    tradeOptions,
+    workingDays: WORKING_DAYS_PER_YEAR,
   });
 });
 
