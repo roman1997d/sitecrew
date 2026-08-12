@@ -1,39 +1,123 @@
 <%- include('../partials/header', { seo: seo }) %>
 
-<section class="section public-company-page">
-  <div class="site-container">
-    <div class="section-header">
-      <span class="section-eyebrow">Hiring companies</span>
-      <h1 class="section-title">Verified construction companies</h1>
-      <p class="section-desc">Browse approved UK employers on SiteCrew and view their open construction jobs.</p>
+<section class="section companies-find-page">
+  <div class="companies-find-hero">
+    <div class="site-container companies-find-hero-inner">
+      <span class="section-eyebrow">Company reviews</span>
+      <h1 class="section-title">Find great construction companies to work for</h1>
+      <p class="section-desc">
+        Get access to verified UK construction employers on SiteCrew — ratings from workers, open jobs, and direct hiring.
+      </p>
+
+      <form class="companies-find-search" method="get" action="/companies" role="search">
+        <label class="companies-find-search-field">
+          <span class="visually-hidden">Company name or trade</span>
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input
+            type="search"
+            name="q"
+            value="<%= filters.q || '' %>"
+            placeholder="Company name or trade"
+            autocomplete="organization"
+          >
+        </label>
+        <label class="companies-find-search-field companies-find-search-city">
+          <span class="visually-hidden">City</span>
+          <i class="bi bi-geo-alt" aria-hidden="true"></i>
+          <input
+            type="text"
+            name="city"
+            value="<%= filters.city || '' %>"
+            placeholder="City (e.g. London)"
+            autocomplete="address-level2"
+          >
+        </label>
+        <button type="submit" class="btn-sc btn-sc-blue companies-find-search-btn">Find Companies</button>
+      </form>
+
+      <p class="companies-find-secondary">
+        Looking for work instead?
+        <a href="/jobs">Browse open construction jobs</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="site-container companies-find-body">
+    <div class="companies-find-heading-row">
+      <h2 class="companies-find-subtitle">
+        <%= hasFilters ? 'Matching companies' : 'Popular companies' %>
+      </h2>
+      <p class="companies-find-count">
+        <%= totalCompanies %> compan<%= totalCompanies === 1 ? 'y' : 'ies' %>
+        <%= hasFilters ? 'found' : 'hiring on SiteCrew' %>
+      </p>
     </div>
 
     <% if (!companies.length) { %>
-      <div class="public-jobs-empty">
-        <h2>No verified companies listed yet</h2>
-        <p>Check back soon or browse open jobs across the UK.</p>
-        <a href="/jobs" class="btn-sc btn-sc-cta">Browse jobs</a>
+      <div class="public-jobs-empty companies-find-empty">
+        <h2>No matching companies right now</h2>
+        <p>Try another company name, trade or city — or browse all verified employers.</p>
+        <a href="/companies" class="btn-sc btn-sc-blue btn-sc-sm">Clear search</a>
       </div>
     <% } else { %>
-      <div class="hub-company-list">
+      <div class="companies-find-grid">
         <% companies.forEach(function(company) { %>
-          <article class="hub-company-card">
-            <div class="hub-company-main">
+          <%
+            const ratingValue = company.ratingAverage != null ? Number(company.ratingAverage) : 0;
+            const fullStars = Math.round(ratingValue);
+          %>
+          <article class="companies-find-card">
+            <a href="/companies/<%= company.slug %>" class="companies-find-card-main">
               <% if (company.logo) { %>
-                <img src="<%= company.logo %>" alt="<%= company.name %> logo" class="public-company-logo-img" loading="lazy" decoding="async" width="64" height="64">
+                <img
+                  src="<%= company.logo %>"
+                  alt="<%= company.name %> logo"
+                  class="companies-find-logo"
+                  loading="lazy"
+                  decoding="async"
+                  width="56"
+                  height="56"
+                >
               <% } else { %>
-                <div class="public-company-logo"><%= company.initials %></div>
+                <div class="companies-find-logo companies-find-logo-fallback" aria-hidden="true"><%= company.initials %></div>
               <% } %>
-              <div>
-                <h2><a href="/companies/<%= company.slug %>"><%= company.name %></a></h2>
-                <p><%= company.city %><% if (company.openJobCount) { %> · <%= company.openJobCount %> open job<%= company.openJobCount === 1 ? '' : 's' %><% } %></p>
+              <div class="companies-find-card-copy">
+                <h3><%= company.name %></h3>
+                <p class="companies-find-location">
+                  <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                  <%= company.city || 'United Kingdom' %>
+                </p>
+                <div class="companies-find-rating" aria-label="<%= company.ratingCount ? (ratingValue + ' out of 5 from ' + company.ratingCount + ' reviews') : 'No reviews yet' %>">
+                  <span class="companies-find-stars" aria-hidden="true">
+                    <% for (let i = 1; i <= 5; i += 1) { %>
+                      <i class="bi <%= i <= fullStars && company.ratingCount ? 'bi-star-fill' : 'bi-star' %>"></i>
+                    <% } %>
+                  </span>
+                  <% if (company.ratingCount) { %>
+                    <span class="companies-find-rating-meta">
+                      <%= ratingValue.toFixed(1) %> · <%= company.ratingCount %> review<%= company.ratingCount === 1 ? '' : 's' %>
+                    </span>
+                  <% } else { %>
+                    <span class="companies-find-rating-meta">No reviews yet</span>
+                  <% } %>
+                </div>
               </div>
+            </a>
+            <div class="companies-find-card-links">
+              <a href="/companies/<%= company.slug %>">View company</a>
+              <a href="/companies/<%= company.slug %>#jobs">
+                <%= company.openJobCount || 0 %> open job<%= company.openJobCount === 1 ? '' : 's' %>
+              </a>
             </div>
-            <a href="/companies/<%= company.slug %>" class="btn-sc btn-sc-blue btn-sc-sm">View company</a>
           </article>
         <% }); %>
       </div>
     <% } %>
+
+    <div class="public-jobs-cta companies-find-cta">
+      <p>Are you a construction employer? Join SiteCrew and hire verified tradespeople directly.</p>
+      <a href="/login?mode=register&role=company" class="btn-sc btn-sc-outline">Join as company</a>
+    </div>
   </div>
 </section>
 

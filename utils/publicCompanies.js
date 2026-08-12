@@ -130,6 +130,11 @@ function mapPublicCompanyCarouselItem(company) {
     || (company.open_job_count > 0
       ? `${company.open_job_count} open job${company.open_job_count === 1 ? '' : 's'} on SiteCrew.`
       : 'Verified construction company on SiteCrew.');
+  const ratingCount = Number(company.review_count || 0);
+  const ratingAverageRaw = company.average_rating != null ? Number(company.average_rating) : null;
+  const ratingAverage = ratingCount > 0 && Number.isFinite(ratingAverageRaw)
+    ? ratingAverageRaw
+    : null;
 
   return {
     id: company.user_id,
@@ -140,6 +145,8 @@ function mapPublicCompanyCarouselItem(company) {
     logo: company.logo || '',
     initials: getInitials(name),
     openJobCount: Number(company.open_job_count || 0),
+    ratingAverage,
+    ratingCount,
     themeClass: ['img-1', 'img-2', 'img-3', 'img-4', 'img-5', 'img-6'][company.user_id % 6],
   };
 }

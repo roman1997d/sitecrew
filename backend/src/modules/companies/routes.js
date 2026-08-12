@@ -340,9 +340,20 @@ router.get('/public/index', asyncHandler(async (req, res) => {
          FROM jobs j
          WHERE j.company_id = cp.user_id
            AND ${OPEN_WORKER_APPLYABLE_JOB_FILTER}
-       ) AS open_job_count
+       ) AS open_job_count,
+       company_rating.average_rating,
+       company_rating.review_count
      FROM company_profiles cp
      JOIN users u ON u.id = cp.user_id
+     LEFT JOIN (
+       SELECT
+         company_id,
+         ROUND(AVG(rating)::numeric, 1) AS average_rating,
+         COUNT(*)::int AS review_count
+       FROM company_reviews
+       WHERE ${VISIBLE_REVIEW_FILTER}
+       GROUP BY company_id
+     ) company_rating ON company_rating.company_id = cp.user_id
      WHERE u.status = 'active'
        AND cp.verification_status = 'approved'
      ORDER BY open_job_count DESC, cp.company_name ASC

@@ -1549,21 +1549,109 @@ app.get('/trades', (req, res) => {
 });
 
 app.get('/companies', async (req, res) => {
-  const companies = (await fetchPublicCompanyIndex())
+  const filters = {
+    q: String(req.query.q || '').trim(),
+    city: String(req.query.city || '').trim(),
+  };
+  const queryLower = filters.q.toLowerCase();
+  const cityLower = filters.city.toLowerCase();
+  const hasFilters = Boolean(filters.q || filters.city);
+
+  let companies = (await fetchPublicCompanyIndex())
     .map(mapPublicCompanyCarouselItem)
     .sort((a, b) => b.openJobCount - a.openJobCount || a.name.localeCompare(b.name));
 
+  if (hasFilters) {
+    companies = companies.filter((company) => {
+      const haystack = [company.name, company.city, company.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      const matchesQuery = !queryLower || haystack.includes(queryLower);
+      const matchesCity = !cityLower || String(company.city || '').toLowerCase().includes(cityLower);
+      return matchesQuery && matchesCity;
+    });
+  }
+
+  const pagePath = (() => {
+    const params = new URLSearchParams();
+    if (filters.q) params.set('q', filters.q);
+    if (filters.city) params.set('city', filters.city);
+    const query = params.toString();
+    return query ? `/companies?${query}` : '/companies';
+  })();
+
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: hasFilters
+      ? `Construction companies matching your search`
+      : 'Popular construction companies on SiteCrew',
+    numberOfItems: companies.length,
+    itemListElement: companies.slice(0, 24).map((company, index) => {
+      const item = {
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Organization',
+          name: company.name,
+          url: buildSeo({ path: `/companies/${company.slug}` }).canonical,
+          description: company.description || undefined,
+          address: company.city
+            ? {
+                '@type': 'PostalAddress',
+                addressLocality: company.city,
+                addressCountry: 'GB',
+              }
+            : undefined,
+        },
+      };
+      if (company.ratingCount > 0 && company.ratingAverage != null) {
+        item.item.aggregateRating = {
+          '@type': 'AggregateRating',
+          ratingValue: company.ratingAverage,
+          reviewCount: company.ratingCount,
+          bestRating: 5,
+          worstRating: 1,
+        };
+      }
+      return item;
+    }),
+  };
+
+  const webPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Find great construction companies to work for',
+    description: 'Find verified UK construction companies on SiteCrew. Read worker ratings, browse open jobs, and connect directly.',
+    url: buildSeo({ path: pagePath }).canonical,
+  };
+
+  setPublicHtmlCache(res, 'dynamic');
+
   res.render('companies/index', {
     seo: buildSeo({
-      path: '/companies',
-      title: 'Verified Construction Companies | SiteCrew',
-      description: 'Browse verified UK construction companies hiring on SiteCrew. View open jobs and company profiles.',
-      jsonLd: getBreadcrumbSchema([
-        { name: 'Home', path: '/' },
-        { name: 'Companies', path: '/companies' },
-      ]),
+      path: pagePath,
+      title: hasFilters
+        ? `Find construction companies${filters.q ? `: ${filters.q}` : ''}${filters.city ? ` in ${filters.city}` : ''} | SiteCrew`
+        : 'Find Construction Companies in the UK | SiteCrew',
+      description: hasFilters
+        ? `Find construction companies${filters.q ? ` matching “${filters.q}”` : ''}${filters.city ? ` in ${filters.city}` : ''} on SiteCrew. View ratings, profiles and open jobs from verified UK employers.`
+        : 'Find great construction companies to work for in the UK. Browse verified SiteCrew employers, worker ratings and open site jobs — apply directly, no agencies.',
+      robots: 'index, follow',
+      jsonLd: [
+        getBreadcrumbSchema([
+          { name: 'Home', path: '/' },
+          { name: 'Companies', path: '/companies' },
+        ]),
+        webPageSchema,
+        itemListSchema,
+      ],
     }),
     companies,
+    filters,
+    hasFilters,
+    totalCompanies: companies.length,
   });
 });
 
