@@ -1,5 +1,55 @@
 [
   {
+    "slug": "highest-paid-most-sought-after-trades-uk",
+    "title": "Highest Paid and Most Sought-After Trades in the UK (2026)",
+    "description": "A clear look at which UK construction trades pay the most and which skills sites need most right now — with typical day rates and tips to find better work on SiteCrew.",
+    "category": "Pay & rates",
+    "icon": "bi-graph-up-arrow",
+    "publishedAt": "2026-08-18",
+    "updatedAt": "2026-08-18",
+    "sections": [
+      {
+        "heading": "Why trade pay and demand matter now",
+        "paragraphs": [
+          "UK construction still has strong demand for skilled tradespeople, especially on housing, commercial fit-out, and infrastructure. Knowing which trades command higher day rates — and which roles are hardest to fill — helps you plan your next contract, set expectations, or choose a trade path.",
+          "On SiteCrew, companies post live roles with rates and locations, and workers can compare trades on the Trade rates page before applying. This guide summarises the highest paid and most sought-after construction trades across the UK in 2026."
+        ]
+      },
+      {
+        "heading": "Highest paid construction trades in the UK",
+        "paragraphs": [
+          "Based on SiteCrew market averages, leadership and scarce electrical and plumbing skills sit at the top of the pay ladder. Typical day rates look like this: Site Manager around £300/day, Electrician around £260/day, Plumber around £240/day, and Bricklayer around £220/day.",
+          "Carpenters, joiners, and roofers often land near £210/day, while dryliners, plasterers, scaffolders, and tilers commonly sit around £200/day. Groundworkers and painters and decorators are often closer to £170/day, with general labourer roles nearer £120/day depending on site and region.",
+          "These are guide figures, not guarantees. London and the South East often pay more than regional cities, while night shifts, short-notice starts, CSCS level, and ticket requirements can push rates higher. Always check the rate listed on each job before you apply."
+        ]
+      },
+      {
+        "heading": "Most sought-after trades on UK sites",
+        "paragraphs": [
+          "Pay and demand do not always match. Some of the most sought-after trades are those sites struggle to book quickly: electricians, plumbers, bricklayers, dryliners, and scaffolders. Housing and commercial programmes keep pulling these skills week after week.",
+          "Carpenters, joiners, plasterers, and roofers also stay in steady demand on new builds and refurbishment. Groundworkers and plant operators (telehandler, forklift) are frequently needed early in the programme, while site managers remain critical whenever projects scale up.",
+          "If your trade is in high demand, keep your SiteCrew profile complete, list your tickets, and respond quickly to messages. Employers often hire the first suitable worker who is available and verified."
+        ]
+      },
+      {
+        "heading": "What pushes a trade up the list",
+        "paragraphs": [
+          "Shortage of qualified workers is the biggest driver. Trades that need longer training, cards, or compliance (electrics, plumbing, scaffolding) usually stay harder to fill. Project type matters too: fit-out spikes drylining and electrical demand; housebuilding lifts brickwork, groundwork, and joinery.",
+          "Location, travel, and accommodation also change the picture. A role outside your home city may pay more, but after travel time and costs the net rate can look different. Compare a few similar jobs by trade and city before you lock in a rate.",
+          "Use the Trade rates page on SiteCrew for a quick market snapshot, then browse live jobs filtered by trade to see what companies are actually offering this week."
+        ]
+      },
+      {
+        "heading": "How to turn demand into better work",
+        "paragraphs": [
+          "If you already work in a high-pay or high-demand trade, treat your profile like a CV: clear trade tags, cities you can cover, day rate expectations, and up-to-date tickets. Apply early on roles that match your rate band.",
+          "If you are building skills, focus on trades with strong demand and clear progression — for example moving from general labour into groundwork, drylining, or scaffolding with the right cards. Pair training with real site time so employers can see both capability and reliability.",
+          "Start on the jobs page to see open UK construction roles, check Trade rates for guide pay by trade, or register as a worker on SiteCrew to apply directly to verified companies — no agency in the middle."
+        ]
+      }
+    ]
+  },
+  {
     "slug": "find-construction-jobs-uk-without-agency",
     "title": "How to Find Construction Jobs in the UK Without an Agency",
     "description": "A practical guide for UK tradespeople on finding site work directly through platforms like SiteCrew — no recruiter fees, faster applications, and verified employers.",
