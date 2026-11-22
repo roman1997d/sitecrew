@@ -100,7 +100,9 @@ function setAuthMode(mode) {
   loginForm.hidden = isRegister;
   registerForm.hidden = !isRegister;
   heading.textContent = isRegister ? 'Create account' : 'Sign in';
-  subtitle.textContent = isRegister ? 'Join SiteCrew as a worker or company' : 'Please fill your information';
+  subtitle.textContent = isRegister
+    ? 'Join SiteCrew as a worker or company'
+    : 'Access your worker or company account';
 }
 
 function setRegisterFieldState(input, { active, required = active }) {
