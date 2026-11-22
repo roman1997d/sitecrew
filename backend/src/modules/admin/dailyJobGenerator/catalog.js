@@ -213,10 +213,10 @@ const DAY_RATE_DESCRIPTION_TEMPLATES = [
 ];
 
 const PRICE_WORK_DESCRIPTION_TEMPLATES = [
-  'Price-work package for a {trade} in {city} ({region}). Measured work paid {rate}. CSCS required. Output and quality checked against drawings and site programme.',
-  '{company} needs an experienced {trade} on measured rates in {city}. Good run of work, weekly measure and payment. Bring your own tools unless agreed otherwise.',
-  'Busy site in {city} offering {trade} price work at around {rate}. Suitable for productive tradespeople used to measured finishing / boarding / laying work.',
-  'Measured {trade} package across {region}. Rate guide {rate}. Must have recent UK site references and right to work.',
+  'Price-work package for a {trade} in {city} ({region}). Measured work — rate agreed on site by measure. CSCS required. Output and quality checked against drawings and site programme.',
+  '{company} needs an experienced {trade} on measured / price-work rates in {city}. Good run of work, weekly measure and payment. Bring your own tools unless agreed otherwise.',
+  'Busy site in {city} offering {trade} price work. Suitable for productive tradespeople used to measured finishing / boarding / laying work. Exact rate confirmed after site measure.',
+  'Measured {trade} package across {region}. Price work — discuss measure and rate with the site manager. Must have recent UK site references and right to work.',
 ];
 
 const DURATIONS = ['2-4 weeks', '4-6 weeks', '6-8 weeks', '3 months', '6+ months', 'Ongoing'];
@@ -252,17 +252,6 @@ function clamp(value, min, max) {
 
 function roundToFive(value) {
   return Math.round(value / 5) * 5;
-}
-
-function roundMoney(value, { wholeNumbers = false } = {}) {
-  if (wholeNumbers) {
-    return Math.round(value);
-  }
-  return Math.round(value * 2) / 2;
-}
-
-function formatMoney(value) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, '');
 }
 
 function unitLabelForPriceWork(unit) {
@@ -317,20 +306,6 @@ function dayRateForTradeAndRegion(tradeEntry, region) {
   return `£${dayRate}/day`;
 }
 
-function priceWorkRateForTradeAndRegion(tradeEntry, region) {
-  const priceWork = tradeEntry.priceWork;
-  const multiplier = REGION_MULTIPLIERS[region] || 1;
-  const mid = (priceWork.min + priceWork.max) / 2;
-  const jitter = 1 + (Math.random() * 0.1 - 0.05);
-  const wholeNumbers = priceWork.unit === '/1000 bricks' || priceWork.max >= 20;
-  const raw = mid * multiplier * jitter;
-  const value = roundMoney(
-    clamp(raw, priceWork.min, priceWork.max * Math.max(1, multiplier)),
-    { wholeNumbers }
-  );
-  return `£${formatMoney(value)}${priceWork.unit}`;
-}
-
 function rateForTradeAndRegion(tradeEntry, region, { preferPriceWork = null } = {}) {
   const usePriceWork = preferPriceWork == null
     ? shouldUsePriceWork(tradeEntry)
@@ -338,7 +313,7 @@ function rateForTradeAndRegion(tradeEntry, region, { preferPriceWork = null } = 
 
   if (usePriceWork) {
     return {
-      rate: priceWorkRateForTradeAndRegion(tradeEntry, region),
+      rate: 'Price work',
       payType: 'price_work',
       unit: tradeEntry.priceWork.unit,
     };
@@ -372,8 +347,7 @@ function buildJobPayload({ tradeEntry, location, companyName, titleIndex = 0 }) 
     .replace(/\{trade\}/g, tradeEntry.trade)
     .replace(/\{city\}/g, location.name)
     .replace(/\{region\}/g, location.region)
-    .replace(/\{company\}/g, companyName)
-    .replace(/\{rate\}/g, pricing.rate);
+    .replace(/\{company\}/g, companyName);
 
   return {
     title,
