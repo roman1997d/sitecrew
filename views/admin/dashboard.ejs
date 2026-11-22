@@ -602,6 +602,37 @@
           <button type="button" class="admin-danger-btn" id="adminFakePurgeBtn">Purge simulator data</button>
         </div>
 
+        <div class="admin-daily-jobs-panel" id="adminDailyJobsPanel">
+          <header class="admin-section-heading-row">
+            <div>
+              <h3>Daily job generator</h3>
+              <p class="admin-user-readonly-lead">
+                Publishes fresh construction vacancies across the UK every day.
+                Even calendar days create <strong>14</strong> jobs; odd days create <strong>7</strong>.
+                Auto-generated jobs older than <strong>7 days</strong> are removed.
+                Pay bands follow UK market rates (Indeed / recruiter guides).
+              </p>
+            </div>
+          </header>
+
+          <div class="admin-fake-sim-stats" id="adminDailyJobsStats">
+            <p class="admin-empty">Loading daily jobs status...</p>
+          </div>
+
+          <div class="admin-daily-jobs-actions">
+            <button type="button" class="admin-secondary-btn" id="adminDailyJobsToggleBtn">
+              Disable generator
+            </button>
+            <button type="button" class="admin-primary-btn" id="adminDailyJobsRunBtn">
+              <i class="bi bi-lightning-charge"></i> Run today now
+            </button>
+            <button type="button" class="admin-secondary-btn" id="adminDailyJobsForceBtn">
+              Force re-run today
+            </button>
+          </div>
+          <p class="admin-mailbox-hint" id="adminDailyJobsHint">Waiting for status...</p>
+        </div>
+
         <div class="admin-fake-sim-result" id="adminFakeSimResult" hidden></div>
       </section>
 

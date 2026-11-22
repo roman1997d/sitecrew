@@ -2416,6 +2416,25 @@
   padding-left: 18px;
 }
 
+.admin-daily-jobs-panel {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  background: #FFFFFF;
+}
+
+.admin-daily-jobs-panel .admin-section-heading-row {
+  margin-bottom: 14px;
+}
+
+.admin-daily-jobs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
 @media (max-width: 900px) {
   .admin-fake-sim-grid {
     grid-template-columns: 1fr;

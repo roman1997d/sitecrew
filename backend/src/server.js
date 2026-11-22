@@ -2,6 +2,7 @@ const app = require('./app');
 const env = require('./config/env');
 const { purgeDeletedUsersOlderThan24Hours } = require('./utils/deletedUserCleanup');
 const { runScheduledEmailControlJobs } = require('./modules/admin/emailControl');
+const { runDailyJobGenerator } = require('./modules/admin/dailyJobGenerator');
 const { purgeApiLogsByAutoCleanSettings } = require('./utils/apiLogMaintenance');
 
 async function runDeletedUserCleanup() {
@@ -40,6 +41,23 @@ async function runApiLogsAutoClean() {
   }
 }
 
+async function runDailyJobsSchedule() {
+  try {
+    const result = await runDailyJobGenerator();
+    if (result?.skipped) {
+      if (result.reason === 'already_ran_today' && result.deletedJobs > 0) {
+        console.log(`Daily jobs cleanup removed ${result.deletedJobs} expired generated job(s).`);
+      }
+      return;
+    }
+    console.log(
+      `Daily jobs generator created ${result.createdJobs} job(s) for ${result.date} (${result.parity}), deleted ${result.deletedJobs} expired.`
+    );
+  } catch (error) {
+    console.error('Daily jobs generator failed:', error.message);
+  }
+}
+
 app.listen(env.port, () => {
   console.log(`SiteCrew backend API running on http://localhost:${env.port}`);
   runDeletedUserCleanup();
@@ -52,4 +70,8 @@ app.listen(env.port, () => {
   // Auto-clean API logs when enabled (supports 1h retention)
   runApiLogsAutoClean();
   setInterval(runApiLogsAutoClean, 15 * 60 * 1000);
+
+  // Fresh UK construction jobs: 14 on even calendar days, 7 on odd; expire after 7 days
+  runDailyJobsSchedule();
+  setInterval(runDailyJobsSchedule, 60 * 60 * 1000);
 });

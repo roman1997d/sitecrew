@@ -23,6 +23,7 @@ const requireAuth = require('./middleware/auth');
 const requireRole = require('./middleware/requireRole');
 const emailControl = require('./modules/admin/emailControl');
 const adminMailbox = require('./modules/admin/mailbox');
+const dailyJobGenerator = require('./modules/admin/dailyJobGenerator');
 const adminRoutes = require('./modules/admin/routes');
 const { isEmailConfigured } = require('./utils/email');
 const { isRecaptchaConfigured, getRecaptchaPublicConfig } = require('./utils/recaptcha');
@@ -102,6 +103,13 @@ app.use(
   requireAuth,
   requireRole('admin', 'superadmin'),
   adminMailbox.router
+);
+
+app.use(
+  '/api/admin/daily-jobs',
+  requireAuth,
+  requireRole('admin', 'superadmin'),
+  dailyJobGenerator.router
 );
 
 app.use('/api/admin', adminRoutes);

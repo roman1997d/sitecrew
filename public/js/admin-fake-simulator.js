@@ -36,6 +36,13 @@
     return data;
   }
 
+  const dailyJobsStatsEl = document.getElementById('adminDailyJobsStats');
+  const dailyJobsHintEl = document.getElementById('adminDailyJobsHint');
+  const dailyJobsToggleBtn = document.getElementById('adminDailyJobsToggleBtn');
+  const dailyJobsRunBtn = document.getElementById('adminDailyJobsRunBtn');
+  const dailyJobsForceBtn = document.getElementById('adminDailyJobsForceBtn');
+  let dailyJobsStatus = null;
+
   function renderStats(stats) {
     if (!statsEl) return;
     statsEl.innerHTML = `
@@ -46,6 +53,45 @@
     `;
   }
 
+  function renderDailyJobsStatus(status) {
+    dailyJobsStatus = status || null;
+    if (!dailyJobsStatsEl || !status) return;
+
+    dailyJobsStatsEl.innerHTML = `
+      <article class="admin-metric-card ${status.enabled ? 'accent' : ''}">
+        <span>Generator</span>
+        <strong>${status.enabled ? 'ON' : 'OFF'}</strong>
+      </article>
+      <article class="admin-metric-card">
+        <span>Today target (${escapeHtml(status.parity)} day ${escapeHtml(status.dayNumber)})</span>
+        <strong>${escapeHtml(status.targetToday)}</strong>
+      </article>
+      <article class="admin-metric-card">
+        <span>Open generated jobs</span>
+        <strong>${escapeHtml(status.openGeneratedJobs)}</strong>
+      </article>
+      <article class="admin-metric-card">
+        <span>Last run</span>
+        <strong>${escapeHtml(status.lastRunDate || 'Never')} · ${escapeHtml(status.lastCreatedCount || 0)} jobs</strong>
+      </article>
+    `;
+
+    if (dailyJobsToggleBtn) {
+      dailyJobsToggleBtn.textContent = status.enabled ? 'Disable generator' : 'Enable generator';
+    }
+
+    if (dailyJobsHintEl) {
+      const bits = [
+        `Catalog: ${status.catalogTrades} trades`,
+        `Companies: ${status.generatorCompanies}`,
+        `Retention: ${status.retentionDays} days`,
+      ];
+      if (status.alreadyRanToday) bits.push('Already ran today');
+      if (status.lastError) bits.push(`Last error: ${status.lastError}`);
+      dailyJobsHintEl.textContent = bits.join(' · ');
+    }
+  }
+
   function showResult(html, type = 'success') {
     if (!resultEl) return;
     resultEl.hidden = false;
@@ -53,9 +99,21 @@
     resultEl.innerHTML = html;
   }
 
+  async function loadDailyJobsStatus() {
+    const data = await apiRequest('/api/admin/daily-jobs/status');
+    renderDailyJobsStatus(data.status);
+  }
+
   async function loadStats() {
     const data = await apiRequest('/api/admin/fake-simulator/status');
     renderStats(data.stats);
+    try {
+      await loadDailyJobsStatus();
+    } catch (error) {
+      if (dailyJobsStatsEl) {
+        dailyJobsStatsEl.innerHTML = `<p class="admin-empty">${escapeHtml(error.message)}</p>`;
+      }
+    }
   }
 
   window.adminFakeSimulatorLoad = loadStats;
@@ -145,5 +203,79 @@
       purgeBtn.disabled = false;
       purgeBtn.textContent = 'Purge simulator data';
     }
+  });
+
+  dailyJobsToggleBtn?.addEventListener('click', async () => {
+    const enabled = !(dailyJobsStatus?.enabled);
+    dailyJobsToggleBtn.disabled = true;
+    try {
+      const data = await apiRequest('/api/admin/daily-jobs/enabled', {
+        method: 'PUT',
+        body: JSON.stringify({ enabled }),
+      });
+      renderDailyJobsStatus(data.status);
+      showResult(`<p>Daily job generator is now <strong>${enabled ? 'enabled' : 'disabled'}</strong>.</p>`);
+    } catch (error) {
+      showResult(`<p>${escapeHtml(error.message)}</p>`, 'error');
+    } finally {
+      dailyJobsToggleBtn.disabled = false;
+    }
+  });
+
+  async function runDailyJobs(force = false) {
+    const btn = force ? dailyJobsForceBtn : dailyJobsRunBtn;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = force ? 'Forcing...' : 'Running...';
+    }
+    try {
+      const data = await apiRequest('/api/admin/daily-jobs/run', {
+        method: 'POST',
+        body: JSON.stringify({ force }),
+      });
+      await loadDailyJobsStatus();
+      if (data.skipped) {
+        showResult(
+          `<p>Skipped: <strong>${escapeHtml(data.reason || 'already ran')}</strong>. Deleted expired: ${escapeHtml(data.deletedJobs || 0)}.</p>`,
+          'error'
+        );
+        return;
+      }
+      showResult(`
+        <p>
+          Created <strong>${escapeHtml(data.createdJobs)}</strong> jobs
+          (${escapeHtml(data.parity)} day) across
+          <strong>${escapeHtml(data.createdCompanies)}</strong> companies.
+          Removed <strong>${escapeHtml(data.deletedJobs || 0)}</strong> jobs older than 7 days.
+        </p>
+        <ul>
+          ${(data.companies || []).slice(0, 8).map((company) => `
+            <li>
+              ${escapeHtml(company.name)} —
+              ${(company.jobs || []).map((job) => `${escapeHtml(job.trade)} @ ${escapeHtml(job.city)} (${escapeHtml(job.rate)})`).join('; ')}
+            </li>
+          `).join('')}
+        </ul>
+      `);
+    } catch (error) {
+      showResult(`<p>${escapeHtml(error.message)}</p>`, 'error');
+    } finally {
+      if (dailyJobsRunBtn) {
+        dailyJobsRunBtn.disabled = false;
+        dailyJobsRunBtn.innerHTML = '<i class="bi bi-lightning-charge"></i> Run today now';
+      }
+      if (dailyJobsForceBtn) {
+        dailyJobsForceBtn.disabled = false;
+        dailyJobsForceBtn.textContent = 'Force re-run today';
+      }
+    }
+  }
+
+  dailyJobsRunBtn?.addEventListener('click', () => runDailyJobs(false));
+  dailyJobsForceBtn?.addEventListener('click', () => {
+    if (!window.confirm('Force another generation for today? This will add more jobs on top of today\'s batch.')) {
+      return;
+    }
+    runDailyJobs(true);
   });
 })();

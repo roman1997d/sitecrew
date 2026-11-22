@@ -848,3 +848,22 @@ CREATE INDEX IF NOT EXISTS idx_admin_mailbox_messages_created
   ON admin_mailbox_messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admin_mailbox_messages_to_email
   ON admin_mailbox_messages(to_email);
+
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS auto_generated BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE INDEX IF NOT EXISTS idx_jobs_auto_generated_created
+  ON jobs(auto_generated, created_at)
+  WHERE auto_generated = TRUE;
+
+CREATE TABLE IF NOT EXISTS daily_job_generator_state (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  last_run_date DATE,
+  last_created_count INTEGER NOT NULL DEFAULT 0,
+  last_deleted_count INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO daily_job_generator_state (id, enabled)
+VALUES (1, TRUE)
+ON CONFLICT (id) DO NOTHING;
