@@ -1,5 +1,161 @@
 [
   {
+    "slug": "cscs-cards-explained-uk-construction-sites",
+    "title": "CSCS Cards Explained: What UK Construction Sites Expect in 2026",
+    "description": "A plain-English guide to CSCS cards for UK tradespeople and site managers — card colours, CITB tests, and how to show employers you are site-ready on SiteCrew.",
+    "category": "Safety & cards",
+    "icon": "bi-person-vcard",
+    "publishedAt": "2026-11-22",
+    "updatedAt": "2026-11-22",
+    "sections": [
+      {
+        "heading": "What a CSCS card actually proves",
+        "paragraphs": [
+          "A CSCS card shows you have passed the CITB Health, Safety and Environment test and hold the qualification linked to your trade or role. It is not a legal licence to work, but almost every main contractor treats it as a site rule — no card usually means no induction and no start.",
+          "On busy UK programmes, site managers check card colour, trade, and expiry before you step through the gate. Keeping your card details up to date on your SiteCrew profile helps companies shortlist you faster when a vacancy goes live."
+        ]
+      },
+      {
+        "heading": "Common card colours and who they suit",
+        "paragraphs": [
+          "Green cards are typically for labourers and entry-level site roles. Blue skilled cards cover many trade NVQs. Gold cards sit with higher NVQ levels or supervisory routes, and black cards are aimed at managers. Specialist schemes such as ECS (electrics) or CISRS (scaffolding) sit alongside CSCS on many sites.",
+          "Always match the card to the task on the job advert. If a SiteCrew listing asks for CSCS Blue bricklayer or ECS Gold electrician, applying without that ticket wastes time for both sides. If you are upgrading cards, note the date you expect to complete training in your profile bio."
+        ]
+      },
+      {
+        "heading": "Getting or renewing your card",
+        "paragraphs": [
+          "Most people book the CITB HS&E test, pass it, then apply for the relevant CSCS card online. Renewals need a valid test within the required window and evidence of the qualification for that card type. Keep a photo of the front and back of your card on your phone for inductions.",
+          "If a company messages you on SiteCrew, send clear photos of your card and any CPCS, IPAF, or Gas Safe tickets they ask for. Clear paperwork is one of the fastest ways to move from message to site start."
+        ]
+      },
+      {
+        "heading": "How SiteCrew helps you use your cards",
+        "paragraphs": [
+          "Add your main trades, tickets, and cities you can cover. Browse open jobs filtered by trade, then apply only where your card level fits. Verified companies can see you are serious about compliance, not just availability.",
+          "Start on the jobs page for live UK vacancies, or update your worker profile so the next electrician, dryliner, or groundwork role lands in front of someone who already knows you are CSCS-ready."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "hire-construction-workers-faster-uk-companies",
+    "title": "How UK Construction Companies Can Hire Workers Faster in 2026",
+    "description": "A practical hiring playbook for UK contractors: write clearer job briefs, set realistic day rates, vet CSCS tickets, and fill vacancies directly on SiteCrew without agency delays.",
+    "category": "For companies",
+    "icon": "bi-building-add",
+    "publishedAt": "2026-11-20",
+    "updatedAt": "2026-11-20",
+    "sections": [
+      {
+        "heading": "Why site hiring still slows programmes down",
+        "paragraphs": [
+          "Most delays are not about a shortage of people — they come from vague briefs, slow rate approval, and late ticket checks. When a site needs a dryliner gang or an electrician for Monday, every extra email costs programme time.",
+          "Platforms like SiteCrew let you post the role once, reach workers who already listed that trade, and message applicants directly. The goal is a repeatable process your site managers can run every week."
+        ]
+      },
+      {
+        "heading": "Write a brief a worker can act on in five minutes",
+        "paragraphs": [
+          "Include trade, city or postcode, start date, expected duration, day rate band, CSCS or specialist tickets, shift pattern, and whether tools or PPE are provided. “Need labour ASAP” gets weak replies; “CSCS Blue bricklayer, Birmingham, £200–£220/day, two weeks, start Thursday” gets usable applications.",
+          "Post that brief as an open job on SiteCrew. Workers sorting by trade and location will see it in their feed and Find Job search, so you are not relying only on one recruiter’s phone book."
+        ]
+      },
+      {
+        "heading": "Vet once, then decide quickly",
+        "paragraphs": [
+          "Before the first shift, confirm right to work, CSCS grade and expiry, and any CPCS or IPAF tickets named in the brief. Ask for recent site references if the role is supervisory or high risk. Keep the checklist the same for every hire so quality does not drop when you are under pressure.",
+          "On SiteCrew, review applicant profiles, save strong workers to your contact journal, and message the best fit the same day. Speed after a clear brief is what fills vacancies before a rival contractor does."
+        ]
+      },
+      {
+        "heading": "Build a trusted bench for the next project",
+        "paragraphs": [
+          "After the first week, note who turned up on time, followed RAMS, and hit output. Invite those workers back on the next package instead of starting from zero. Over a few months you build a local bench of bricklayers, plasterers, plant operators, and supervisors you already trust.",
+          "Create a company account on SiteCrew, keep your company profile complete, and post every open role with a honest rate. Direct hiring keeps control on site — and keeps good tradespeople coming back."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "cis-vs-paye-construction-workers-uk",
+    "title": "CIS vs PAYE for UK Construction Workers: Which Pays Better?",
+    "description": "Compare CIS day rates and PAYE employment for UK tradespeople — tax deductions, holiday pay, risk, and how to read job offers on SiteCrew before you accept.",
+    "category": "Pay & rates",
+    "icon": "bi-cash-coin",
+    "publishedAt": "2026-11-18",
+    "updatedAt": "2026-11-18",
+    "sections": [
+      {
+        "heading": "Two common ways site work is paid",
+        "paragraphs": [
+          "Many UK construction roles are offered as CIS self-employed day rates. Others are PAYE employment with holiday pay and employer National Insurance handled by the company. The headline number is not the whole story — what lands in your bank after tax and unpaid gaps matters more.",
+          "Job posts on SiteCrew often show a day rate. Ask the company whether the role is CIS or PAYE before you commit, especially on longer programmes where holiday entitlement and continuity change the real value."
+        ]
+      },
+      {
+        "heading": "What CIS day rates usually mean",
+        "paragraphs": [
+          "Under the Construction Industry Scheme, contractors may deduct tax from the labour element of your invoice before paying you. Registered subcontractors typically see a 20% deduction; unregistered status can mean a higher rate. Materials should be itemised separately where relevant.",
+          "CIS rates look high because you are pricing risk, tools, travel, downtime between jobs, and your own accounting. A £220 CIS day is not the same as £220 PAYE. Keep records, register correctly with HMRC if you operate as a subcontractor, and compare net pay over a full month — not one good week."
+        ]
+      },
+      {
+        "heading": "When PAYE can be the better deal",
+        "paragraphs": [
+          "PAYE often comes with a lower gross day-equivalent, but holiday pay, clearer continuity, and fewer admin surprises. For some workers, a steady PAYE site role beats chasing CIS weeks with travel costs and empty Fridays.",
+          "Supervisors, site managers, and longer commercial contracts sometimes lean PAYE. Trades covering short-notice cover, snagging, or multiple sites often stay on CIS. Match the engagement type to how you actually want to work this quarter."
+        ]
+      },
+      {
+        "heading": "How to compare offers on SiteCrew",
+        "paragraphs": [
+          "Read the rate, city, duration, and tickets required. Message the company to confirm CIS or PAYE, shift length, overtime rules, and payment frequency. Use the Trade rates page as a market guide, then judge each offer against travel time and how many days you expect to work that month.",
+          "Browse live jobs, shortlist roles that fit your trade and preferred engagement type, and keep your expected rate visible on your profile so companies know your band before they invite you."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "first-week-on-new-construction-site-checklist",
+    "title": "Your First Week on a New UK Construction Site: A Practical Checklist",
+    "description": "A day-by-day checklist for tradespeople starting a new UK site — induction, RAMS, PPE, first-shift habits, and how to stay booked after week one.",
+    "category": "Careers",
+    "icon": "bi-clipboard-check",
+    "publishedAt": "2026-11-15",
+    "updatedAt": "2026-11-15",
+    "sections": [
+      {
+        "heading": "Before you travel to site",
+        "paragraphs": [
+          "Confirm address, postcode, parking or public transport, start time, site contact name, and what PPE you must bring. Take your CSCS card, photo ID, and any plant or trade tickets named in the job brief. If the company messaged you on SiteCrew, save those details in one place so you are not hunting texts at 6:40am.",
+          "Ask whether induction is first thing and whether tools are provided. Turning up unsure about parking or PPE is the fastest way to look unprepared on day one."
+        ]
+      },
+      {
+        "heading": "Induction, RAMS, and site rules",
+        "paragraphs": [
+          "Expect a site induction covering hazards, welfare, emergency routes, and who you report to. You will usually sign to confirm you understood the briefing. RAMS (risk assessment and method statement) explain how the task should be done — if the real work differs, stop and raise it instead of improvising.",
+          "High-risk tasks may need a permit to work. Never start hot works, confined space tasks, or live service work without the paperwork the site requires. Main contractors treat this as non-negotiable."
+        ]
+      },
+      {
+        "heading": "Habits that get you invited back",
+        "paragraphs": [
+          "Arrive early, keep your area tidy, follow the method, and tell the supervisor early if materials or access will block progress. Site managers remember tradespeople who communicate problems before they become delays.",
+          "After the first few shifts, check that timesheets or invoices match what was agreed. If the programme is extending and you want to stay, say so clearly. Companies on SiteCrew often rehire workers who were reliable in week one."
+        ]
+      },
+      {
+        "heading": "Keep your next role lined up",
+        "paragraphs": [
+          "Update your SiteCrew availability when the job is ending. A complete profile with trades, cities, and tickets means the next drylining, electrical, or groundwork package can find you while you are still finishing snags.",
+          "Use Find Job search for your trade and location, apply early, and keep messaging professional. The best first week on site is the one that quietly leads to the next booking."
+        ]
+      }
+    ]
+  },
+  {
     "slug": "highest-paid-most-sought-after-trades-uk",
     "title": "Highest Paid and Most Sought-After Trades in the UK (2026)",
     "description": "A clear look at which UK construction trades pay the most and which skills sites need most right now — with typical day rates and tips to find better work on SiteCrew.",
