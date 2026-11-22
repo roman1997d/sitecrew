@@ -447,6 +447,42 @@ async function sendContactFormEmail({ to, name, email, subject, message }) {
   });
 }
 
+async function sendAdminMailboxEmail({ to, name, subject, bodyText }) {
+  const from = `"${env.emailFromName}" <${env.emailFrom}>`;
+  const safeName = escapeHtml(name || 'there');
+  const safeBody = escapeHtml(bodyText || '').replace(/\n/g, '<br>');
+  const greeting = name
+    ? `<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#334155;">Hi ${safeName},</p>`
+    : '';
+
+  const bodyHtml = `
+                ${greeting}
+                <div style="margin:0;font-size:16px;line-height:1.7;color:#334155;">
+                  ${safeBody}
+                </div>`;
+
+  const html = wrapBrandedEmailHtml({
+    title: subject,
+    bodyHtml,
+  });
+
+  const textLines = [];
+  if (name) {
+    textLines.push(`Hi ${name},`, '');
+  }
+  textLines.push(String(bodyText || '').trim());
+
+  const text = appendBrandFooterText(textLines);
+
+  await sendMail({
+    from,
+    to,
+    subject,
+    text,
+    html,
+  });
+}
+
 async function sendNotificationEmail({
   to,
   name,
@@ -512,4 +548,5 @@ module.exports = {
   sendNewJobAlertEmail,
   sendContactFormEmail,
   sendNotificationEmail,
+  sendAdminMailboxEmail,
 };

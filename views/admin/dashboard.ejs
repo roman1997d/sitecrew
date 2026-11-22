@@ -34,6 +34,7 @@
         <button type="button" data-admin-section="audit" title="Audit Trails"><i class="bi bi-journal-text"></i> Audit</button>
         <button type="button" data-admin-section="server" title="Server"><i class="bi bi-hdd-network"></i> Server</button>
         <button type="button" data-admin-section="email-control" title="Email Control"><i class="bi bi-envelope"></i> Email Control</button>
+        <button type="button" data-admin-section="mailbox" title="Mailbox"><i class="bi bi-inbox"></i> Mailbox</button>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -1191,6 +1192,116 @@
               </label>
               <button type="button" class="admin-primary-btn" data-email-mode="invite-company-page-visits">Trimite</button>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" id="adminSection-mailbox" data-section="mailbox" hidden>
+        <p class="admin-section-lead">
+          Cutie de email pentru administrator: scrie și trimite mesaje către workeri, companii sau orice adresă, și vezi istoricul trimiterilor.
+        </p>
+
+        <div class="admin-mailbox">
+          <aside class="admin-mailbox-folders" aria-label="Mailbox folders">
+            <button type="button" class="active" data-mailbox-folder="compose">
+              <i class="bi bi-pencil-square"></i> Compose
+            </button>
+            <button type="button" data-mailbox-folder="sent">
+              <i class="bi bi-send"></i> Sent
+              <span class="admin-mailbox-folder-count" id="adminMailboxSentCount">0</span>
+            </button>
+            <p class="admin-mailbox-hint" id="adminMailboxStatusHint">Loading mailbox...</p>
+          </aside>
+
+          <div class="admin-mailbox-pane" id="adminMailboxComposePane">
+            <header class="admin-mailbox-pane-head">
+              <div>
+                <h2>New message</h2>
+                <p>Trimite un email branduit SiteCrew.uk. Test Mode din Email Control se aplică și aici.</p>
+              </div>
+            </header>
+
+            <form id="adminMailboxComposeForm" class="admin-mailbox-compose" autocomplete="off">
+              <input type="hidden" id="adminMailboxToUserId" name="toUserId" value="">
+
+              <label class="admin-field admin-mailbox-to-field">
+                <span>To</span>
+                <div class="admin-mailbox-to-wrap">
+                  <input
+                    type="text"
+                    id="adminMailboxToInput"
+                    name="to"
+                    placeholder="Search user or type an email address"
+                    autocomplete="off"
+                    required
+                  >
+                  <div class="admin-mailbox-recipient-panel" id="adminMailboxRecipientPanel" hidden></div>
+                </div>
+                <small id="adminMailboxToHint">Poți alege un user din platformă sau introduce orice email.</small>
+              </label>
+
+              <label class="admin-field">
+                <span>Subject</span>
+                <input type="text" id="adminMailboxSubject" name="subject" maxlength="300" required placeholder="Subject">
+              </label>
+
+              <label class="admin-field">
+                <span>Message</span>
+                <textarea
+                  id="adminMailboxBody"
+                  name="bodyText"
+                  rows="12"
+                  maxlength="20000"
+                  required
+                  placeholder="Write your message..."
+                ></textarea>
+              </label>
+
+              <div class="admin-mailbox-compose-actions">
+                <p class="admin-mailbox-compose-meta" id="adminMailboxComposeMeta"></p>
+                <button type="submit" class="admin-primary-btn" id="adminMailboxSendBtn">
+                  <i class="bi bi-send-fill"></i> Send email
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-mailbox-pane" id="adminMailboxSentPane" hidden>
+            <div class="admin-mailbox-split">
+              <div class="admin-mailbox-list-col">
+                <header class="admin-mailbox-pane-head">
+                  <div>
+                    <h2>Sent</h2>
+                    <p id="adminMailboxSentMeta">No messages yet.</p>
+                  </div>
+                  <button type="button" class="admin-secondary-btn" id="adminMailboxRefreshSentBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                  </button>
+                </header>
+                <div class="admin-mailbox-list" id="adminMailboxList">
+                  <p class="admin-empty">Loading sent messages...</p>
+                </div>
+              </div>
+
+              <div class="admin-mailbox-read-col" id="adminMailboxReadPane">
+                <p class="admin-mailbox-read-empty" id="adminMailboxReadEmpty">Select a message to read it.</p>
+                <article class="admin-mailbox-read" id="adminMailboxRead" hidden>
+                  <header>
+                    <div class="admin-mailbox-read-subject-row">
+                      <h3 id="adminMailboxReadSubject">Subject</h3>
+                      <span class="admin-mailbox-status-badge" id="adminMailboxReadStatus">sent</span>
+                    </div>
+                    <dl class="admin-mailbox-read-meta">
+                      <div><dt>To</dt><dd id="adminMailboxReadTo">—</dd></div>
+                      <div><dt>From admin</dt><dd id="adminMailboxReadFrom">—</dd></div>
+                      <div><dt>Sent</dt><dd id="adminMailboxReadDate">—</dd></div>
+                    </dl>
+                  </header>
+                  <pre id="adminMailboxReadBody"></pre>
+                  <p class="admin-mailbox-read-error" id="adminMailboxReadError" hidden></p>
+                </article>
+              </div>
+            </div>
           </div>
         </div>
       </section>

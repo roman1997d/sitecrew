@@ -13,6 +13,7 @@
     audit: 'Audit Trails',
     server: 'Server',
     'email-control': 'Email Control',
+    mailbox: 'Mailbox',
   };
 
   let activeSection = 'metrics';
@@ -3298,6 +3299,10 @@
     }
     if (section === 'email-control') {
       await loadEmailControlSection();
+      return;
+    }
+    if (section === 'mailbox') {
+      await loadMailboxSection();
     }
   }
 
@@ -5467,6 +5472,371 @@
       adminEmailConfirmYesBtn.disabled = false;
       adminEmailConfirmYesBtn.textContent = 'Yes';
       showAlert(error.message);
+    }
+  });
+
+  let mailboxLoaded = false;
+  let mailboxMessages = [];
+  let selectedMailboxId = null;
+  let mailboxRecipientTimer = null;
+  let activeMailboxFolder = 'compose';
+
+  const adminMailboxComposeForm = document.getElementById('adminMailboxComposeForm');
+  const adminMailboxToInput = document.getElementById('adminMailboxToInput');
+  const adminMailboxToUserId = document.getElementById('adminMailboxToUserId');
+  const adminMailboxToHint = document.getElementById('adminMailboxToHint');
+  const adminMailboxRecipientPanel = document.getElementById('adminMailboxRecipientPanel');
+  const adminMailboxSubject = document.getElementById('adminMailboxSubject');
+  const adminMailboxBody = document.getElementById('adminMailboxBody');
+  const adminMailboxSendBtn = document.getElementById('adminMailboxSendBtn');
+  const adminMailboxComposeMeta = document.getElementById('adminMailboxComposeMeta');
+  const adminMailboxStatusHint = document.getElementById('adminMailboxStatusHint');
+  const adminMailboxSentCount = document.getElementById('adminMailboxSentCount');
+  const adminMailboxSentMeta = document.getElementById('adminMailboxSentMeta');
+  const adminMailboxList = document.getElementById('adminMailboxList');
+  const adminMailboxComposePane = document.getElementById('adminMailboxComposePane');
+  const adminMailboxSentPane = document.getElementById('adminMailboxSentPane');
+  const adminMailboxRead = document.getElementById('adminMailboxRead');
+  const adminMailboxReadEmpty = document.getElementById('adminMailboxReadEmpty');
+  const adminMailboxReadSubject = document.getElementById('adminMailboxReadSubject');
+  const adminMailboxReadStatus = document.getElementById('adminMailboxReadStatus');
+  const adminMailboxReadTo = document.getElementById('adminMailboxReadTo');
+  const adminMailboxReadFrom = document.getElementById('adminMailboxReadFrom');
+  const adminMailboxReadDate = document.getElementById('adminMailboxReadDate');
+  const adminMailboxReadBody = document.getElementById('adminMailboxReadBody');
+  const adminMailboxReadError = document.getElementById('adminMailboxReadError');
+  const adminMailboxRefreshSentBtn = document.getElementById('adminMailboxRefreshSentBtn');
+
+  function formatMailboxDate(value) {
+    if (!value) return '—';
+    try {
+      return new Date(value).toLocaleString();
+    } catch (_) {
+      return String(value);
+    }
+  }
+
+  function looksLikeEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+  }
+
+  function setMailboxFolder(folder) {
+    activeMailboxFolder = folder === 'sent' ? 'sent' : 'compose';
+    document.querySelectorAll('[data-mailbox-folder]').forEach((button) => {
+      button.classList.toggle('active', button.dataset.mailboxFolder === activeMailboxFolder);
+    });
+    if (adminMailboxComposePane) {
+      adminMailboxComposePane.hidden = activeMailboxFolder !== 'compose';
+    }
+    if (adminMailboxSentPane) {
+      adminMailboxSentPane.hidden = activeMailboxFolder !== 'sent';
+    }
+  }
+
+  function clearMailboxRecipientSelection({ keepInput = true } = {}) {
+    if (adminMailboxToUserId) adminMailboxToUserId.value = '';
+    if (!keepInput && adminMailboxToInput) adminMailboxToInput.value = '';
+    if (adminMailboxToHint) {
+      adminMailboxToHint.textContent = 'Poți alege un user din platformă sau introduce orice email.';
+    }
+  }
+
+  function selectMailboxRecipient(recipient) {
+    if (!recipient) return;
+    if (adminMailboxToUserId) adminMailboxToUserId.value = String(recipient.id || '');
+    if (adminMailboxToInput) {
+      adminMailboxToInput.value = recipient.email || '';
+    }
+    if (adminMailboxToHint) {
+      adminMailboxToHint.textContent = `${recipient.displayName || recipient.email} · ${recipient.role || 'user'}`;
+    }
+    if (adminMailboxRecipientPanel) {
+      adminMailboxRecipientPanel.hidden = true;
+      adminMailboxRecipientPanel.innerHTML = '';
+    }
+  }
+
+  function renderMailboxRecipients(recipients = []) {
+    if (!adminMailboxRecipientPanel) return;
+    if (!recipients.length) {
+      adminMailboxRecipientPanel.hidden = true;
+      adminMailboxRecipientPanel.innerHTML = '';
+      return;
+    }
+
+    adminMailboxRecipientPanel.hidden = false;
+    adminMailboxRecipientPanel.innerHTML = recipients.map((recipient) => `
+      <button type="button" class="admin-mailbox-recipient-option"
+        data-mailbox-recipient-id="${escapeHtml(recipient.id)}"
+        data-mailbox-recipient-email="${escapeHtml(recipient.email || '')}"
+        data-mailbox-recipient-name="${escapeHtml(recipient.displayName || '')}"
+        data-mailbox-recipient-role="${escapeHtml(recipient.role || '')}">
+        <strong>${escapeHtml(recipient.displayName || recipient.email || 'User')}</strong>
+        <span>${escapeHtml(recipient.email || '')} · ${escapeHtml(recipient.role || 'user')}</span>
+      </button>
+    `).join('');
+  }
+
+  async function searchMailboxRecipients(query) {
+    const q = String(query || '').trim();
+    if (q.length < 2) {
+      renderMailboxRecipients([]);
+      return;
+    }
+
+    try {
+      const data = await apiRequest(`/api/admin/mailbox/recipients?q=${encodeURIComponent(q)}`);
+      renderMailboxRecipients(data.recipients || []);
+    } catch (_) {
+      renderMailboxRecipients([]);
+    }
+  }
+
+  function renderMailboxList(messages = []) {
+    mailboxMessages = messages;
+    if (adminMailboxSentCount) {
+      adminMailboxSentCount.textContent = String(messages.length);
+    }
+    if (adminMailboxSentMeta) {
+      adminMailboxSentMeta.textContent = messages.length
+        ? `${messages.length} sent message${messages.length === 1 ? '' : 's'}`
+        : 'No messages yet.';
+    }
+    if (!adminMailboxList) return;
+
+    if (!messages.length) {
+      adminMailboxList.innerHTML = '<p class="admin-empty">No emails sent yet.</p>';
+      return;
+    }
+
+    adminMailboxList.innerHTML = messages.map((message) => {
+      const preview = String(message.bodyText || '').replace(/\s+/g, ' ').trim().slice(0, 90);
+      const statusClass = message.status === 'failed' ? 'is-failed' : (message.testMode ? 'is-test' : '');
+      const statusLabel = message.status === 'failed' ? 'failed' : (message.testMode ? 'test' : 'sent');
+      return `
+        <button type="button" class="admin-mailbox-item ${selectedMailboxId === message.id ? 'active' : ''}" data-mailbox-id="${escapeHtml(message.id)}">
+          <div class="admin-mailbox-item-top">
+            <strong>${escapeHtml(message.toDisplayName || message.toEmail || 'Recipient')}</strong>
+            <time>${escapeHtml(formatMailboxDate(message.createdAt))}</time>
+          </div>
+          <p class="admin-mailbox-item-subject">${escapeHtml(message.subject || '(no subject)')}</p>
+          <p class="admin-mailbox-item-preview">${escapeHtml(preview || '—')}</p>
+          <span class="admin-mailbox-status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>
+        </button>
+      `;
+    }).join('');
+  }
+
+  function showMailboxMessage(message) {
+    if (!message) {
+      selectedMailboxId = null;
+      if (adminMailboxRead) adminMailboxRead.hidden = true;
+      if (adminMailboxReadEmpty) adminMailboxReadEmpty.hidden = false;
+      return;
+    }
+
+    selectedMailboxId = message.id;
+    if (adminMailboxReadEmpty) adminMailboxReadEmpty.hidden = true;
+    if (adminMailboxRead) adminMailboxRead.hidden = false;
+
+    if (adminMailboxReadSubject) {
+      adminMailboxReadSubject.textContent = message.subject || '(no subject)';
+    }
+    if (adminMailboxReadStatus) {
+      const failed = message.status === 'failed';
+      const test = Boolean(message.testMode) && !failed;
+      adminMailboxReadStatus.textContent = failed ? 'failed' : (test ? 'test' : 'sent');
+      adminMailboxReadStatus.classList.toggle('is-failed', failed);
+      adminMailboxReadStatus.classList.toggle('is-test', test);
+    }
+    if (adminMailboxReadTo) {
+      const bits = [message.toDisplayName || message.toEmail];
+      if (message.toEmail && message.toDisplayName && message.toDisplayName !== message.toEmail) {
+        bits.push(`<${message.toEmail}>`);
+      }
+      if (message.toUserRole) bits.push(`· ${message.toUserRole}`);
+      adminMailboxReadTo.textContent = bits.filter(Boolean).join(' ');
+    }
+    if (adminMailboxReadFrom) {
+      adminMailboxReadFrom.textContent = message.actorEmail || 'Admin';
+    }
+    if (adminMailboxReadDate) {
+      adminMailboxReadDate.textContent = formatMailboxDate(message.createdAt);
+    }
+    if (adminMailboxReadBody) {
+      adminMailboxReadBody.textContent = message.bodyText || '';
+    }
+    if (adminMailboxReadError) {
+      if (message.errorMessage) {
+        adminMailboxReadError.hidden = false;
+        adminMailboxReadError.textContent = message.errorMessage;
+      } else {
+        adminMailboxReadError.hidden = true;
+        adminMailboxReadError.textContent = '';
+      }
+    }
+
+    adminMailboxList?.querySelectorAll('[data-mailbox-id]').forEach((button) => {
+      button.classList.toggle('active', Number(button.dataset.mailboxId) === Number(message.id));
+    });
+  }
+
+  async function loadMailboxSection({ keepSelection = true } = {}) {
+    const data = await apiRequest('/api/admin/mailbox?limit=50');
+    mailboxLoaded = true;
+    renderMailboxList(data.messages || []);
+
+    if (adminMailboxStatusHint) {
+      adminMailboxStatusHint.textContent = data.emailConfigured
+        ? 'SMTP ready — emails will be delivered.'
+        : 'SMTP not configured — sending is unavailable until email settings are set.';
+    }
+    if (adminMailboxComposeMeta) {
+      adminMailboxComposeMeta.textContent = data.emailConfigured
+        ? 'Emails are sent with the SiteCrew.uk branded template.'
+        : 'Configure SMTP before sending.';
+    }
+
+    if (keepSelection && selectedMailboxId) {
+      const selected = (data.messages || []).find((item) => Number(item.id) === Number(selectedMailboxId));
+      showMailboxMessage(selected || null);
+    } else if (!selectedMailboxId) {
+      showMailboxMessage(null);
+    }
+
+    setMailboxFolder(activeMailboxFolder);
+  }
+
+  document.querySelectorAll('[data-mailbox-folder]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      setMailboxFolder(button.dataset.mailboxFolder);
+      if (activeMailboxFolder === 'sent' && mailboxLoaded) {
+        try {
+          await loadMailboxSection();
+        } catch (error) {
+          showAlert(error.message);
+        }
+      }
+    });
+  });
+
+  adminMailboxToInput?.addEventListener('input', () => {
+    const value = adminMailboxToInput.value;
+    if (adminMailboxToUserId?.value) {
+      clearMailboxRecipientSelection({ keepInput: true });
+      if (adminMailboxToInput) adminMailboxToInput.value = value;
+    }
+    clearTimeout(mailboxRecipientTimer);
+    mailboxRecipientTimer = setTimeout(() => {
+      searchMailboxRecipients(value);
+    }, 220);
+  });
+
+  adminMailboxToInput?.addEventListener('blur', () => {
+    setTimeout(() => {
+      if (adminMailboxRecipientPanel) {
+        adminMailboxRecipientPanel.hidden = true;
+      }
+    }, 180);
+  });
+
+  adminMailboxRecipientPanel?.addEventListener('mousedown', (event) => {
+    const option = event.target.closest('[data-mailbox-recipient-id]');
+    if (!option) return;
+    event.preventDefault();
+    selectMailboxRecipient({
+      id: option.dataset.mailboxRecipientId,
+      email: option.dataset.mailboxRecipientEmail,
+      displayName: option.dataset.mailboxRecipientName,
+      role: option.dataset.mailboxRecipientRole,
+    });
+  });
+
+  adminMailboxList?.addEventListener('click', async (event) => {
+    const item = event.target.closest('[data-mailbox-id]');
+    if (!item) return;
+    const id = Number(item.dataset.mailboxId);
+    const cached = mailboxMessages.find((message) => Number(message.id) === id);
+    if (cached) {
+      showMailboxMessage(cached);
+      return;
+    }
+    try {
+      const data = await apiRequest(`/api/admin/mailbox/${id}`);
+      showMailboxMessage(data.message);
+    } catch (error) {
+      showAlert(error.message);
+    }
+  });
+
+  adminMailboxRefreshSentBtn?.addEventListener('click', async () => {
+    try {
+      await loadMailboxSection();
+      showAlert('Sent mailbox refreshed.', 'success');
+    } catch (error) {
+      showAlert(error.message);
+    }
+  });
+
+  adminMailboxComposeForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const toEmail = String(adminMailboxToInput?.value || '').trim();
+    const toUserId = adminMailboxToUserId?.value ? Number(adminMailboxToUserId.value) : null;
+    const subject = String(adminMailboxSubject?.value || '').trim();
+    const bodyText = String(adminMailboxBody?.value || '').trim();
+
+    if (!toUserId && !looksLikeEmail(toEmail)) {
+      showAlert('Enter a valid email address or pick a platform user.');
+      return;
+    }
+    if (!subject || !bodyText) {
+      showAlert('Subject and message are required.');
+      return;
+    }
+
+    if (adminMailboxSendBtn) {
+      adminMailboxSendBtn.disabled = true;
+      adminMailboxSendBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+    }
+
+    try {
+      const result = await apiRequest('/api/admin/mailbox/send', {
+        method: 'POST',
+        body: JSON.stringify({
+          toEmail: toUserId ? undefined : toEmail,
+          toUserId: toUserId || undefined,
+          subject,
+          bodyText,
+        }),
+      });
+
+      if (adminMailboxSubject) adminMailboxSubject.value = '';
+      if (adminMailboxBody) adminMailboxBody.value = '';
+      clearMailboxRecipientSelection({ keepInput: false });
+
+      selectedMailboxId = result.message?.id || null;
+      await loadMailboxSection({ keepSelection: true });
+      setMailboxFolder('sent');
+      if (result.message) showMailboxMessage(result.message);
+
+      showAlert(
+        result.testMode
+          ? 'Email recorded in Test Mode (redirected to test inbox).'
+          : 'Email sent successfully.',
+        'success'
+      );
+    } catch (error) {
+      showAlert(error.message);
+      try {
+        await loadMailboxSection();
+      } catch (_) {
+        // ignore refresh errors after send failure
+      }
+    } finally {
+      if (adminMailboxSendBtn) {
+        adminMailboxSendBtn.disabled = false;
+        adminMailboxSendBtn.innerHTML = '<i class="bi bi-send-fill"></i> Send email';
+      }
     }
   });
 

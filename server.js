@@ -2070,6 +2070,10 @@ app.get('/admin/email-control', requireAdminAuth, (req, res) => {
   return res.redirect('/admin/dashboard?section=email-control');
 });
 
+app.get('/admin/mailbox', requireAdminAuth, (req, res) => {
+  return res.redirect('/admin/dashboard?section=mailbox');
+});
+
 app.get('/__sitecrew/deploy-check', async (req, res) => {
   const uploadsDir = path.join(__dirname, 'backend', 'uploads');
   let uploadFiles = [];

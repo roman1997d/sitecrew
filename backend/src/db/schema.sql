@@ -828,3 +828,23 @@ SELECT ad.id, 0, 'Claw hammer 20oz', 'Balanced hammer with fibreglass handle.', 
 FROM marketplace_ads ad
 WHERE ad.internal_title = 'General tools marketplace test'
   AND NOT EXISTS (SELECT 1 FROM marketplace_ad_products p WHERE p.ad_id = ad.id AND p.sort_order = 0);
+
+CREATE TABLE IF NOT EXISTS admin_mailbox_messages (
+  id SERIAL PRIMARY KEY,
+  actor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  to_email TEXT NOT NULL,
+  to_name TEXT,
+  to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  subject TEXT NOT NULL,
+  body_text TEXT NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'sent'
+    CHECK (status IN ('sent', 'failed')),
+  error_message TEXT,
+  test_mode BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_mailbox_messages_created
+  ON admin_mailbox_messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_mailbox_messages_to_email
+  ON admin_mailbox_messages(to_email);
