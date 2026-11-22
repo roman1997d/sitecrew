@@ -4,7 +4,7 @@
     "title": "CSCS Cards Explained: What UK Construction Sites Expect in 2026",
     "description": "A plain-English guide to CSCS cards for UK tradespeople and site managers — card colours, CITB tests, and how to show employers you are site-ready on SiteCrew.",
     "category": "Safety & cards",
-    "icon": "bi-person-vcard",
+    "icon": "bi-tools",
     "publishedAt": "2026-11-22",
     "updatedAt": "2026-11-22",
     "sections": [
@@ -43,7 +43,7 @@
     "title": "How UK Construction Companies Can Hire Workers Faster in 2026",
     "description": "A practical hiring playbook for UK contractors: write clearer job briefs, set realistic day rates, vet CSCS tickets, and fill vacancies directly on SiteCrew without agency delays.",
     "category": "For companies",
-    "icon": "bi-building-add",
+    "icon": "bi-building",
     "publishedAt": "2026-11-20",
     "updatedAt": "2026-11-20",
     "sections": [
@@ -82,7 +82,7 @@
     "title": "CIS vs PAYE for UK Construction Workers: Which Pays Better?",
     "description": "Compare CIS day rates and PAYE employment for UK tradespeople — tax deductions, holiday pay, risk, and how to read job offers on SiteCrew before you accept.",
     "category": "Pay & rates",
-    "icon": "bi-cash-coin",
+    "icon": "bi-cash-stack",
     "publishedAt": "2026-11-18",
     "updatedAt": "2026-11-18",
     "sections": [
@@ -121,7 +121,7 @@
     "title": "Your First Week on a New UK Construction Site: A Practical Checklist",
     "description": "A day-by-day checklist for tradespeople starting a new UK site — induction, RAMS, PPE, first-shift habits, and how to stay booked after week one.",
     "category": "Careers",
-    "icon": "bi-clipboard-check",
+    "icon": "bi-briefcase",
     "publishedAt": "2026-11-15",
     "updatedAt": "2026-11-15",
     "sections": [
