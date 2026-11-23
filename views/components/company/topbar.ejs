@@ -15,6 +15,15 @@
       <span class="company-topbar-bell-dot" id="companyNotificationBadge" <%= notifications.length > 0 ? '' : 'hidden' %>></span>
     </button>
 
+    <button type="button" class="company-topbar-contacts" id="openCompanyMessages" aria-label="Messenger" title="Messenger">
+      <i class="bi bi-chat-text"></i>
+      <% if (typeof insights !== 'undefined' && insights.messageCount > 0) { %>
+        <span class="company-topbar-bell-dot" id="companyMessagesBadge"></span>
+      <% } else { %>
+        <span class="company-topbar-bell-dot" id="companyMessagesBadge" hidden></span>
+      <% } %>
+    </button>
+
     <button type="button" class="company-topbar-contacts" id="openContactsJournal" aria-label="Contact journal" title="Contact journal">
       <i class="bi bi-person-lines-fill"></i>
     </button>
@@ -27,6 +36,4 @@
       <i class="bi bi-box-arrow-right"></i>
     </button>
   </div>
-
-  <button type="button" id="openCompanyMessages" hidden aria-hidden="true" tabindex="-1"></button>
 </header>

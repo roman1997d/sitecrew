@@ -1154,7 +1154,7 @@
       const isOwn = Number(message.sender_id) === Number(currentCompanyId);
       const senderName = message.sender_name || (isOwn ? 'You' : 'Worker');
       const avatar = renderMessengerAvatar(senderName, message.sender_avatar, isOwn ? 'own' : '');
-      const pendingReview = isOwn && message.moderation_status === 'hidden';
+      const pendingReview = message.moderation_status === 'hidden' || message.moderation_status === 'flagged';
       return `
         <div class="company-thread-message ${isOwn ? 'own' : ''}">
           ${avatar}
@@ -2815,6 +2815,10 @@
 
   function focusCompanySection(focusId) {
     if (!focusId) return;
+    if (focusId === 'messages') {
+      openCompanyMessages();
+      return;
+    }
     requestAnimationFrame(() => {
       const target = document.getElementById(focusId);
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });

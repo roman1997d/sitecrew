@@ -182,6 +182,8 @@ router.get('/:id/messages', requireAuth, asyncHandler(async (req, res) => {
     [req.user.id, req.params.id]
   );
 
+  // Conversation participants can see the full thread, including own/other
+  // messages still pending AI review (frontend labels pending items).
   const result = await pool.query(
     `SELECT
        m.*,
@@ -192,12 +194,8 @@ router.get('/:id/messages', requireAuth, asyncHandler(async (req, res) => {
      LEFT JOIN worker_profiles wp ON wp.user_id = m.sender_id
      LEFT JOIN company_profiles cp ON cp.user_id = m.sender_id
      WHERE m.conversation_id = $1
-       AND (
-         COALESCE(m.moderation_status, 'visible') <> 'hidden'
-         OR m.sender_id = $2
-       )
      ORDER BY m.created_at ASC`,
-    [req.params.id, req.user.id]
+    [req.params.id]
   );
   res.json({ messages: result.rows });
 }));
