@@ -2471,7 +2471,8 @@
     }
   });
 
-  workerResults?.addEventListener('click', async (event) => {
+  const workerActionRoot = document.querySelector('.company-spa-main') || workerResults;
+  workerActionRoot?.addEventListener('click', async (event) => {
     const inviteButton = event.target.closest('[data-invite-worker-job]');
     if (inviteButton) {
       const workerId = inviteButton.dataset.workerId;
@@ -2504,9 +2505,16 @@
 
     const workerId = button.dataset.workerId;
     const workerName = button.dataset.workerName || 'this worker';
+    if (!workerId) return;
+
+    if (typeof openContactMessageModal === 'function' && contactMessageModal && contactMessageForm) {
+      openContactMessageModal(workerId, workerName);
+      return;
+    }
+
     const message = window.prompt(`Write a message to ${workerName}:`);
 
-    if (!workerId || message === null) return;
+    if (message === null) return;
 
     const trimmedMessage = message.trim();
     if (!trimmedMessage) {

@@ -12,12 +12,38 @@
   <% } %>
   <div class="company-panel-list">
     <% workers.slice(0, 3).forEach(function(worker) { %>
-      <article class="company-reco-item">
-        <span class="company-reco-avatar"><%= worker.name.charAt(0) %></span>
+      <article class="company-reco-item" data-worker-id="<%= worker.id %>">
+        <button
+          type="button"
+          class="company-reco-avatar"
+          data-view-recommended-worker-profile
+          data-worker-id="<%= worker.id %>"
+          aria-label="View <%= worker.name %> profile"
+        ><%= worker.name.charAt(0) %></button>
         <div class="company-reco-copy">
-          <strong><%= worker.name %></strong>
+          <button
+            type="button"
+            class="company-reco-name"
+            data-view-recommended-worker-profile
+            data-worker-id="<%= worker.id %>"
+          ><%= worker.name %></button>
           <span><%= worker.trade %> · <%= worker.location %></span>
           <small><i class="bi bi-circle-fill"></i> <%= worker.availability %></small>
+          <div class="company-reco-actions">
+            <button
+              type="button"
+              class="company-reco-action"
+              data-view-recommended-worker-profile
+              data-worker-id="<%= worker.id %>"
+            ><i class="bi bi-person-badge"></i> Profile</button>
+            <button
+              type="button"
+              class="company-reco-action primary"
+              data-send-worker-message
+              data-worker-id="<%= worker.id %>"
+              data-worker-name="<%= worker.name %>"
+            ><i class="bi bi-chat-dots"></i> Message</button>
+          </div>
         </div>
         <span class="company-reco-match"><%= worker.score %>% Match</span>
       </article>
