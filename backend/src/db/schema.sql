@@ -278,10 +278,15 @@ CREATE TABLE IF NOT EXISTS company_team_members (
   company_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   worker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   occupation VARCHAR(120),
+  can_post_jobs BOOLEAN NOT NULL DEFAULT FALSE,
+  can_post_company_posts BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(company_id, worker_id)
 );
+
+ALTER TABLE company_team_members ADD COLUMN IF NOT EXISTS can_post_jobs BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE company_team_members ADD COLUMN IF NOT EXISTS can_post_company_posts BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE INDEX IF NOT EXISTS idx_company_team_members_company
   ON company_team_members(company_id, updated_at DESC);

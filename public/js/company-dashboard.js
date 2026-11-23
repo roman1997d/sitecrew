@@ -902,8 +902,16 @@
     card.dataset.canPostCompanyPosts = permissions.canPostCompanyPosts ? 'true' : 'false';
 
     if (roleLabel) {
-      roleLabel.textContent = isLeader ? 'Leader' : 'Operative';
-      roleLabel.className = `company-status ${isLeader ? 'review' : 'open'}`;
+      const isHired = card.dataset.isHired !== 'false';
+      roleLabel.textContent = isLeader ? 'Leader' : (isHired ? 'Operative' : 'Roster');
+      roleLabel.className = `company-status ${isLeader ? 'review' : (isHired ? 'open' : 'closed')}`;
+    }
+
+    const existingMoveBtn = card.querySelector('[data-move-to-leaders], [data-move-to-operatives]');
+    if (existingMoveBtn) {
+      existingMoveBtn.outerHTML = isLeader
+        ? '<button type="button" class="company-team-move-operative-btn" data-move-to-operatives>Move to Operatives</button>'
+        : '<button type="button" class="company-team-move-leader-btn" data-move-to-leaders>Move to Leaders</button>';
     }
 
     if (targetGrid && sourceGrid !== targetGrid) {
@@ -1691,6 +1699,24 @@
     }
 
     return data.application;
+  }
+
+  async function updateTeamLeadership(workerId, isLeader) {
+    const response = await fetch(`${API_BASE_URL}/api/companies/team/${workerId}/leadership`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify({ isLeader: Boolean(isLeader) }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Could not update team role.');
+    }
+
+    return data;
   }
 
   async function updateRosterOccupation(workerId, occupation) {
@@ -3038,6 +3064,33 @@
         workerProfileContent.innerHTML = `<p class="company-side-empty">${escapeHtml(error.message)}</p>`;
       }
     });
+  });
+
+  document.getElementById('my-team')?.addEventListener('click', async (event) => {
+    const moveToLeaders = event.target.closest('[data-move-to-leaders]');
+    const moveToOperatives = event.target.closest('[data-move-to-operatives]');
+    if (!moveToLeaders && !moveToOperatives) return;
+
+    const button = moveToLeaders || moveToOperatives;
+    const card = button.closest('[data-team-worker-card]');
+    const workerId = card?.dataset.workerId;
+    if (!workerId) return;
+
+    const makeLeader = Boolean(moveToLeaders);
+    button.disabled = true;
+    button.textContent = makeLeader ? 'Moving...' : 'Moving...';
+
+    try {
+      const result = await updateTeamLeadership(workerId, makeLeader);
+      moveTeamCardByPermissions(card, {
+        canPostJobs: Boolean(result.canPostJobs ?? makeLeader),
+        canPostCompanyPosts: Boolean(result.canPostCompanyPosts ?? makeLeader),
+      });
+    } catch (error) {
+      alert(error.message);
+      button.disabled = false;
+      button.textContent = makeLeader ? 'Move to Leaders' : 'Move to Operatives';
+    }
   });
 
   const teamSearchInput = document.getElementById('companyTeamSearch');

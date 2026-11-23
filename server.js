@@ -821,6 +821,8 @@ function mapTeamMember(application) {
 
 function mapRosterTeamMember(member) {
   const name = member.full_name || 'Worker';
+  const canPostJobs = Boolean(member.can_post_jobs);
+  const canPostCompanyPosts = Boolean(member.can_post_company_posts);
   return {
     applicationId: null,
     id: member.worker_id,
@@ -834,9 +836,9 @@ function mapRosterTeamMember(member) {
     jobTitle: member.occupation || 'Team roster',
     occupation: member.occupation || '',
     certificates: Array.isArray(member.certificates) && member.certificates.length ? member.certificates.join(', ') : 'No certificates added',
-    canPostJobs: false,
-    canPostCompanyPosts: false,
-    isLeader: false,
+    canPostJobs,
+    canPostCompanyPosts,
+    isLeader: Boolean(canPostJobs || canPostCompanyPosts),
     isHired: false,
     source: 'roster',
   };
@@ -952,6 +954,9 @@ async function buildCompanyDashboard(token, companyId, profile) {
         if (member.occupation && !existing.occupation) {
           existing.occupation = member.occupation;
         }
+        if (member.can_post_jobs) existing.canPostJobs = true;
+        if (member.can_post_company_posts) existing.canPostCompanyPosts = true;
+        existing.isLeader = Boolean(existing.canPostJobs || existing.canPostCompanyPosts);
         return;
       }
       teamByWorker.set(workerId, mapRosterTeamMember(member));

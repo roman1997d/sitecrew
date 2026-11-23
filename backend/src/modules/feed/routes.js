@@ -133,6 +133,12 @@ async function getPostAuthorId(req, companyId) {
        AND j.company_id = $2
        AND a.status = 'accepted'
        AND a.can_post_company_posts = TRUE
+     UNION ALL
+     SELECT 1
+     FROM company_team_members ctm
+     WHERE ctm.worker_id = $1
+       AND ctm.company_id = $2
+       AND ctm.can_post_company_posts = TRUE
      LIMIT 1`,
     [req.user.id, companyId]
   );
@@ -543,6 +549,12 @@ async function assertCanViewPostEngagement(req, postId) {
          AND j.company_id = $2
          AND a.status = 'accepted'
          AND a.can_post_company_posts = TRUE
+       UNION ALL
+       SELECT 1
+       FROM company_team_members ctm
+       WHERE ctm.worker_id = $1
+         AND ctm.company_id = $2
+         AND ctm.can_post_company_posts = TRUE
        LIMIT 1`,
       [req.user.id, post.author_id]
     );

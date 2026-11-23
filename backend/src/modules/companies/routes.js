@@ -236,10 +236,20 @@ async function ensureCompanyTeamMembersTable() {
       company_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       worker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       occupation VARCHAR(120),
+      can_post_jobs BOOLEAN NOT NULL DEFAULT FALSE,
+      can_post_company_posts BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(company_id, worker_id)
     )
+  `);
+  await pool.query(`
+    ALTER TABLE company_team_members
+    ADD COLUMN IF NOT EXISTS can_post_jobs BOOLEAN NOT NULL DEFAULT FALSE
+  `);
+  await pool.query(`
+    ALTER TABLE company_team_members
+    ADD COLUMN IF NOT EXISTS can_post_company_posts BOOLEAN NOT NULL DEFAULT FALSE
   `);
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_company_team_members_company
@@ -262,6 +272,12 @@ const teamMemberSchema = z.object({
 const teamOccupationSchema = z.object({
   body: z.object({
     occupation: z.string().trim().min(2).max(120),
+  }),
+});
+
+const teamLeadershipSchema = z.object({
+  body: z.object({
+    isLeader: z.boolean(),
   }),
 });
 
@@ -454,6 +470,73 @@ router.patch('/team/:workerId/occupation', requireAuth, requireRole('company', '
   );
 
   res.json({ member: result.rows[0] });
+}));
+
+router.patch('/team/:workerId/leadership', requireAuth, requireRole('company', 'admin'), validate(teamLeadershipSchema), asyncHandler(async (req, res) => {
+  await ensureCompanyTeamMembersTable();
+  const workerId = Number(req.params.workerId);
+  const isLeader = Boolean(req.validated.body.isLeader);
+
+  const worker = await pool.query(
+    `SELECT wp.user_id
+     FROM worker_profiles wp
+     JOIN users u ON u.id = wp.user_id
+     WHERE wp.user_id = $1
+       AND u.status = 'active'`,
+    [workerId]
+  );
+  if (worker.rowCount === 0) {
+    return res.status(404).json({ error: 'Worker not found.' });
+  }
+
+  const onTeam = await pool.query(
+    `SELECT 1
+     FROM company_team_members
+     WHERE company_id = $1 AND worker_id = $2
+     UNION ALL
+     SELECT 1
+     FROM applications a
+     JOIN jobs j ON j.id = a.job_id
+     WHERE j.company_id = $1
+       AND a.worker_id = $2
+       AND a.status = 'accepted'
+     LIMIT 1`,
+    [req.user.id, workerId]
+  );
+  if (onTeam.rowCount === 0) {
+    return res.status(400).json({ error: 'Add this worker to your team before making them a leader.' });
+  }
+
+  const result = await pool.query(
+    `INSERT INTO company_team_members (company_id, worker_id, can_post_jobs, can_post_company_posts)
+     VALUES ($1, $2, $3, $3)
+     ON CONFLICT (company_id, worker_id) DO UPDATE SET
+       can_post_jobs = EXCLUDED.can_post_jobs,
+       can_post_company_posts = EXCLUDED.can_post_company_posts,
+       updated_at = CURRENT_TIMESTAMP
+     RETURNING *`,
+    [req.user.id, workerId, isLeader]
+  );
+
+  await pool.query(
+    `UPDATE applications a
+     SET can_post_jobs = $1,
+         can_post_company_posts = $1,
+         updated_at = CURRENT_TIMESTAMP
+     FROM jobs j
+     WHERE a.job_id = j.id
+       AND j.company_id = $2
+       AND a.worker_id = $3
+       AND a.status = 'accepted'`,
+    [isLeader, req.user.id, workerId]
+  );
+
+  res.json({
+    member: result.rows[0],
+    isLeader,
+    canPostJobs: isLeader,
+    canPostCompanyPosts: isLeader,
+  });
 }));
 
 router.get('/', requireAuth, requireRole('worker', 'company', 'admin'), asyncHandler(async (req, res) => {

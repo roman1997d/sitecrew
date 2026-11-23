@@ -119,21 +119,42 @@ router.post('/me/verification-request', requireAuth, requireRole('worker'), asyn
 router.get('/me/company-permissions', requireAuth, requireRole('worker'), asyncHandler(async (req, res) => {
   const result = await pool.query(
     `SELECT
-       j.company_id,
-       cp.company_name,
-       cp.logo,
-       BOOL_OR(a.can_post_jobs)::boolean AS can_post_jobs,
-       BOOL_OR(a.can_post_company_posts)::boolean AS can_post_company_posts
-     FROM applications a
-     JOIN jobs j ON j.id = a.job_id
-     JOIN company_profiles cp ON cp.user_id = j.company_id
-     JOIN users u ON u.id = j.company_id
-     WHERE a.worker_id = $1
-       AND a.status = 'accepted'
-       AND u.status = 'active'
-       AND (a.can_post_jobs = TRUE OR a.can_post_company_posts = TRUE)
-     GROUP BY j.company_id, cp.company_name, cp.logo
-     ORDER BY cp.company_name ASC`,
+       company_id,
+       company_name,
+       logo,
+       BOOL_OR(can_post_jobs)::boolean AS can_post_jobs,
+       BOOL_OR(can_post_company_posts)::boolean AS can_post_company_posts
+     FROM (
+       SELECT
+         j.company_id,
+         cp.company_name,
+         cp.logo,
+         a.can_post_jobs,
+         a.can_post_company_posts
+       FROM applications a
+       JOIN jobs j ON j.id = a.job_id
+       JOIN company_profiles cp ON cp.user_id = j.company_id
+       JOIN users u ON u.id = j.company_id
+       WHERE a.worker_id = $1
+         AND a.status = 'accepted'
+         AND u.status = 'active'
+         AND (a.can_post_jobs = TRUE OR a.can_post_company_posts = TRUE)
+       UNION ALL
+       SELECT
+         ctm.company_id,
+         cp.company_name,
+         cp.logo,
+         ctm.can_post_jobs,
+         ctm.can_post_company_posts
+       FROM company_team_members ctm
+       JOIN company_profiles cp ON cp.user_id = ctm.company_id
+       JOIN users u ON u.id = ctm.company_id
+       WHERE ctm.worker_id = $1
+         AND u.status = 'active'
+         AND (ctm.can_post_jobs = TRUE OR ctm.can_post_company_posts = TRUE)
+     ) permissions
+     GROUP BY company_id, company_name, logo
+     ORDER BY company_name ASC`,
     [req.user.id]
   );
 

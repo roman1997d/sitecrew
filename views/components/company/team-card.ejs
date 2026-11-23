@@ -37,4 +37,13 @@
   <% } %>
   <small><i class="bi bi-geo-alt"></i> <%= worker.city %> · <%= worker.experience %></small>
   <small><i class="bi bi-patch-check"></i> <%= worker.certificates %></small>
+  <% if (!worker.isLeader) { %>
+    <button type="button" class="company-team-move-leader-btn" data-move-to-leaders>
+      Move to Leaders
+    </button>
+  <% } else { %>
+    <button type="button" class="company-team-move-operative-btn" data-move-to-operatives>
+      Move to Operatives
+    </button>
+  <% } %>
 </article>

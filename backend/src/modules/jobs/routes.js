@@ -90,6 +90,12 @@ async function getJobCompanyId(req, companyId) {
        AND j.company_id = $2
        AND a.status = 'accepted'
        AND a.can_post_jobs = TRUE
+     UNION ALL
+     SELECT 1
+     FROM company_team_members ctm
+     WHERE ctm.worker_id = $1
+       AND ctm.company_id = $2
+       AND ctm.can_post_jobs = TRUE
      LIMIT 1`,
     [req.user.id, companyId]
   );
