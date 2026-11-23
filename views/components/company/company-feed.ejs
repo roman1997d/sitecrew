@@ -73,6 +73,33 @@
               <% }); %>
             </div>
           <% } %>
+          <div class="company-post-stats" aria-label="Post engagement">
+            <div class="company-post-stat">
+              <i class="bi bi-eye" aria-hidden="true"></i>
+              <strong><%= (post.stats && post.stats.views) || 0 %></strong>
+              <span>Views</span>
+            </div>
+            <div class="company-post-stat">
+              <i class="bi bi-heart" aria-hidden="true"></i>
+              <strong><%= (post.stats && post.stats.likes) || 0 %></strong>
+              <span>Likes</span>
+            </div>
+            <div class="company-post-stat">
+              <i class="bi bi-chat" aria-hidden="true"></i>
+              <strong><%= (post.stats && post.stats.comments) || 0 %></strong>
+              <span>Comments</span>
+            </div>
+            <div class="company-post-stat">
+              <i class="bi bi-bookmark" aria-hidden="true"></i>
+              <strong><%= (post.stats && post.stats.saves) || 0 %></strong>
+              <span>Saved</span>
+            </div>
+            <div class="company-post-stat">
+              <i class="bi bi-emoji-smile" aria-hidden="true"></i>
+              <strong><%= (post.stats && post.stats.reactions) || 0 %></strong>
+              <span>Reactions</span>
+            </div>
+          </div>
           <div class="company-feed-post-actions">
             <button type="button" data-edit-company-post>Edit</button>
             <button type="button" class="danger" data-delete-company-post>Delete</button>

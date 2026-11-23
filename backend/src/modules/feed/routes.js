@@ -17,6 +17,32 @@ const { normalizeMediaList, normalizeMediaPath } = require('../../utils/mediaPat
 
 const router = express.Router();
 
+let feedStatsSchemaReady = false;
+
+async function ensureFeedStatsSchema() {
+  if (feedStatsSchemaReady) return;
+
+  await pool.query(`
+    ALTER TABLE feed_posts
+    ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS feed_post_views (
+      post_id INTEGER NOT NULL REFERENCES feed_posts(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      viewer_key VARCHAR(80) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (post_id, viewer_key)
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_feed_post_views_post
+    ON feed_post_views(post_id, created_at DESC)
+  `);
+
+  feedStatsSchemaReady = true;
+}
+
 function mapFeedPostRow(row) {
   return {
     ...row,
@@ -88,6 +114,7 @@ async function getPostLikeCount(postId) {
 }
 
 router.get('/', optionalAuth, asyncHandler(async (req, res) => {
+  await ensureFeedStatsSchema();
   const { type } = req.query;
   const viewerId = req.user?.id || null;
   const result = await pool.query(
@@ -100,11 +127,13 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
        creator.id AS created_by_id,
        creator.role AS created_by_role,
        COALESCE(creator_wp.full_name, creator_cp.company_name) AS created_by_name,
+       COALESCE(fp.view_count, 0)::int AS view_count,
        (SELECT COUNT(*)::int FROM feed_likes WHERE post_id = fp.id) AS like_count,
        (SELECT COUNT(*)::int
         FROM feed_comments
         WHERE post_id = fp.id
           AND COALESCE(moderation_status, 'visible') = 'visible') AS comment_count,
+       (SELECT COUNT(*)::int FROM feed_saved_posts WHERE post_id = fp.id) AS save_count,
        CASE
          WHEN $2::int IS NOT NULL THEN EXISTS(
            SELECT 1 FROM feed_likes WHERE post_id = fp.id AND user_id = $2
@@ -302,6 +331,57 @@ router.delete('/posts/:id', requireAuth, asyncHandler(async (req, res) => {
   }
 
   return res.json({ deleted: true, postId: result.rows[0].id });
+}));
+
+router.post('/posts/:id/view', optionalAuth, asyncHandler(async (req, res) => {
+  await ensureFeedStatsSchema();
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId) || postId <= 0) {
+    return res.status(400).json({ error: 'Invalid post id.' });
+  }
+
+  const postResult = await pool.query(
+    'SELECT id, author_id, COALESCE(view_count, 0)::int AS view_count FROM feed_posts WHERE id = $1',
+    [postId]
+  );
+  if (postResult.rowCount === 0) {
+    return res.status(404).json({ error: 'Post not found.' });
+  }
+
+  const post = postResult.rows[0];
+  if (req.user && Number(req.user.id) === Number(post.author_id)) {
+    return res.json({ counted: false, viewCount: post.view_count });
+  }
+
+  const rawViewerKey = String(req.body?.viewerKey || req.headers['x-viewer-key'] || '').trim().slice(0, 64);
+  const viewerKey = req.user?.id
+    ? `user:${req.user.id}`
+    : (rawViewerKey ? `anon:${rawViewerKey}` : null);
+
+  if (!viewerKey) {
+    return res.status(400).json({ error: 'viewerKey is required for anonymous views.' });
+  }
+
+  const inserted = await pool.query(
+    `INSERT INTO feed_post_views (post_id, user_id, viewer_key)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (post_id, viewer_key) DO NOTHING
+     RETURNING post_id`,
+    [postId, req.user?.id || null, viewerKey]
+  );
+
+  if (inserted.rowCount > 0) {
+    const updated = await pool.query(
+      `UPDATE feed_posts
+       SET view_count = COALESCE(view_count, 0) + 1
+       WHERE id = $1
+       RETURNING COALESCE(view_count, 0)::int AS view_count`,
+      [postId]
+    );
+    return res.status(201).json({ counted: true, viewCount: updated.rows[0].view_count });
+  }
+
+  return res.json({ counted: false, viewCount: post.view_count });
 }));
 
 router.post('/posts/:id/like', requireAuth, asyncHandler(async (req, res) => {

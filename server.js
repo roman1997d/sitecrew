@@ -823,6 +823,13 @@ function mapCompanyFeedPost(post, index = 0) {
     tags: post.tags || [],
     postType: post.post_type || 'work_completed',
     projectSize: post.project_size || '',
+    stats: {
+      views: Number(post.view_count || 0),
+      likes: Number(post.like_count || 0),
+      comments: Number(post.comment_count || 0),
+      saves: Number(post.save_count || 0),
+      reactions: Number(post.like_count || 0),
+    },
   };
 }
 

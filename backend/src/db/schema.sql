@@ -291,6 +291,18 @@ CREATE TABLE IF NOT EXISTS feed_posts (
 ALTER TABLE feed_posts ADD COLUMN IF NOT EXISTS created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
 UPDATE feed_posts SET created_by_user_id = author_id WHERE created_by_user_id IS NULL;
 
+ALTER TABLE feed_posts ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS feed_post_views (
+  post_id INTEGER NOT NULL REFERENCES feed_posts(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  viewer_key VARCHAR(80) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (post_id, viewer_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_feed_post_views_post ON feed_post_views(post_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS feed_likes (
   post_id INTEGER NOT NULL REFERENCES feed_posts(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

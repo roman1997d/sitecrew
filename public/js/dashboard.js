@@ -2486,6 +2486,55 @@
     loadFeedComments(card);
   });
 
+  function getAnonViewerKey() {
+    const storageKey = 'sitecrewViewerKey';
+    let viewerKey = localStorage.getItem(storageKey);
+    if (!viewerKey) {
+      viewerKey = `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(storageKey, viewerKey);
+    }
+    return viewerKey;
+  }
+
+  async function trackFeedPostView(postId) {
+    if (!postId) return;
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      const token = getToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      await fetch(`${API_BASE_URL}/api/feed/posts/${postId}/view`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ viewerKey: getAnonViewerKey() }),
+        keepalive: true,
+      });
+    } catch (_error) {
+      // Ignore view tracking failures so feed UX stays smooth.
+    }
+  }
+
+  if ('IntersectionObserver' in window) {
+    const viewedPosts = new Set();
+    const viewObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.55) return;
+        const card = entry.target;
+        const postId = card.getAttribute('data-post-id');
+        if (!postId || viewedPosts.has(postId)) return;
+        viewedPosts.add(postId);
+        viewObserver.unobserve(card);
+        trackFeedPostView(postId);
+      });
+    }, { threshold: [0.55] });
+
+    document.querySelectorAll('.feed-post-card[data-post-id]').forEach((card) => {
+      viewObserver.observe(card);
+    });
+  }
+
   const highlightedPostId = new URLSearchParams(window.location.search).get('post');
   if (highlightedPostId) {
     const highlightedCard = document.querySelector(`.feed-post-card[data-post-id="${highlightedPostId}"]`);
