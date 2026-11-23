@@ -42,13 +42,25 @@ function getOrganizationSchema() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: SITE_NAME,
+    alternateName: ['Site Crew', 'sitecrew.uk'],
     url: getSiteUrl(),
     logo: absoluteUrl('/android-chrome-512x512.png'),
     description: DEFAULT_DESCRIPTION,
+    knowsAbout: [
+      'UK construction jobs',
+      'Direct construction hiring',
+      'Plasterer jobs',
+      'Dryliner jobs',
+      'Electrician jobs',
+      'Construction day rates',
+    ],
     areaServed: {
       '@type': 'Country',
       name: 'United Kingdom',
     },
+    sameAs: [
+      getSiteUrl(),
+    ],
   };
 }
 
@@ -197,9 +209,7 @@ function getBreadcrumbSchema(items = []) {
 }
 
 function renderRobotsTxt() {
-  return [
-    'User-agent: *',
-    'Allow: /',
+  const privatePaths = [
     'Disallow: /admin/',
     'Disallow: /worker/dashboard',
     'Disallow: /company/dashboard',
@@ -207,7 +217,37 @@ function renderRobotsTxt() {
     'Disallow: /forgot-password',
     'Disallow: /reset-password',
     'Disallow: /api/',
+  ];
+
+  // Explicit allow for major AI / answer-engine crawlers on public pages.
+  const aiAgents = [
+    'GPTBot',
+    'ChatGPT-User',
+    'Google-Extended',
+    'Googlebot',
+    'ClaudeBot',
+    'Anthropic-AI',
+    'PerplexityBot',
+    'Bytespider',
+    'CCBot',
+    'Applebot-Extended',
+  ];
+
+  const aiBlocks = aiAgents.flatMap((agent) => [
+    `User-agent: ${agent}`,
+    'Allow: /',
+    ...privatePaths,
     '',
+  ]);
+
+  return [
+    '# SiteCrew robots — public job pages are crawlable for search and AI assistants',
+    'User-agent: *',
+    'Allow: /',
+    ...privatePaths,
+    '',
+    ...aiBlocks,
+    `# AI context file: ${absoluteUrl('/llms.txt')}`,
     `Sitemap: ${absoluteUrl('/sitemap.xml')}`,
   ].join('\n');
 }
@@ -219,6 +259,7 @@ module.exports = {
   getSiteUrl,
   absoluteUrl,
   buildSeo,
+  getOrganizationSchema,
   getHomeFaqItems,
   getHomePageJsonLd,
   getBreadcrumbSchema,

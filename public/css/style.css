@@ -1467,6 +1467,37 @@ main { flex: 1; }
   color: var(--amber);
 }
 
+.public-jobs-faq {
+  margin-top: 42px;
+  display: grid;
+  gap: 12px;
+}
+
+.public-jobs-faq h2 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  color: var(--navy, #0f172a);
+}
+
+.public-jobs-faq-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 14px;
+}
+
+.public-jobs-faq-item summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.public-jobs-faq-item p {
+  margin: 10px 0 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
 .public-jobs-cta {
   margin-top: 40px;
   text-align: center;

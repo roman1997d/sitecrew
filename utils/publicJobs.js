@@ -135,8 +135,13 @@ function getJobPostingSchema(job, canonicalUrl) {
       address: {
         '@type': 'PostalAddress',
         addressLocality: job.city || 'United Kingdom',
+        addressRegion: job.city || undefined,
         addressCountry: 'GB',
       },
+    },
+    applicantLocationRequirements: {
+      '@type': 'Country',
+      name: 'United Kingdom',
     },
     baseSalary: rateValue
       ? {

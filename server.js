@@ -10,6 +10,7 @@ const {
   getBreadcrumbSchema,
   renderSitemapXml,
   renderRobotsTxt,
+  getOrganizationSchema,
 } = require('./utils/seo');
 const { resolveOgImageFromSources, resolveOgImageUrl } = require('./utils/ogImages');
 const {
@@ -22,12 +23,14 @@ const {
 const {
   resolveJobLandingSlug,
   getLandingSeo,
+  getLandingFaqSchema,
   getLandingFilters,
   getAllLandingPaths,
   getTradeBrowseLinks,
   getCityBrowseLinks,
   getPopularLandingLinks,
 } = require('./utils/seoLandings');
+const { renderLlmsTxt } = require('./utils/llmsTxt');
 const {
   buildCompanySlug,
   parseCompanySlug,
@@ -178,7 +181,14 @@ app.use((req, res, next) => {
 
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
+  res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
   res.send(renderRobotsTxt());
+});
+
+app.get('/llms.txt', (req, res) => {
+  res.type('text/plain; charset=utf-8');
+  res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
+  res.send(renderLlmsTxt());
 });
 
 app.get('/sitemap.xml', async (req, res) => {
@@ -1381,10 +1391,13 @@ async function renderPublicJobsPage(req, res, options = {}) {
         }
       : {}),
   };
+  const landingFaqSchema = options.landing ? getLandingFaqSchema(options.landing) : null;
   const jsonLd = [
+    getOrganizationSchema(),
     getBreadcrumbSchema(breadcrumbItems),
     webPageSchema,
     ...(listSchema ? [listSchema] : []),
+    ...(landingFaqSchema ? [landingFaqSchema] : []),
   ];
 
   setPublicHtmlCache(res, options.landing ? 'landing' : 'dynamic');
@@ -1402,6 +1415,7 @@ async function renderPublicJobsPage(req, res, options = {}) {
     filters: hideJobListings ? { q: '', trade: '', city: '' } : filters,
     tradeLinks: options.showBrowseLinks === false ? [] : getTradeBrowseLinks(),
     cityLinks: options.showBrowseLinks === false ? [] : getCityBrowseLinks(),
+    landingFaqs: pageMeta.faqItems || [],
   });
 }
 
