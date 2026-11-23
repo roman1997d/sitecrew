@@ -309,11 +309,12 @@
           </label>
         </div>
 
-        <label>
+        <div class="company-form-full company-portfolio-media-field">
           <span>Photos / video</span>
-          <input type="file" name="media" accept="image/*,video/*" multiple>
-          <small class="company-form-help">Add site photos or a short video — one video or up to 5 pictures.</small>
-        </label>
+          <input type="file" name="media" id="companyPostMediaInput" accept="image/*,video/*" multiple>
+          <small class="company-form-help">Add up to 3 photos, or 1 video. Selected files appear below as thumbnails.</small>
+          <div class="company-media-preview" id="companyPostMediaPreview" hidden></div>
+        </div>
 
         <label>
           <span>Description</span>

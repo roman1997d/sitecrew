@@ -535,6 +535,7 @@
     companyPostForm?.reset();
     if (companyPostForm?.elements.postId) companyPostForm.elements.postId.value = '';
     setCompanyPostType('work_completed');
+    setCompanyPostSelectedFiles([]);
     const submitBtn = companyPostForm?.querySelector('button[type="submit"]');
     if (submitBtn) submitBtn.textContent = 'Publish to portfolio';
     const title = document.getElementById('companyPostTitle');
@@ -558,6 +559,7 @@
       companyPostForm.elements.projectSize.value = card.dataset.projectSize || '';
     }
     setCompanyPostType(card.dataset.postType || 'work_completed');
+    setCompanyPostSelectedFiles([]);
     const submitBtn = companyPostForm.querySelector('button[type="submit"]');
     if (submitBtn) submitBtn.textContent = 'Save changes';
     const title = document.getElementById('companyPostTitle');
@@ -585,6 +587,59 @@
     return data.story;
   }
 
+  const PORTFOLIO_MAX_IMAGES = 3;
+  const companyPostMediaInput = document.getElementById('companyPostMediaInput');
+  const companyPostMediaPreview = document.getElementById('companyPostMediaPreview');
+  let companyPostSelectedFiles = [];
+  const companyPostPreviewUrls = new Set();
+
+  function revokeCompanyPostPreviewUrls() {
+    companyPostPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    companyPostPreviewUrls.clear();
+  }
+
+  function syncCompanyPostMediaInput() {
+    if (!companyPostMediaInput) return;
+    const transfer = new DataTransfer();
+    companyPostSelectedFiles.forEach((file) => transfer.items.add(file));
+    companyPostMediaInput.files = transfer.files;
+  }
+
+  function renderCompanyPostMediaPreview() {
+    if (!companyPostMediaPreview) return;
+    revokeCompanyPostPreviewUrls();
+
+    if (!companyPostSelectedFiles.length) {
+      companyPostMediaPreview.hidden = true;
+      companyPostMediaPreview.innerHTML = '';
+      return;
+    }
+
+    companyPostMediaPreview.hidden = false;
+    companyPostMediaPreview.innerHTML = companyPostSelectedFiles.map((file, index) => {
+      const isVideo = file.type.startsWith('video/');
+      const url = URL.createObjectURL(file);
+      companyPostPreviewUrls.add(url);
+      return `
+        <article class="company-media-thumb" data-media-index="${index}">
+          ${isVideo
+            ? `<video src="${url}" muted playsinline></video><span class="company-media-thumb-badge">Video</span>`
+            : `<img src="${url}" alt="${escapeHtml(file.name)}">`}
+          <button type="button" class="company-media-thumb-remove" data-remove-media-index="${index}" aria-label="Remove ${escapeHtml(file.name)}">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          <small>${escapeHtml(file.name)}</small>
+        </article>
+      `;
+    }).join('');
+  }
+
+  function setCompanyPostSelectedFiles(files) {
+    companyPostSelectedFiles = Array.from(files || []);
+    syncCompanyPostMediaInput();
+    renderCompanyPostMediaPreview();
+  }
+
   function validatePostMedia(files) {
     if (!files.length) return;
 
@@ -592,21 +647,65 @@
     const videos = files.filter((file) => file.type.startsWith('video/'));
 
     if (videos.length && files.length > 1) {
-      throw new Error('For posts, upload either one video or up to 5 pictures.');
+      throw new Error('Upload either one video or up to 3 photos.');
     }
 
     if (videos.length > 1) {
       throw new Error('Only one video is allowed.');
     }
 
-    if (images.length > 5) {
-      throw new Error('Maximum 5 pictures are allowed.');
+    if (images.length > PORTFOLIO_MAX_IMAGES) {
+      throw new Error(`Maximum ${PORTFOLIO_MAX_IMAGES} photos are allowed.`);
     }
 
     if (images.length + videos.length !== files.length) {
       throw new Error('Only pictures or videos are allowed.');
     }
   }
+
+  companyPostMediaInput?.addEventListener('change', () => {
+    const incoming = Array.from(companyPostMediaInput.files || []);
+    if (!incoming.length) {
+      setCompanyPostSelectedFiles([]);
+      return;
+    }
+
+    try {
+      const merged = [];
+      const existingKeys = new Set(
+        companyPostSelectedFiles.map((file) => `${file.name}:${file.size}:${file.lastModified}`)
+      );
+
+      companyPostSelectedFiles.forEach((file) => merged.push(file));
+      incoming.forEach((file) => {
+        const key = `${file.name}:${file.size}:${file.lastModified}`;
+        if (!existingKeys.has(key)) {
+          merged.push(file);
+          existingKeys.add(key);
+        }
+      });
+
+      validatePostMedia(merged);
+      if (merged.length > PORTFOLIO_MAX_IMAGES && !merged.some((file) => file.type.startsWith('video/'))) {
+        throw new Error(`Maximum ${PORTFOLIO_MAX_IMAGES} photos are allowed.`);
+      }
+
+      setCompanyPostSelectedFiles(merged.slice(0, merged.some((file) => file.type.startsWith('video/')) ? 1 : PORTFOLIO_MAX_IMAGES));
+    } catch (error) {
+      alert(error.message);
+      syncCompanyPostMediaInput();
+    }
+  });
+
+  companyPostMediaPreview?.addEventListener('click', (event) => {
+    const removeBtn = event.target.closest('[data-remove-media-index]');
+    if (!removeBtn) return;
+    const index = Number(removeBtn.dataset.removeMediaIndex);
+    if (!Number.isInteger(index)) return;
+    companyPostSelectedFiles = companyPostSelectedFiles.filter((_, itemIndex) => itemIndex !== index);
+    syncCompanyPostMediaInput();
+    renderCompanyPostMediaPreview();
+  });
 
   function getVideoDuration(file) {
     return new Promise((resolve, reject) => {
@@ -2424,7 +2523,10 @@
 
     const formData = new FormData(companyPostForm);
     const submitBtn = companyPostForm.querySelector('button[type="submit"]');
-    const files = Array.from(formData.getAll('media')).filter((file) => file.size > 0);
+    syncCompanyPostMediaInput();
+    const files = companyPostSelectedFiles.length
+      ? companyPostSelectedFiles.slice()
+      : Array.from(formData.getAll('media')).filter((file) => file && file.size > 0);
     const postId = formData.get('postId');
     submitBtn.disabled = true;
     submitBtn.textContent = postId ? 'Saving...' : 'Publishing...';
