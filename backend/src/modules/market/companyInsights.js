@@ -303,9 +303,44 @@ async function getRecentSnapshots(limit = 7) {
   }));
 }
 
+function toRelativeRank(items = []) {
+  return (items || []).map((item) => ({
+    label: item.label,
+    share: item.share || 0,
+    intensity: item.intensity || 0,
+  }));
+}
+
+function toPublicCompanyInsights(live) {
+  // Keep absolute platform totals internal to SiteCrew.
+  return {
+    generatedAt: live.generatedAt,
+    lookbackDays: live.lookbackDays,
+    summary: {
+      searchCoverage: live.summary?.searchCoverage || 'platform_demand',
+    },
+    mostSearchedJobs: toRelativeRank(live.mostSearchedJobs),
+    mostSearchedTrades: toRelativeRank(live.mostSearchedTrades),
+    searchCities: toRelativeRank(live.searchCities),
+    attractingRates: toRelativeRank(live.attractingRates),
+    openJobTrades: toRelativeRank(live.openJobTrades),
+    openJobCities: toRelativeRank(live.openJobCities),
+    workerTrades: toRelativeRank(live.workerTrades),
+    workerCities: toRelativeRank(live.workerCities),
+    demandVsSupply: (live.demandVsSupply || []).map((row) => ({
+      label: row.label,
+      demandShare: row.demandShare || 0,
+      supplyShare: row.supplyShare || 0,
+      demand: row.demandShare || 0,
+      supply: row.supplyShare || 0,
+    })),
+    updatedDaily: true,
+  };
+}
+
 async function getCompanyMarketInsights() {
   const live = await computeLiveInsights();
-  const snapshots = await getRecentSnapshots(7);
+  const snapshots = await getRecentSnapshots(1);
 
   // Ensure today's snapshot exists / is refreshed when companies open the page.
   const today = toIsoDate(new Date());
@@ -313,28 +348,7 @@ async function getCompanyMarketInsights() {
     await saveDailySnapshot(live);
   }
 
-  const trend = [...snapshots].reverse().map((snap) => ({
-    date: snap.date,
-    searches: Number(snap.payload?.summary?.searches30d || 0),
-    applications: Number(snap.payload?.summary?.applications30d || 0),
-    openJobs: Number(snap.payload?.summary?.openJobs || 0),
-  }));
-
-  // Prefer live for current cards; keep trend from stored days.
-  if (!trend.some((item) => item.date === today)) {
-    trend.push({
-      date: today,
-      searches: live.summary.searches30d,
-      applications: live.summary.applications30d,
-      openJobs: live.summary.openJobs,
-    });
-  }
-
-  return {
-    ...live,
-    trend: trend.slice(-7),
-    updatedDaily: true,
-  };
+  return toPublicCompanyInsights(live);
 }
 
 async function runDailyMarketStatsRefresh() {

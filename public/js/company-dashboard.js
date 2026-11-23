@@ -3466,7 +3466,7 @@
       <div class="company-market-bar-row ${tone}">
         <div class="company-market-bar-meta">
           <strong>${escapeHtml(item.label)}</strong>
-          <span>${formatMarketNumber(item.count)} · ${item.share || 0}%</span>
+          <span>${item.share || 0}% of demand</span>
         </div>
         <div class="company-market-bar-track">
           <div class="company-market-bar-fill" style="width: ${Math.max(6, Number(item.intensity) || 0)}%"></div>
@@ -3484,7 +3484,7 @@
     container.innerHTML = items.slice(0, 10).map((item) => `
       <span class="company-market-chip">
         ${escapeHtml(item.label)}
-        <em>${formatMarketNumber(item.count)}</em>
+        <em>${item.share || 0}%</em>
       </span>
     `).join('');
   }
@@ -3501,7 +3501,7 @@
       <div class="company-market-compare-row">
         <div class="company-market-compare-label">
           <strong>${escapeHtml(row.label)}</strong>
-          <span>Demand ${formatMarketNumber(row.demand)} · Open jobs ${formatMarketNumber(row.supply)}</span>
+          <span>Demand ${row.demandShare || 0}% · Supply ${row.supplyShare || 0}%</span>
         </div>
         <div class="company-market-dual-track">
           <div class="company-market-dual-bar demand">
@@ -3521,81 +3521,23 @@
     `).join('');
   }
 
-  function renderMarketTrend(container, trend = []) {
-    if (!container) return;
-    if (!trend.length) {
-      container.innerHTML = '<p class="company-market-empty">Daily snapshots will build this trend after refresh.</p>';
-      return;
-    }
-
-    const maxValue = trend.reduce(
-      (max, day) => Math.max(max, day.searches || 0, day.applications || 0, day.openJobs || 0),
-      0
-    ) || 1;
-
-    container.innerHTML = `
-      <div class="company-market-trend-chart">
-        ${trend.map((day) => {
-          const label = String(day.date || '').slice(5);
-          const searchesH = Math.max(4, Math.round(((day.searches || 0) / maxValue) * 100));
-          const appsH = Math.max(4, Math.round(((day.applications || 0) / maxValue) * 100));
-          const jobsH = Math.max(4, Math.round(((day.openJobs || 0) / maxValue) * 100));
-          return `
-            <div class="company-market-trend-col" title="${escapeHtml(day.date)}">
-              <div class="company-market-trend-stack">
-                <div class="company-market-trend-seg searches" style="height: ${searchesH}%"></div>
-                <div class="company-market-trend-seg applications" style="height: ${appsH}%"></div>
-                <div class="company-market-trend-seg jobs" style="height: ${jobsH}%"></div>
-              </div>
-              <small>${escapeHtml(label)}</small>
-            </div>
-          `;
-        }).join('')}
-      </div>
-      <div class="company-market-legend">
-        <span><i class="searches"></i>Searches (30d window)</span>
-        <span><i class="applications"></i>Applications (30d)</span>
-        <span><i class="jobs"></i>Open jobs</span>
-      </div>
-    `;
-  }
-
   function renderMarketInsights(insights) {
     const summary = insights.summary || {};
     const summaryEl = document.querySelector('[data-market-summary]');
     const updatedEl = document.querySelector('[data-market-updated]');
     const sourceLabel = summary.searchCoverage === 'search_engine'
-      ? 'From SiteCrew job-search engine + applications'
-      : 'From SiteCrew applications & worker activity (search log warming up)';
+      ? 'From SiteCrew job-search patterns'
+      : 'From SiteCrew hiring demand patterns (search log warming up)';
 
     if (updatedEl) {
       const generated = insights.generatedAt ? new Date(insights.generatedAt) : new Date();
       updatedEl.textContent = `${sourceLabel}. Last refreshed ${generated.toLocaleString('en-GB')}. Updates daily.`;
     }
 
+    // Platform totals (searches, applications, open jobs, workers, companies) stay internal.
     if (summaryEl) {
-      summaryEl.innerHTML = `
-        <article class="company-market-kpi">
-          <span>Searches (30d)</span>
-          <strong>${formatMarketNumber(summary.searches30d)}</strong>
-          <small>${formatMarketNumber(summary.searchesToday)} today</small>
-        </article>
-        <article class="company-market-kpi">
-          <span>Applications (30d)</span>
-          <strong>${formatMarketNumber(summary.applications30d)}</strong>
-          <small>${formatMarketNumber(summary.applicationsToday)} today</small>
-        </article>
-        <article class="company-market-kpi">
-          <span>Open jobs</span>
-          <strong>${formatMarketNumber(summary.openJobs)}</strong>
-          <small>${formatMarketNumber(summary.activeWorkers)} active workers</small>
-        </article>
-        <article class="company-market-kpi">
-          <span>Active companies</span>
-          <strong>${formatMarketNumber(summary.activeCompanies)}</strong>
-          <small>${formatMarketNumber(summary.uniqueSearchers)} unique searchers</small>
-        </article>
-      `;
+      summaryEl.innerHTML = '';
+      summaryEl.hidden = true;
     }
 
     renderMarketBars(document.querySelector('[data-market-searched-jobs]'), insights.mostSearchedJobs || []);
@@ -3603,7 +3545,6 @@
     renderMarketBars(document.querySelector('[data-market-cities]'), insights.searchCities || [], 'is-warm');
     renderMarketBars(document.querySelector('[data-market-rates]'), insights.attractingRates || [], 'is-accent');
     renderMarketCompare(document.querySelector('[data-market-compare]'), insights.demandVsSupply || []);
-    renderMarketTrend(document.querySelector('[data-market-trend]'), insights.trend || []);
     renderMarketChips(document.querySelector('[data-market-worker-trades]'), insights.workerTrades || []);
     renderMarketChips(document.querySelector('[data-market-worker-cities]'), insights.workerCities || []);
   }
