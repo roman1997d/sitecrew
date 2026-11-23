@@ -245,6 +245,10 @@ async function ensureCompanyTeamMembersTable() {
     CREATE INDEX IF NOT EXISTS idx_company_team_members_company
     ON company_team_members(company_id, updated_at DESC)
   `);
+  await pool.query(`
+    ALTER TABLE applications
+    ADD COLUMN IF NOT EXISTS company_occupation VARCHAR(120)
+  `);
   companyTeamMembersReady = true;
 }
 
