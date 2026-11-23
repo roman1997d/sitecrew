@@ -58,7 +58,9 @@ function mapFeedPostRow(row) {
 }
 
 async function recordFeedViewsForViewer(posts, viewer) {
-  if (!viewer?.id || !Array.isArray(posts) || !posts.length) return;
+  // Portfolio views are for workers (and anonymous). Company accounts loading the
+  // shared feed (e.g. dashboard) must not inflate other companies' view stats.
+  if (!viewer?.id || viewer.role === 'company' || !Array.isArray(posts) || !posts.length) return;
 
   for (const post of posts) {
     if (!post?.id || Number(post.author_id) === Number(viewer.id)) continue;
@@ -163,6 +165,8 @@ async function getPostLikeCount(postId) {
 router.get('/', optionalAuth, asyncHandler(async (req, res) => {
   await ensureFeedStatsSchema();
   const { type } = req.query;
+  const authorId = Number(req.query.authorId);
+  const hasAuthorFilter = Number.isInteger(authorId) && authorId > 0;
   const viewerId = req.user?.id || null;
   const result = await pool.query(
     `SELECT
@@ -201,14 +205,18 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
      LEFT JOIN worker_profiles creator_wp ON creator_wp.user_id = creator.id
      LEFT JOIN company_profiles creator_cp ON creator_cp.user_id = creator.id
      WHERE ($1::text IS NULL OR fp.post_type = $1)
+       AND ($3::int IS NULL OR fp.author_id = $3)
        AND COALESCE(fp.moderation_status, 'visible') = 'visible'
      ORDER BY fp.created_at DESC
      LIMIT 50`,
-    [type || null, viewerId]
+    [type || null, viewerId, hasAuthorFilter ? authorId : null]
   );
 
   const posts = result.rows.map(mapFeedPostRow);
-  await recordFeedViewsForViewer(posts, req.user);
+  // Only count views for the shared discovery feed, not author-filtered portfolio fetches.
+  if (!hasAuthorFilter) {
+    await recordFeedViewsForViewer(posts, req.user);
+  }
   res.json({ posts });
 }));
 
@@ -400,6 +408,11 @@ router.post('/posts/:id/view', optionalAuth, asyncHandler(async (req, res) => {
 
   const post = postResult.rows[0];
   if (req.user && Number(req.user.id) === Number(post.author_id)) {
+    return res.json({ counted: false, viewCount: post.view_count });
+  }
+
+  // Company accounts should not count as portfolio viewers.
+  if (req.user?.role === 'company') {
     return res.json({ counted: false, viewCount: post.view_count });
   }
 

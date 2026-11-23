@@ -891,7 +891,7 @@ function getUnreadMessageCount(conversations = []) {
 async function buildCompanyDashboard(token, companyId, profile) {
   const [jobs, feed, notifications, conversations, companyPublicData] = await Promise.all([
     apiGet('/api/jobs?status=', token),
-    apiGet('/api/feed', token),
+    apiGet(`/api/feed?authorId=${companyId}`, token),
     apiGet('/api/notifications', token),
     apiGet('/api/conversations', token),
     apiGet(`/api/companies/${companyId}`, token),
@@ -1169,7 +1169,7 @@ async function buildPublicCompanyProfile(token, companyId) {
     apiGet(`/api/companies/${companyId}`, token),
     apiGet('/api/follows/me', token),
     apiGet('/api/stories/companies', token),
-    apiGet('/api/feed', token).catch(() => ({ posts: [] })),
+    apiGet(`/api/feed?authorId=${companyId}`, token).catch(() => ({ posts: [] })),
   ]);
 
   const companyProfile = companyData.profile;
@@ -1179,7 +1179,6 @@ async function buildPublicCompanyProfile(token, companyId) {
   const ratingAverage = companyData.rating?.average;
   const ratingCount = Number(companyData.rating?.count || 0);
   const portfolio = (feed.posts || [])
-    .filter((post) => Number(post.author_id) === Number(companyId))
     .slice(0, 24)
     .map(mapCompanyFeedPost);
 
