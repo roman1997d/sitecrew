@@ -2,9 +2,9 @@
   <div class="company-section-header">
     <div>
       <span>My Team</span>
-      <h2>Workers hired by your company</h2>
+      <h2>Your company crew</h2>
     </div>
-    <p>Search your team and set each worker’s occupation name in your company.</p>
+    <p>Search any worker on SiteCrew, add them to your team, and set their occupation.</p>
   </div>
 
   <div class="company-team-toolbar">
@@ -13,21 +13,21 @@
       <input
         type="search"
         id="companyTeamSearch"
-        placeholder="Search by worker name..."
+        placeholder="Search all workers by name, trade, or city..."
         autocomplete="off"
-        <%= teamMembers.length ? '' : 'disabled' %>
       >
     </label>
-    <p class="company-team-search-empty" data-team-search-empty hidden>No workers match this name.</p>
+    <div class="company-team-search-results" data-team-search-results hidden></div>
+    <p class="company-team-search-empty" data-team-search-empty hidden>No workers match this search.</p>
   </div>
 
   <% const leaders = teamMembers.filter(function(worker) { return worker.isLeader; }); %>
   <% const operatives = teamMembers.filter(function(worker) { return !worker.isLeader; }); %>
 
   <% if (!teamMembers.length) { %>
-    <article class="company-empty-card">
-      <strong>No workers hired yet</strong>
-      <p>Accepted applicants will appear here as your active team.</p>
+    <article class="company-empty-card" data-team-empty-all>
+      <strong>No team members yet</strong>
+      <p>Search the platform above to add workers, or accept applicants from your jobs.</p>
     </article>
   <% } else { %>
     <div class="company-team-sections">
@@ -56,7 +56,7 @@
       <div class="company-team-group-header">
         <div>
           <span>Operatives</span>
-          <h3>Workers without company permissions</h3>
+          <h3>Workers on your team roster</h3>
         </div>
         <small><%= operatives.length %> active</small>
       </div>
@@ -64,11 +64,11 @@
         <% if (!operatives.length) { %>
           <article class="company-empty-card" data-team-empty="operatives">
             <strong>No operatives yet</strong>
-            <p>Hired workers without company permissions will appear here.</p>
+            <p>Add workers from search or hire applicants to build your roster.</p>
           </article>
         <% } %>
         <% operatives.forEach(function(worker) { %>
-          <%- include('./team-card', { worker: worker, roleLabel: 'Operative' }) %>
+          <%- include('./team-card', { worker: worker, roleLabel: worker.isHired === false ? 'Roster' : 'Operative' }) %>
         <% }); %>
       </div>
     </div>

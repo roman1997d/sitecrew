@@ -1693,6 +1693,55 @@
     return data.application;
   }
 
+  async function updateRosterOccupation(workerId, occupation) {
+    const response = await fetch(`${API_BASE_URL}/api/companies/team/${workerId}/occupation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify({ occupation }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Could not save occupation.');
+    }
+
+    return data.member;
+  }
+
+  async function addWorkerToTeam(workerId, occupation) {
+    const response = await fetch(`${API_BASE_URL}/api/companies/team`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify({ workerId: Number(workerId), occupation }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Could not add worker to team.');
+    }
+
+    return data.member;
+  }
+
+  async function searchPlatformWorkers(query) {
+    const response = await fetch(`${API_BASE_URL}/api/companies/team/search?q=${encodeURIComponent(query)}`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Could not search workers.');
+    }
+
+    return data.workers || [];
+  }
+
   async function updateTeamPermissions(applicationId, payload) {
     const response = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/permissions`, {
       method: 'PATCH',
@@ -1759,9 +1808,16 @@
       : escapeHtml((profile.full_name || 'W').charAt(0).toUpperCase());
     const permissions = options.permissions || {};
     const occupationValue = options.occupation || '';
-    const teamActions = options.applicationId
+    const hasTeamContext = Boolean(options.workerId);
+    const hasHiredApplication = Boolean(options.applicationId);
+    const occupationForm = hasTeamContext
       ? `
-        <form class="team-worker-occupation-form" data-team-occupation-form data-application-id="${escapeHtml(options.applicationId)}">
+        <form
+          class="team-worker-occupation-form"
+          data-team-occupation-form
+          data-worker-id="${escapeHtml(String(options.workerId))}"
+          ${hasHiredApplication ? `data-application-id="${escapeHtml(String(options.applicationId))}"` : ''}
+        >
           <span>Company occupation</span>
           <label>
             <span>Occupation name in your company</span>
@@ -1778,7 +1834,11 @@
             <button type="submit" class="company-submit-btn">Save occupation</button>
           </div>
         </form>
-        <form class="team-worker-permissions-form" data-team-permissions-form data-application-id="${escapeHtml(options.applicationId)}">
+      `
+      : '';
+    const hiredActions = hasHiredApplication
+      ? `
+        <form class="team-worker-permissions-form" data-team-permissions-form data-application-id="${escapeHtml(String(options.applicationId))}">
           <span>Company permissions</span>
           <label class="team-permission-toggle">
             <input type="checkbox" name="canPostJobs" ${permissions.canPostJobs ? 'checked' : ''}>
@@ -1798,7 +1858,7 @@
             <button type="submit" class="company-submit-btn">Save permissions</button>
           </div>
         </form>
-        <form class="team-worker-review-form" data-worker-review-form data-worker-id="${escapeHtml(options.workerId)}">
+        <form class="team-worker-review-form" data-worker-review-form data-worker-id="${escapeHtml(String(options.workerId))}">
           <span>Rate this worker</span>
           <div class="team-rating-stars" role="radiogroup" aria-label="Rate this worker">
             <input type="hidden" name="rating" value="5">
@@ -1814,11 +1874,12 @@
           </label>
           <div class="team-worker-actions">
             <button type="submit" class="company-submit-btn">Submit feedback</button>
-            <button type="button" class="company-danger-btn" data-unhire-worker data-application-id="${escapeHtml(options.applicationId)}">Unhire this worker</button>
+            <button type="button" class="company-danger-btn" data-unhire-worker data-application-id="${escapeHtml(String(options.applicationId))}">Unhire this worker</button>
           </div>
         </form>
       `
       : '';
+    const teamActions = `${occupationForm}${hiredActions}`;
 
     return `
       <div class="company-worker-profile-head">
@@ -2966,7 +3027,7 @@
         const profile = await fetchWorkerProfile(workerId);
         workerProfileContent.innerHTML = renderWorkerProfile(profile, {
           workerId,
-          applicationId,
+          applicationId: applicationId || null,
           occupation: card?.dataset.occupation || '',
           permissions: {
             canPostJobs: card?.dataset.canPostJobs === 'true',
@@ -2979,48 +3040,232 @@
     });
   });
 
-  function updateTeamSearchFilter() {
-    const query = (document.getElementById('companyTeamSearch')?.value || '').trim().toLowerCase();
-    const cards = Array.from(document.querySelectorAll('[data-team-worker-card]'));
-    const emptyState = document.querySelector('[data-team-search-empty]');
-    let visibleCount = 0;
+  const teamSearchInput = document.getElementById('companyTeamSearch');
+  const teamSearchResults = document.querySelector('[data-team-search-results]');
+  const teamSearchEmpty = document.querySelector('[data-team-search-empty]');
+  let teamSearchTimer = null;
+  let teamSearchRequestId = 0;
+  let pendingTeamAddWorker = null;
 
-    cards.forEach((card) => {
-      const name = (card.dataset.workerName || '').toLowerCase();
-      const occupation = (card.dataset.occupation || '').toLowerCase();
-      const matches = !query || name.includes(query) || occupation.includes(query);
-      card.hidden = !matches;
-      if (matches) visibleCount += 1;
-    });
+  function hideTeamSearchResults() {
+    if (teamSearchResults) {
+      teamSearchResults.hidden = true;
+      teamSearchResults.innerHTML = '';
+    }
+    pendingTeamAddWorker = null;
+  }
 
-    document.querySelectorAll('[data-team-group]').forEach((group) => {
-      const visibleInGroup = group.querySelectorAll('[data-team-worker-card]:not([hidden])').length;
-      group.hidden = Boolean(query) && visibleInGroup === 0;
-    });
+  function renderTeamSearchResults(workers, query) {
+    if (!teamSearchResults) return;
 
-    if (emptyState) {
-      emptyState.hidden = !(query && visibleCount === 0);
+    if (!workers.length) {
+      teamSearchResults.hidden = true;
+      teamSearchResults.innerHTML = '';
+      if (teamSearchEmpty) teamSearchEmpty.hidden = false;
+      return;
+    }
+
+    if (teamSearchEmpty) teamSearchEmpty.hidden = true;
+    teamSearchResults.hidden = false;
+    teamSearchResults.innerHTML = workers.map((worker) => {
+      const initial = escapeHtml((worker.name || 'W').charAt(0).toUpperCase());
+      const photo = worker.profilePhoto
+        ? `<img src="${escapeHtml(getMediaUrl(worker.profilePhoto))}" alt="">`
+        : initial;
+      const meta = worker.isOnTeam
+        ? '<span class="company-team-search-item-meta is-on-team">On team</span>'
+        : '<span class="company-team-search-item-meta">Add</span>';
+      return `
+        <button
+          type="button"
+          class="company-team-search-item"
+          data-team-search-pick
+          data-worker-id="${escapeHtml(String(worker.id))}"
+          data-worker-name="${escapeHtml(worker.name || 'Worker')}"
+          data-is-on-team="${worker.isOnTeam ? 'true' : 'false'}"
+          data-application-id="${escapeHtml(String(worker.applicationId || ''))}"
+          data-occupation="${escapeHtml(worker.occupation || '')}"
+        >
+          <span class="company-worker-avatar ${worker.profilePhoto ? 'has-photo' : ''}">${photo}</span>
+          <span>
+            <strong>${escapeHtml(worker.name || 'Worker')}</strong>
+            <small>${escapeHtml(worker.trade || 'Trade not set')} · ${escapeHtml(worker.city || 'Location not set')}</small>
+          </span>
+          ${meta}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function showTeamAddForm(worker) {
+    if (!teamSearchResults) return;
+    pendingTeamAddWorker = worker;
+    teamSearchResults.hidden = false;
+    teamSearchResults.innerHTML = `
+      <div class="company-team-search-add" data-team-add-panel>
+        <strong>Add ${escapeHtml(worker.name)} to your team</strong>
+        <label>
+          Occupation in your company
+          <input
+            type="text"
+            data-team-add-occupation
+            maxlength="120"
+            placeholder="e.g. Site Supervisor, Electrician"
+            value="${escapeHtml(worker.occupation || '')}"
+          >
+        </label>
+        <div class="company-team-search-add-actions">
+          <button type="button" class="company-submit-btn" data-team-add-confirm>Add to team</button>
+          <button type="button" class="company-secondary-btn" data-team-add-cancel>Cancel</button>
+        </div>
+      </div>
+    `;
+    teamSearchResults.querySelector('[data-team-add-occupation]')?.focus();
+  }
+
+  async function runPlatformTeamSearch(query) {
+    const requestId = ++teamSearchRequestId;
+    try {
+      const workers = await searchPlatformWorkers(query);
+      if (requestId !== teamSearchRequestId) return;
+      renderTeamSearchResults(workers, query);
+    } catch (error) {
+      if (requestId !== teamSearchRequestId) return;
+      hideTeamSearchResults();
+      if (teamSearchEmpty) {
+        teamSearchEmpty.hidden = false;
+        teamSearchEmpty.textContent = error.message || 'Could not search workers.';
+      }
     }
   }
 
-  document.getElementById('companyTeamSearch')?.addEventListener('input', updateTeamSearchFilter);
+  teamSearchInput?.addEventListener('input', () => {
+    const query = (teamSearchInput.value || '').trim();
+    clearTimeout(teamSearchTimer);
+    pendingTeamAddWorker = null;
+
+    if (query.length < 2) {
+      hideTeamSearchResults();
+      if (teamSearchEmpty) {
+        teamSearchEmpty.hidden = true;
+        teamSearchEmpty.textContent = 'No workers match this search.';
+      }
+      return;
+    }
+
+    teamSearchTimer = setTimeout(() => {
+      runPlatformTeamSearch(query);
+    }, 250);
+  });
+
+  teamSearchResults?.addEventListener('click', async (event) => {
+    const cancelBtn = event.target.closest('[data-team-add-cancel]');
+    if (cancelBtn) {
+      const query = (teamSearchInput?.value || '').trim();
+      if (query.length >= 2) runPlatformTeamSearch(query);
+      else hideTeamSearchResults();
+      return;
+    }
+
+    const confirmBtn = event.target.closest('[data-team-add-confirm]');
+    if (confirmBtn) {
+      const occupationInput = teamSearchResults.querySelector('[data-team-add-occupation]');
+      const occupation = String(occupationInput?.value || '').trim();
+      if (!pendingTeamAddWorker) return;
+      if (occupation.length < 2) {
+        alert('Enter an occupation name (at least 2 characters).');
+        occupationInput?.focus();
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Adding...';
+      try {
+        await addWorkerToTeam(pendingTeamAddWorker.id, occupation);
+        window.location.hash = '#my-team';
+        window.location.reload();
+      } catch (error) {
+        alert(error.message);
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Add to team';
+      }
+      return;
+    }
+
+    const pick = event.target.closest('[data-team-search-pick]');
+    if (!pick) return;
+
+    const workerId = pick.dataset.workerId;
+    const isOnTeam = pick.dataset.isOnTeam === 'true';
+    const applicationId = pick.dataset.applicationId || '';
+    const occupation = pick.dataset.occupation || '';
+    const name = pick.dataset.workerName || 'Worker';
+
+    if (isOnTeam) {
+      hideTeamSearchResults();
+      const card = document.querySelector(`[data-team-worker-card][data-worker-id="${workerId}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.querySelector('[data-team-worker-profile]')?.click();
+      } else if (workerProfileContent) {
+        workerProfileContent.innerHTML = '<p class="company-side-empty">Loading worker profile...</p>';
+        openWorkerProfileModal();
+        try {
+          const profile = await fetchWorkerProfile(workerId);
+          workerProfileContent.innerHTML = renderWorkerProfile(profile, {
+            workerId,
+            applicationId: applicationId || null,
+            occupation,
+          });
+        } catch (error) {
+          workerProfileContent.innerHTML = `<p class="company-side-empty">${escapeHtml(error.message)}</p>`;
+        }
+      }
+      return;
+    }
+
+    showTeamAddForm({ id: workerId, name, occupation });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!teamSearchResults || teamSearchResults.hidden) return;
+    if (event.target.closest('.company-team-toolbar')) return;
+    hideTeamSearchResults();
+  });
 
   workerProfileContent?.addEventListener('submit', async (event) => {
     const occupationForm = event.target.closest('[data-team-occupation-form]');
     if (occupationForm) {
       event.preventDefault();
-      const applicationId = occupationForm.dataset.applicationId;
+      const applicationId = occupationForm.dataset.applicationId || '';
+      const workerId = occupationForm.dataset.workerId || '';
       const submitBtn = occupationForm.querySelector('button[type="submit"]');
       const formData = new FormData(occupationForm);
       const occupation = String(formData.get('occupation') || '').trim();
+
+      if (occupation.length < 2) {
+        alert('Enter an occupation name (at least 2 characters).');
+        return;
+      }
 
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
 
       try {
-        const application = await updateTeamOccupation(applicationId, occupation);
-        const card = document.querySelector(`[data-team-worker-card][data-application-id="${applicationId}"]`);
-        const nextOccupation = application.company_occupation || occupation || '';
+        let nextOccupation = occupation;
+        if (workerId) {
+          const member = await updateRosterOccupation(workerId, occupation);
+          nextOccupation = member.occupation || occupation || '';
+        } else if (applicationId) {
+          const application = await updateTeamOccupation(applicationId, occupation);
+          nextOccupation = application.company_occupation || occupation || '';
+        } else {
+          throw new Error('Missing worker for occupation update.');
+        }
+
+        const card = workerId
+          ? document.querySelector(`[data-team-worker-card][data-worker-id="${workerId}"]`)
+          : document.querySelector(`[data-team-worker-card][data-application-id="${applicationId}"]`);
         if (card) {
           card.dataset.occupation = nextOccupation;
           const label = card.querySelector('[data-team-occupation-label]');
@@ -3035,7 +3280,6 @@
           submitBtn.disabled = false;
           submitBtn.textContent = 'Save occupation';
         }, 1200);
-        updateTeamSearchFilter();
       } catch (error) {
         alert(error.message);
         submitBtn.disabled = false;

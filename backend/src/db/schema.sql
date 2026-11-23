@@ -273,6 +273,19 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS can_post_jobs BOOLEAN NOT NULL
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS can_post_company_posts BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS company_occupation VARCHAR(120);
 
+CREATE TABLE IF NOT EXISTS company_team_members (
+  id SERIAL PRIMARY KEY,
+  company_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  worker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  occupation VARCHAR(120),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(company_id, worker_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_team_members_company
+  ON company_team_members(company_id, updated_at DESC);
+
 CREATE TABLE IF NOT EXISTS feed_posts (
   id SERIAL PRIMARY KEY,
   author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

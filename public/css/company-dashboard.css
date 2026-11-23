@@ -1506,11 +1506,13 @@
 }
 
 .company-team-toolbar {
+  position: relative;
   display: grid;
   gap: 10px;
   margin: 0 0 18px;
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
+  z-index: 5;
 }
 
 .company-team-search {
@@ -1565,6 +1567,110 @@
   margin: 0;
   color: #64748b;
   font-size: 13px;
+}
+
+.company-team-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 0;
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
+}
+
+.company-team-search-item {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.company-team-search-item:last-child {
+  border-bottom: 0;
+}
+
+.company-team-search-item:hover,
+.company-team-search-item:focus-visible {
+  background: #f8fafc;
+  outline: none;
+}
+
+.company-team-search-item .company-worker-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.company-team-search-item strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.company-team-search-item small {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.company-team-search-item-meta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #2563eb;
+  white-space: nowrap;
+}
+
+.company-team-search-item-meta.is-on-team {
+  color: #059669;
+}
+
+.company-team-search-add {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.company-team-search-add label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.company-team-search-add input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font: inherit;
+  background: #fff;
+}
+
+.company-team-search-add-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .company-team-card [data-team-occupation-label] {

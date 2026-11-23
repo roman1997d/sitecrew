@@ -814,6 +814,31 @@ function mapTeamMember(application) {
     canPostJobs: Boolean(application.can_post_jobs),
     canPostCompanyPosts: Boolean(application.can_post_company_posts),
     isLeader: Boolean(application.can_post_jobs || application.can_post_company_posts),
+    isHired: true,
+    source: 'hired',
+  };
+}
+
+function mapRosterTeamMember(member) {
+  const name = member.full_name || 'Worker';
+  return {
+    applicationId: null,
+    id: member.worker_id,
+    name,
+    initial: getInitials(name).slice(0, 1),
+    profilePhoto: member.profile_photo,
+    trade: Array.isArray(member.trades) && member.trades.length ? member.trades.join(', ') : 'Trade not set',
+    experience: member.experience || 'Experience not set',
+    city: member.city || 'Location not set',
+    availability: member.availability_status || 'Availability not set',
+    jobTitle: member.occupation || 'Team roster',
+    occupation: member.occupation || '',
+    certificates: Array.isArray(member.certificates) && member.certificates.length ? member.certificates.join(', ') : 'No certificates added',
+    canPostJobs: false,
+    canPostCompanyPosts: false,
+    isLeader: false,
+    isHired: false,
+    source: 'roster',
   };
 }
 
@@ -917,6 +942,24 @@ async function buildCompanyDashboard(token, companyId, profile) {
         teamByWorker.set(application.worker_id, mapTeamMember(application));
       }
     });
+
+  try {
+    const roster = await apiGet('/api/companies/team', token);
+    (roster.members || []).forEach((member) => {
+      const workerId = Number(member.worker_id);
+      const existing = teamByWorker.get(workerId);
+      if (existing) {
+        if (member.occupation && !existing.occupation) {
+          existing.occupation = member.occupation;
+        }
+        return;
+      }
+      teamByWorker.set(workerId, mapRosterTeamMember(member));
+    });
+  } catch (error) {
+    // Roster endpoint may be unavailable before API restart; hired team still works.
+  }
+
   const teamMembers = Array.from(teamByWorker.values());
 
   const openJobs = ownJobsWithApplicants.filter((job) => job.status === 'open');
@@ -948,7 +991,7 @@ async function buildCompanyDashboard(token, companyId, profile) {
       workersNeeded,
       responseRate: '85%',
       applicantCount: applicants.length,
-      hiredCount: teamMembers.length,
+      hiredCount: teamMembers.filter((member) => member.isHired !== false).length,
       messageCount: getUnreadMessageCount(conversations.conversations || []),
     },
   };

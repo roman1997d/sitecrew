@@ -226,6 +226,236 @@ router.delete('/contacts/:workerId', requireAuth, requireRole('company'), asyncH
   res.json({ deleted: true, contact: result.rows[0] });
 }));
 
+let companyTeamMembersReady = false;
+
+async function ensureCompanyTeamMembersTable() {
+  if (companyTeamMembersReady) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS company_team_members (
+      id SERIAL PRIMARY KEY,
+      company_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      worker_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      occupation VARCHAR(120),
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(company_id, worker_id)
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_company_team_members_company
+    ON company_team_members(company_id, updated_at DESC)
+  `);
+  companyTeamMembersReady = true;
+}
+
+const teamMemberSchema = z.object({
+  body: z.object({
+    workerId: z.number().int().positive(),
+    occupation: z.string().trim().min(2).max(120),
+  }),
+});
+
+const teamOccupationSchema = z.object({
+  body: z.object({
+    occupation: z.string().trim().min(2).max(120),
+  }),
+});
+
+router.get('/team/search', requireAuth, requireRole('company', 'admin'), asyncHandler(async (req, res) => {
+  await ensureCompanyTeamMembersTable();
+  const query = String(req.query.q || '').trim();
+  if (query.length < 2) {
+    return res.json({ workers: [] });
+  }
+
+  const companyId = req.user.role === 'admin' && req.query.companyId
+    ? Number(req.query.companyId)
+    : req.user.id;
+
+  const result = await pool.query(
+    `SELECT
+       wp.user_id,
+       wp.full_name,
+       wp.profile_photo,
+       wp.trades,
+       wp.city,
+       wp.postcode,
+       wp.availability_status,
+       wp.experience,
+       EXISTS (
+         SELECT 1
+         FROM applications a
+         JOIN jobs j ON j.id = a.job_id
+         WHERE a.worker_id = wp.user_id
+           AND j.company_id = $3
+           AND a.status = 'accepted'
+       ) AS is_hired,
+       EXISTS (
+         SELECT 1
+         FROM company_team_members ctm
+         WHERE ctm.company_id = $3
+           AND ctm.worker_id = wp.user_id
+       ) AS is_on_team,
+       (
+         SELECT a.id
+         FROM applications a
+         JOIN jobs j ON j.id = a.job_id
+         WHERE a.worker_id = wp.user_id
+           AND j.company_id = $3
+           AND a.status = 'accepted'
+         ORDER BY a.updated_at DESC
+         LIMIT 1
+       ) AS application_id,
+       COALESCE(
+         (
+           SELECT ctm.occupation
+           FROM company_team_members ctm
+           WHERE ctm.company_id = $3
+             AND ctm.worker_id = wp.user_id
+         ),
+         (
+           SELECT a.company_occupation
+           FROM applications a
+           JOIN jobs j ON j.id = a.job_id
+           WHERE a.worker_id = wp.user_id
+             AND j.company_id = $3
+             AND a.status = 'accepted'
+           ORDER BY a.updated_at DESC
+           LIMIT 1
+         )
+       ) AS occupation
+     FROM worker_profiles wp
+     JOIN users u ON u.id = wp.user_id
+     WHERE u.status = 'active'
+       AND (
+         wp.full_name ILIKE $1
+         OR wp.city ILIKE $1
+         OR EXISTS (SELECT 1 FROM unnest(wp.trades) AS t WHERE t ILIKE $1)
+       )
+     ORDER BY
+       CASE WHEN wp.full_name ILIKE $2 THEN 0 ELSE 1 END,
+       wp.full_name ASC
+     LIMIT 12`,
+    [`%${query}%`, `${query}%`, companyId]
+  );
+
+  res.json({
+    workers: result.rows.map((row) => ({
+      id: row.user_id,
+      name: row.full_name || 'Worker',
+      profilePhoto: row.profile_photo || null,
+      trade: Array.isArray(row.trades) && row.trades.length ? row.trades.join(', ') : 'Trade not set',
+      city: row.city || row.postcode || 'Location not set',
+      availability: row.availability_status || 'Availability not set',
+      experience: row.experience || '',
+      isHired: Boolean(row.is_hired),
+      isOnTeam: Boolean(row.is_on_team || row.is_hired),
+      applicationId: row.application_id || null,
+      occupation: row.occupation || '',
+    })),
+  });
+}));
+
+router.get('/team', requireAuth, requireRole('company', 'admin'), asyncHandler(async (req, res) => {
+  await ensureCompanyTeamMembersTable();
+  const companyId = req.user.role === 'admin' && req.query.companyId
+    ? Number(req.query.companyId)
+    : req.user.id;
+
+  const result = await pool.query(
+    `SELECT
+       ctm.*,
+       wp.full_name,
+       wp.profile_photo,
+       wp.trades,
+       wp.city,
+       wp.experience,
+       wp.certificates,
+       wp.availability_status
+     FROM company_team_members ctm
+     JOIN worker_profiles wp ON wp.user_id = ctm.worker_id
+     JOIN users u ON u.id = ctm.worker_id
+     WHERE ctm.company_id = $1
+       AND u.status = 'active'
+     ORDER BY ctm.updated_at DESC`,
+    [companyId]
+  );
+
+  res.json({ members: result.rows });
+}));
+
+router.post('/team', requireAuth, requireRole('company', 'admin'), validate(teamMemberSchema), asyncHandler(async (req, res) => {
+  await ensureCompanyTeamMembersTable();
+  const { workerId, occupation } = req.validated.body;
+
+  const worker = await pool.query(
+    `SELECT wp.user_id
+     FROM worker_profiles wp
+     JOIN users u ON u.id = wp.user_id
+     WHERE wp.user_id = $1
+       AND u.status = 'active'`,
+    [workerId]
+  );
+  if (worker.rowCount === 0) {
+    return res.status(404).json({ error: 'Worker not found.' });
+  }
+
+  const result = await pool.query(
+    `INSERT INTO company_team_members (company_id, worker_id, occupation)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (company_id, worker_id) DO UPDATE SET
+       occupation = EXCLUDED.occupation,
+       updated_at = CURRENT_TIMESTAMP
+     RETURNING *`,
+    [req.user.id, workerId, occupation]
+  );
+
+  // Keep occupation in sync for hired applications too.
+  await pool.query(
+    `UPDATE applications a
+     SET company_occupation = $1,
+         updated_at = CURRENT_TIMESTAMP
+     FROM jobs j
+     WHERE a.job_id = j.id
+       AND j.company_id = $2
+       AND a.worker_id = $3
+       AND a.status = 'accepted'`,
+    [occupation, req.user.id, workerId]
+  );
+
+  res.status(201).json({ member: result.rows[0] });
+}));
+
+router.patch('/team/:workerId/occupation', requireAuth, requireRole('company', 'admin'), validate(teamOccupationSchema), asyncHandler(async (req, res) => {
+  await ensureCompanyTeamMembersTable();
+  const workerId = Number(req.params.workerId);
+  const occupation = req.validated.body.occupation;
+
+  const result = await pool.query(
+    `INSERT INTO company_team_members (company_id, worker_id, occupation)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (company_id, worker_id) DO UPDATE SET
+       occupation = EXCLUDED.occupation,
+       updated_at = CURRENT_TIMESTAMP
+     RETURNING *`,
+    [req.user.id, workerId, occupation]
+  );
+
+  await pool.query(
+    `UPDATE applications a
+     SET company_occupation = $1,
+         updated_at = CURRENT_TIMESTAMP
+     FROM jobs j
+     WHERE a.job_id = j.id
+       AND j.company_id = $2
+       AND a.worker_id = $3
+       AND a.status = 'accepted'`,
+    [occupation, req.user.id, workerId]
+  );
+
+  res.json({ member: result.rows[0] });
+}));
+
 router.get('/', requireAuth, requireRole('worker', 'company', 'admin'), asyncHandler(async (req, res) => {
   const {
     companyName = '',

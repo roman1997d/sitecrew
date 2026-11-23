@@ -2,9 +2,10 @@
   class="company-team-card"
   data-team-worker-card
   data-worker-id="<%= worker.id %>"
-  data-application-id="<%= worker.applicationId %>"
+  data-application-id="<%= worker.applicationId || '' %>"
   data-worker-name="<%= worker.name %>"
   data-occupation="<%= worker.occupation || '' %>"
+  data-is-hired="<%= worker.isHired === false ? 'false' : 'true' %>"
   data-can-post-jobs="<%= worker.canPostJobs ? 'true' : 'false' %>"
   data-can-post-company-posts="<%= worker.canPostCompanyPosts ? 'true' : 'false' %>"
 >
@@ -16,7 +17,7 @@
         <%= worker.initial %>
       <% } %>
     </button>
-    <span class="company-status <%= roleLabel === 'Leader' ? 'review' : 'open' %>" data-team-role-label><%= roleLabel %></span>
+    <span class="company-status <%= roleLabel === 'Leader' ? 'review' : (roleLabel === 'Roster' ? 'closed' : 'open') %>" data-team-role-label><%= roleLabel %></span>
   </div>
   <h3><button type="button" class="company-team-name-btn" data-team-worker-profile><%= worker.name %></button></h3>
   <p data-team-occupation-label>
@@ -27,7 +28,13 @@
     <% } %>
   </p>
   <small><i class="bi bi-tools"></i> <%= worker.trade %></small>
-  <small><i class="bi bi-briefcase"></i> Working on <%= worker.jobTitle %></small>
+  <% if (worker.isHired !== false) { %>
+    <small><i class="bi bi-briefcase"></i> Working on <%= worker.jobTitle %></small>
+  <% } else if (worker.occupation) { %>
+    <small><i class="bi bi-briefcase"></i> Roster · <%= worker.occupation %></small>
+  <% } else { %>
+    <small><i class="bi bi-briefcase"></i> Added to company roster</small>
+  <% } %>
   <small><i class="bi bi-geo-alt"></i> <%= worker.city %> · <%= worker.experience %></small>
   <small><i class="bi bi-patch-check"></i> <%= worker.certificates %></small>
 </article>
