@@ -1888,6 +1888,131 @@
     });
   });
 
+  const postEngagementModal = document.getElementById('postEngagementModal');
+  const postEngagementBody = document.getElementById('postEngagementBody');
+  const postEngagementTitle = document.getElementById('postEngagementTitle');
+  const closePostEngagementModalBtn = document.getElementById('closePostEngagementModal');
+  const cancelPostEngagementModalBtn = document.getElementById('cancelPostEngagementModal');
+  let postEngagementCache = null;
+  let postEngagementActiveTab = 'views';
+
+  function formatEngagementTime(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString(undefined, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  function setEngagementTab(tab) {
+    postEngagementActiveTab = tab;
+    postEngagementModal?.querySelectorAll('[data-engagement-tab]').forEach((button) => {
+      const isActive = button.dataset.engagementTab === tab;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+  }
+
+  function renderEngagementList(tab) {
+    if (!postEngagementBody) return;
+
+    if (!postEngagementCache) {
+      postEngagementBody.innerHTML = '<p class="company-side-empty">Loading...</p>';
+      return;
+    }
+
+    const items = postEngagementCache[tab] || [];
+    if (!items.length) {
+      const emptyCopy = {
+        views: 'No views recorded yet.',
+        likes: 'No likes yet.',
+        comments: 'No comments yet.',
+        saves: 'Nobody has saved this post yet.',
+      };
+      postEngagementBody.innerHTML = `<p class="company-side-empty">${escapeHtml(emptyCopy[tab] || 'Nothing here yet.')}</p>`;
+      return;
+    }
+
+    postEngagementBody.innerHTML = `
+      <div class="company-engagement-list">
+        ${items.map((item) => `
+          <article class="company-engagement-item">
+            <span class="company-engagement-avatar">${escapeHtml(item.initials || '?')}</span>
+            <div class="company-engagement-copy">
+              <strong>${escapeHtml(item.name || 'User')}</strong>
+              ${item.body ? `<p>${escapeHtml(item.body)}</p>` : ''}
+              <small>${escapeHtml([item.role, formatEngagementTime(item.at)].filter(Boolean).join(' · '))}</small>
+            </div>
+          </article>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  async function openPostEngagementModal(postId, tab = 'views', postTitle = '') {
+    if (!postEngagementModal || !postId) return;
+
+    postEngagementCache = null;
+    setEngagementTab(tab);
+    if (postEngagementTitle) {
+      postEngagementTitle.textContent = postTitle ? postTitle : 'Who interacted';
+    }
+    if (postEngagementBody) {
+      postEngagementBody.innerHTML = '<p class="company-side-empty">Loading...</p>';
+    }
+    openModal(postEngagementModal, null, null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/feed/posts/${postId}/engagement`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not load engagement details.');
+      }
+
+      postEngagementCache = data;
+      if (postEngagementTitle && data.post?.title) {
+        postEngagementTitle.textContent = data.post.title;
+      }
+      renderEngagementList(postEngagementActiveTab);
+    } catch (error) {
+      if (postEngagementBody) {
+        postEngagementBody.innerHTML = `<p class="company-side-empty">${escapeHtml(error.message)}</p>`;
+      }
+    }
+  }
+
+  document.querySelector('.company-spa-main')?.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-open-post-engagement]');
+    if (!trigger) return;
+    openPostEngagementModal(
+      trigger.dataset.postId,
+      trigger.dataset.openPostEngagement || 'views',
+      trigger.dataset.postTitle || ''
+    );
+  });
+
+  postEngagementModal?.querySelectorAll('[data-engagement-tab]').forEach((button) => {
+    button.addEventListener('click', () => {
+      setEngagementTab(button.dataset.engagementTab || 'views');
+      renderEngagementList(postEngagementActiveTab);
+    });
+  });
+
+  [closePostEngagementModalBtn, cancelPostEngagementModalBtn].forEach((button) => {
+    button?.addEventListener('click', () => closeModal(postEngagementModal));
+  });
+
+  postEngagementModal?.addEventListener('click', (event) => {
+    if (event.target === postEngagementModal) closeModal(postEngagementModal);
+  });
+
   document.querySelectorAll('[data-delete-company-post]').forEach((button) => {
     button.addEventListener('click', async () => {
       const card = button.closest('[data-company-feed-post]');
@@ -2151,6 +2276,9 @@
     }
     if (event.key === 'Escape' && contactMessageModal?.classList.contains('open')) {
       closeContactMessageModal();
+    }
+    if (event.key === 'Escape' && postEngagementModal?.classList.contains('open')) {
+      closeModal(postEngagementModal);
     }
     if (event.key === 'Escape' && contactAvatarQuickview?.classList.contains('open')) {
       closeContactAvatarQuickview();

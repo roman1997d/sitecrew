@@ -1304,3 +1304,100 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.company-post-stat {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  padding: 4px 2px;
+  border-radius: 10px;
+}
+
+.company-post-stat:hover,
+.company-post-stat:focus {
+  background: #e2e8f0;
+}
+
+.company-engagement-modal {
+  width: min(560px, 100%);
+}
+
+.company-engagement-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.company-engagement-tabs button {
+  border: 1px solid #dbe3f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.company-engagement-tabs button.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.company-engagement-body {
+  max-height: min(55vh, 420px);
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.company-engagement-list {
+  display: grid;
+  gap: 10px;
+}
+
+.company-engagement-item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.company-engagement-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #93c5fd, #3b82f6);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.company-engagement-copy strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.company-engagement-copy p {
+  margin: 4px 0 0;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.company-engagement-copy small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+}

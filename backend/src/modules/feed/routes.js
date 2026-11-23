@@ -513,4 +513,152 @@ router.get('/posts/:id/comments', asyncHandler(async (req, res) => {
   res.json({ comments: result.rows });
 }));
 
+async function assertCanViewPostEngagement(req, postId) {
+  const postResult = await pool.query(
+    `SELECT id, author_id, created_by_user_id, title
+     FROM feed_posts
+     WHERE id = $1`,
+    [postId]
+  );
+
+  if (postResult.rowCount === 0) {
+    const error = new Error('Post not found.');
+    error.status = 404;
+    throw error;
+  }
+
+  const post = postResult.rows[0];
+  const userId = Number(req.user.id);
+
+  if (userId === Number(post.author_id) || userId === Number(post.created_by_user_id || 0)) {
+    return post;
+  }
+
+  if (req.user.role === 'worker') {
+    const permission = await pool.query(
+      `SELECT 1
+       FROM applications a
+       JOIN jobs j ON j.id = a.job_id
+       WHERE a.worker_id = $1
+         AND j.company_id = $2
+         AND a.status = 'accepted'
+         AND a.can_post_company_posts = TRUE
+       LIMIT 1`,
+      [req.user.id, post.author_id]
+    );
+    if (permission.rowCount > 0) {
+      return post;
+    }
+  }
+
+  const error = new Error('You do not have permission to view engagement for this post.');
+  error.status = 403;
+  throw error;
+}
+
+function mapEngagementPerson(row) {
+  const name = row.name || (row.user_id ? 'SiteCrew user' : 'Anonymous visitor');
+  return {
+    id: row.user_id || null,
+    name,
+    role: row.role || null,
+    initials: String(name).trim().charAt(0).toUpperCase() || '?',
+    at: row.created_at,
+    body: row.body || null,
+    anonymous: !row.user_id,
+  };
+}
+
+router.get('/posts/:id/engagement', requireAuth, asyncHandler(async (req, res) => {
+  await ensureFeedStatsSchema();
+  const postId = Number(req.params.id);
+  if (!Number.isInteger(postId) || postId <= 0) {
+    return res.status(400).json({ error: 'Invalid post id.' });
+  }
+
+  const post = await assertCanViewPostEngagement(req, postId);
+
+  const [views, likes, comments, saves] = await Promise.all([
+    pool.query(
+      `SELECT
+         fpv.user_id,
+         fpv.created_at,
+         u.role,
+         COALESCE(wp.full_name, cp.company_name) AS name
+       FROM feed_post_views fpv
+       LEFT JOIN users u ON u.id = fpv.user_id
+       LEFT JOIN worker_profiles wp ON wp.user_id = fpv.user_id
+       LEFT JOIN company_profiles cp ON cp.user_id = fpv.user_id
+       WHERE fpv.post_id = $1
+       ORDER BY fpv.created_at DESC
+       LIMIT 200`,
+      [postId]
+    ),
+    pool.query(
+      `SELECT
+         fl.user_id,
+         fl.created_at,
+         u.role,
+         COALESCE(wp.full_name, cp.company_name) AS name
+       FROM feed_likes fl
+       JOIN users u ON u.id = fl.user_id
+       LEFT JOIN worker_profiles wp ON wp.user_id = fl.user_id
+       LEFT JOIN company_profiles cp ON cp.user_id = fl.user_id
+       WHERE fl.post_id = $1
+       ORDER BY fl.created_at DESC
+       LIMIT 200`,
+      [postId]
+    ),
+    pool.query(
+      `SELECT
+         fc.user_id,
+         fc.created_at,
+         fc.body,
+         u.role,
+         COALESCE(wp.full_name, cp.company_name) AS name
+       FROM feed_comments fc
+       JOIN users u ON u.id = fc.user_id
+       LEFT JOIN worker_profiles wp ON wp.user_id = fc.user_id
+       LEFT JOIN company_profiles cp ON cp.user_id = fc.user_id
+       WHERE fc.post_id = $1
+         AND COALESCE(fc.moderation_status, 'visible') = 'visible'
+       ORDER BY fc.created_at DESC
+       LIMIT 200`,
+      [postId]
+    ),
+    pool.query(
+      `SELECT
+         fsp.user_id,
+         fsp.created_at,
+         u.role,
+         COALESCE(wp.full_name, cp.company_name) AS name
+       FROM feed_saved_posts fsp
+       JOIN users u ON u.id = fsp.user_id
+       LEFT JOIN worker_profiles wp ON wp.user_id = fsp.user_id
+       LEFT JOIN company_profiles cp ON cp.user_id = fsp.user_id
+       WHERE fsp.post_id = $1
+       ORDER BY fsp.created_at DESC
+       LIMIT 200`,
+      [postId]
+    ),
+  ]);
+
+  res.json({
+    post: {
+      id: post.id,
+      title: post.title || 'Portfolio item',
+    },
+    views: views.rows.map(mapEngagementPerson),
+    likes: likes.rows.map(mapEngagementPerson),
+    comments: comments.rows.map(mapEngagementPerson),
+    saves: saves.rows.map(mapEngagementPerson),
+    counts: {
+      views: views.rows.length,
+      likes: likes.rows.length,
+      comments: comments.rows.length,
+      saves: saves.rows.length,
+    },
+  });
+}));
+
 module.exports = router;

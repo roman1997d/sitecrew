@@ -496,6 +496,33 @@
     </div>
   </div>
 
+  <div class="company-modal-overlay" id="postEngagementModal" aria-hidden="true">
+    <div class="company-modal company-engagement-modal" role="dialog" aria-modal="true" aria-labelledby="postEngagementTitle">
+      <div class="company-modal-header">
+        <div>
+          <span>Post engagement</span>
+          <h2 id="postEngagementTitle">Who interacted</h2>
+        </div>
+        <button type="button" id="closePostEngagementModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="company-engagement-tabs" role="tablist" aria-label="Engagement type">
+        <button type="button" class="active" data-engagement-tab="views" role="tab" aria-selected="true">Views</button>
+        <button type="button" data-engagement-tab="likes" role="tab" aria-selected="false">Likes</button>
+        <button type="button" data-engagement-tab="comments" role="tab" aria-selected="false">Comments</button>
+        <button type="button" data-engagement-tab="saves" role="tab" aria-selected="false">Saved</button>
+      </div>
+
+      <div class="company-engagement-body" id="postEngagementBody">
+        <p class="company-side-empty">Loading...</p>
+      </div>
+
+      <div class="company-modal-actions">
+        <button type="button" class="company-secondary-btn" id="cancelPostEngagementModal">Close</button>
+      </div>
+    </div>
+  </div>
+
   <%- include('../partials/api-config') %>
   <script src="/js/company-dashboard.js"></script>
 </body>
