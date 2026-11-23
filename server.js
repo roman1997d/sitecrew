@@ -809,6 +809,7 @@ function mapTeamMember(application) {
     city: application.city || 'Location not set',
     availability: application.availability_status || 'Availability not set',
     jobTitle: application.job_title || 'Company job',
+    occupation: application.company_occupation || '',
     certificates: Array.isArray(application.certificates) && application.certificates.length ? application.certificates.join(', ') : 'No certificates added',
     canPostJobs: Boolean(application.can_post_jobs),
     canPostCompanyPosts: Boolean(application.can_post_company_posts),

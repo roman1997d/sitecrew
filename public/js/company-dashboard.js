@@ -1675,6 +1675,24 @@
     closeModal(contactAvatarQuickview);
   }
 
+  async function updateTeamOccupation(applicationId, occupation) {
+    const response = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/occupation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify({ occupation }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Could not save occupation.');
+    }
+
+    return data.application;
+  }
+
   async function updateTeamPermissions(applicationId, payload) {
     const response = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/permissions`, {
       method: 'PATCH',
@@ -1740,8 +1758,26 @@
       ? `<img src="${escapeHtml(getMediaUrl(profile.profile_photo))}" alt="${escapeHtml(profile.full_name || 'Worker')} profile picture">`
       : escapeHtml((profile.full_name || 'W').charAt(0).toUpperCase());
     const permissions = options.permissions || {};
+    const occupationValue = options.occupation || '';
     const teamActions = options.applicationId
       ? `
+        <form class="team-worker-occupation-form" data-team-occupation-form data-application-id="${escapeHtml(options.applicationId)}">
+          <span>Company occupation</span>
+          <label>
+            <span>Occupation name in your company</span>
+            <input
+              type="text"
+              name="occupation"
+              maxlength="120"
+              value="${escapeHtml(occupationValue)}"
+              placeholder="e.g. Site Supervisor, Electrician, Project Manager"
+            >
+            <small class="company-form-help">This shows that this person works for your company in this role.</small>
+          </label>
+          <div class="team-worker-actions">
+            <button type="submit" class="company-submit-btn">Save occupation</button>
+          </div>
+        </form>
         <form class="team-worker-permissions-form" data-team-permissions-form data-application-id="${escapeHtml(options.applicationId)}">
           <span>Company permissions</span>
           <label class="team-permission-toggle">
@@ -2931,6 +2967,7 @@
         workerProfileContent.innerHTML = renderWorkerProfile(profile, {
           workerId,
           applicationId,
+          occupation: card?.dataset.occupation || '',
           permissions: {
             canPostJobs: card?.dataset.canPostJobs === 'true',
             canPostCompanyPosts: card?.dataset.canPostCompanyPosts === 'true',
@@ -2942,7 +2979,71 @@
     });
   });
 
+  function updateTeamSearchFilter() {
+    const query = (document.getElementById('companyTeamSearch')?.value || '').trim().toLowerCase();
+    const cards = Array.from(document.querySelectorAll('[data-team-worker-card]'));
+    const emptyState = document.querySelector('[data-team-search-empty]');
+    let visibleCount = 0;
+
+    cards.forEach((card) => {
+      const name = (card.dataset.workerName || '').toLowerCase();
+      const occupation = (card.dataset.occupation || '').toLowerCase();
+      const matches = !query || name.includes(query) || occupation.includes(query);
+      card.hidden = !matches;
+      if (matches) visibleCount += 1;
+    });
+
+    document.querySelectorAll('[data-team-group]').forEach((group) => {
+      const visibleInGroup = group.querySelectorAll('[data-team-worker-card]:not([hidden])').length;
+      group.hidden = Boolean(query) && visibleInGroup === 0;
+    });
+
+    if (emptyState) {
+      emptyState.hidden = !(query && visibleCount === 0);
+    }
+  }
+
+  document.getElementById('companyTeamSearch')?.addEventListener('input', updateTeamSearchFilter);
+
   workerProfileContent?.addEventListener('submit', async (event) => {
+    const occupationForm = event.target.closest('[data-team-occupation-form]');
+    if (occupationForm) {
+      event.preventDefault();
+      const applicationId = occupationForm.dataset.applicationId;
+      const submitBtn = occupationForm.querySelector('button[type="submit"]');
+      const formData = new FormData(occupationForm);
+      const occupation = String(formData.get('occupation') || '').trim();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+
+      try {
+        const application = await updateTeamOccupation(applicationId, occupation);
+        const card = document.querySelector(`[data-team-worker-card][data-application-id="${applicationId}"]`);
+        const nextOccupation = application.company_occupation || occupation || '';
+        if (card) {
+          card.dataset.occupation = nextOccupation;
+          const label = card.querySelector('[data-team-occupation-label]');
+          if (label) {
+            label.innerHTML = nextOccupation
+              ? `<i class="bi bi-person-badge"></i> Works as <strong>${escapeHtml(nextOccupation)}</strong>`
+              : '<i class="bi bi-person-badge"></i> Occupation not set';
+          }
+        }
+        submitBtn.textContent = 'Occupation saved';
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save occupation';
+        }, 1200);
+        updateTeamSearchFilter();
+      } catch (error) {
+        alert(error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save occupation';
+      }
+      return;
+    }
+
     const permissionsForm = event.target.closest('[data-team-permissions-form]');
     if (permissionsForm) {
       event.preventDefault();

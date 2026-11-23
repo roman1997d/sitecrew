@@ -22,6 +22,23 @@ const permissionSchema = z.object({
   }),
 });
 
+const occupationSchema = z.object({
+  body: z.object({
+    occupation: z.string().trim().max(120).optional().nullable(),
+  }),
+});
+
+let applicationOccupationReady = false;
+
+async function ensureApplicationOccupationColumn() {
+  if (applicationOccupationReady) return;
+  await pool.query(`
+    ALTER TABLE applications
+    ADD COLUMN IF NOT EXISTS company_occupation VARCHAR(120)
+  `);
+  applicationOccupationReady = true;
+}
+
 router.get('/me', requireAuth, requireRole('worker'), asyncHandler(async (req, res) => {
   const result = await pool.query(
     `SELECT a.*, j.title, j.trade_required, j.city, j.rate, cp.company_name, cp.logo
@@ -124,6 +141,54 @@ router.patch('/:id/permissions', requireAuth, requireRole('company', 'admin'), v
      WHERE id = $1
      RETURNING *`,
     [req.params.id, req.validated.body.canPostJobs, req.validated.body.canPostCompanyPosts]
+  );
+
+  res.json({ application: result.rows[0] });
+}));
+
+router.patch('/:id/occupation', requireAuth, requireRole('company', 'admin'), validate(occupationSchema), asyncHandler(async (req, res) => {
+  await ensureApplicationOccupationColumn();
+
+  const application = await pool.query(
+    `SELECT a.*, j.company_id
+     FROM applications a
+     JOIN jobs j ON j.id = a.job_id
+     WHERE a.id = $1`,
+    [req.params.id]
+  );
+
+  if (application.rowCount === 0) {
+    return res.status(404).json({ error: 'Application not found' });
+  }
+
+  const row = application.rows[0];
+  if (req.user.role !== 'admin' && row.company_id !== req.user.id) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  if (row.status !== 'accepted') {
+    return res.status(400).json({ error: 'Occupation can be set only for hired workers.' });
+  }
+
+  const occupation = String(req.validated.body.occupation || '').trim() || null;
+
+  await pool.query(
+    `UPDATE applications a
+     SET company_occupation = $1,
+         updated_at = CURRENT_TIMESTAMP
+     FROM jobs j
+     WHERE a.job_id = j.id
+       AND j.company_id = $2
+       AND a.worker_id = $3
+       AND a.status = 'accepted'`,
+    [occupation, row.company_id, row.worker_id]
+  );
+
+  const result = await pool.query(
+    `SELECT *
+     FROM applications
+     WHERE id = $1`,
+    [req.params.id]
   );
 
   res.json({ application: result.rows[0] });

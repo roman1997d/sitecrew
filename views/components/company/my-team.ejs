@@ -4,8 +4,21 @@
       <span>My Team</span>
       <h2>Workers hired by your company</h2>
     </div>
-    <p>Workers appear here after you accept their job application.</p>
+    <p>Search your team and set each worker’s occupation name in your company.</p>
   </div>
+
+  <% if (teamMembers.length) { %>
+    <label class="company-team-search" aria-label="Search team by name">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input
+        type="search"
+        id="companyTeamSearch"
+        placeholder="Search by worker name..."
+        autocomplete="off"
+      >
+    </label>
+    <p class="company-team-search-empty" data-team-search-empty hidden>No workers match this name.</p>
+  <% } %>
 
   <% const leaders = teamMembers.filter(function(worker) { return worker.isLeader; }); %>
   <% const operatives = teamMembers.filter(function(worker) { return !worker.isLeader; }); %>

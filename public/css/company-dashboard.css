@@ -1504,3 +1504,78 @@
   display: block;
   background: #1e293b;
 }
+
+.company-team-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--company-border, #e2e8f0);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.company-team-search i {
+  color: #64748b;
+}
+
+.company-team-search input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.company-team-search-empty {
+  margin: 0 0 14px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.company-team-card [data-team-occupation-label] {
+  margin: 0;
+  color: #334155;
+  font-size: 13px;
+}
+
+.company-team-card [data-team-occupation-label] strong {
+  color: #0f172a;
+}
+
+.team-worker-occupation-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.team-worker-occupation-form > span {
+  font-size: 13px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.team-worker-occupation-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.team-worker-occupation-form label > span {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.team-worker-occupation-form input[type="text"] {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 14px;
+}
