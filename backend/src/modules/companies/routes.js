@@ -327,11 +327,7 @@ router.get('/team/search', requireAuth, requireRole('company', 'admin'), asyncHa
      FROM worker_profiles wp
      JOIN users u ON u.id = wp.user_id
      WHERE u.status = 'active'
-       AND (
-         wp.full_name ILIKE $1
-         OR wp.city ILIKE $1
-         OR EXISTS (SELECT 1 FROM unnest(wp.trades) AS t WHERE t ILIKE $1)
-       )
+       AND wp.full_name ILIKE $1
      ORDER BY
        CASE WHEN wp.full_name ILIKE $2 THEN 0 ELSE 1 END,
        wp.full_name ASC
