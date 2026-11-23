@@ -4520,10 +4520,6 @@ body.marketplace-ad-preview-open {
 
 /* ---- Company Dashboard ---- */
 .company-dash-body {
-  background: #F6F8FC;
-}
-
-.company-dashboard {
   --company-navy: #0B1F3B;
   --company-blue: #2563EB;
   --company-blue-soft: #EFF6FF;
@@ -4533,6 +4529,10 @@ body.marketplace-ad-preview-open {
   --company-muted: #64748B;
   --company-border: #E2E8F0;
   --company-shell-bg: #F4F7FB;
+  background: #F6F8FC;
+}
+
+.company-dashboard {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
@@ -5480,7 +5480,7 @@ body.marketplace-ad-preview-open {
 .company-profile-card button {
   border: 0;
   border-radius: 9px;
-  background: var(--company-blue);
+  background: var(--company-blue, #2563EB);
   color: #fff;
   padding: 8px 10px;
   font-size: 12px;
@@ -5730,8 +5730,8 @@ body.marketplace-ad-preview-open {
 }
 
 .company-row-actions button.ghost {
-  background: #fff;
-  color: var(--company-blue);
+  background: #EFF6FF;
+  color: var(--company-blue, #2563EB);
   border: 1px solid #BFDBFE;
 }
 
@@ -5780,8 +5780,8 @@ body.marketplace-ad-preview-open {
 }
 
 .company-worker-actions button.ghost {
-  background: #fff;
-  color: var(--company-blue);
+  background: #EFF6FF;
+  color: var(--company-blue, #2563EB);
   border: 1px solid #BFDBFE;
 }
 
@@ -7098,17 +7098,24 @@ body.marketplace-ad-preview-open {
 }
 
 .company-secondary-btn {
-  background: #F1F5F9;
-  color: #475569;
+  background: #E2E8F0;
+  color: #0F172A;
+  border: 1px solid #CBD5E1;
+}
+
+.company-secondary-btn:hover,
+.company-secondary-btn:focus {
+  background: #CBD5E1;
+  color: #0F172A;
 }
 
 .company-submit-btn {
-  background: var(--company-orange);
+  background: var(--company-orange, #F59E0B);
   color: #fff;
 }
 
 .company-modal-actions .company-submit-btn {
-  background: var(--company-orange);
+  background: var(--company-orange, #F59E0B);
   color: #FFFFFF;
 }
 

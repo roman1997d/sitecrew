@@ -549,10 +549,10 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid #dbe3f0;
+  border: 1px solid #cbd5e1;
   border-radius: 999px;
-  background: #fff;
-  color: #334155;
+  background: #f1f5f9;
+  color: #0f172a;
   font: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -562,14 +562,22 @@
 
 .company-reco-action.primary {
   border-color: #2563eb;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #2563eb;
+  color: #fff;
 }
 
 .company-reco-action:hover,
 .company-reco-action:focus {
-  border-color: #2563eb;
-  color: #1d4ed8;
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.company-reco-action:not(.primary):hover,
+.company-reco-action:not(.primary):focus {
+  border-color: #94a3b8;
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .company-reco-match {
@@ -806,18 +814,26 @@
 }
 
 .company-applicant-more-actions button {
-  border: 1px solid var(--company-border);
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  background: #fff;
+  background: #f1f5f9;
   padding: 6px 10px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  color: var(--company-text);
+  color: #0f172a;
+}
+
+.company-applicant-more-actions button[data-application-action="accepted"] {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
 }
 
 .company-applicant-more-actions button.muted {
-  color: var(--company-muted);
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 
 .company-applicant-more-actions button.contact.saved {
