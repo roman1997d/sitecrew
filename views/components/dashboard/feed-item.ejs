@@ -139,7 +139,9 @@
         <i class="bi bi-send"></i> <span data-i18n="buttons.share">Share</span>
       </button>
       <button class="save-btn <%= item.savedByMe ? 'active' : '' %>" type="button" data-feed-action="save" aria-pressed="<%= item.savedByMe ? 'true' : 'false' %>">
-        <i class="bi <%= item.savedByMe ? 'bi-bookmark-fill' : 'bi-bookmark' %>"></i> <span data-i18n="buttons.save">Save</span>
+        <i class="bi <%= item.savedByMe ? 'bi-bookmark-fill' : 'bi-bookmark' %>"></i>
+        <span data-feed-save-count><%= item.saveCount || 0 %></span>
+        <span data-i18n="buttons.save">Save</span>
       </button>
     </div>
     <div class="feed-caption">

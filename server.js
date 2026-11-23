@@ -636,6 +636,8 @@ function mapFeedPost(post, index = 0) {
     tags: (post.tags || []).map((tag) => (tag.startsWith('#') ? tag : `#${tag}`)),
     likeCount: Number(post.like_count || 0),
     commentCount: Number(post.comment_count || 0),
+    saveCount: Number(post.save_count || post.saves_total || 0),
+    viewCount: Number(post.view_count || post.views_total || 0),
     likedByMe: Boolean(post.liked_by_me),
     savedByMe: Boolean(post.saved_by_me),
     authorVerified: post.author_verification_status === 'approved',
@@ -824,10 +826,10 @@ function mapCompanyFeedPost(post, index = 0) {
     postType: post.post_type || 'work_completed',
     projectSize: post.project_size || '',
     stats: {
-      views: Number(post.view_count || 0),
+      views: Number(post.view_count || post.views_total || 0),
       likes: Number(post.like_count || 0),
       comments: Number(post.comment_count || 0),
-      saves: Number(post.save_count || 0),
+      saves: Number(post.save_count || post.saves_total || 0),
       reactions: Number(post.like_count || 0),
     },
   };

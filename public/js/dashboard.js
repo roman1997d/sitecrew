@@ -2316,12 +2316,16 @@
     }
   }
 
-  function updateFeedSaveButton(button, saved) {
+  function updateFeedSaveButton(button, saved, saveCount) {
     button.classList.toggle('active', saved);
     button.setAttribute('aria-pressed', saved ? 'true' : 'false');
     const icon = button.querySelector('i');
     if (icon) {
       icon.className = saved ? 'bi bi-bookmark-fill' : 'bi bi-bookmark';
+    }
+    const countEl = button.querySelector('[data-feed-save-count]');
+    if (countEl && Number.isFinite(Number(saveCount))) {
+      countEl.textContent = String(Number(saveCount));
     }
   }
 
@@ -2445,7 +2449,7 @@
 
       if (action === 'save') {
         const data = await apiRequest(`/api/feed/posts/${postId}/save`, { method: 'POST' });
-        updateFeedSaveButton(actionButton, Boolean(data.saved));
+        updateFeedSaveButton(actionButton, Boolean(data.saved), Number(data.saveCount || 0));
         return;
       }
 
@@ -2516,19 +2520,33 @@
     }
   }
 
+  const viewedPosts = new Set();
+  function markFeedPostViewed(postId) {
+    if (!postId || viewedPosts.has(postId)) return;
+    viewedPosts.add(postId);
+    trackFeedPostView(postId);
+  }
+
+  document.querySelectorAll('.feed-post-card[data-post-id]').forEach((card) => {
+    const postId = card.getAttribute('data-post-id');
+    // Count immediately for posts already on screen, plus observer for scrolled ones.
+    const rect = card.getBoundingClientRect();
+    const onScreen = rect.top < window.innerHeight && rect.bottom > 0;
+    if (onScreen) {
+      markFeedPostViewed(postId);
+    }
+  });
+
   if ('IntersectionObserver' in window) {
-    const viewedPosts = new Set();
     const viewObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (!entry.isIntersecting || entry.intersectionRatio < 0.55) return;
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.2) return;
         const card = entry.target;
         const postId = card.getAttribute('data-post-id');
-        if (!postId || viewedPosts.has(postId)) return;
-        viewedPosts.add(postId);
+        markFeedPostViewed(postId);
         viewObserver.unobserve(card);
-        trackFeedPostView(postId);
       });
-    }, { threshold: [0.55] });
+    }, { threshold: [0.2] });
 
     document.querySelectorAll('.feed-post-card[data-post-id]').forEach((card) => {
       viewObserver.observe(card);

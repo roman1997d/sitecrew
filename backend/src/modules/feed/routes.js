@@ -44,11 +44,52 @@ async function ensureFeedStatsSchema() {
 }
 
 function mapFeedPostRow(row) {
+  const viewCount = Number(row.views_total ?? row.view_count ?? 0);
+  const saveCount = Number(row.saves_total ?? row.save_count ?? 0);
   return {
     ...row,
     media_urls: normalizeMediaList(row.media_urls || []),
     author_avatar: normalizeMediaPath(row.author_avatar),
+    view_count: viewCount,
+    save_count: saveCount,
+    like_count: Number(row.like_count || 0),
+    comment_count: Number(row.comment_count || 0),
   };
+}
+
+async function recordFeedViewsForViewer(posts, viewer) {
+  if (!viewer?.id || !Array.isArray(posts) || !posts.length) return;
+
+  for (const post of posts) {
+    if (!post?.id || Number(post.author_id) === Number(viewer.id)) continue;
+
+    const viewerKey = `user:${viewer.id}`;
+    const inserted = await pool.query(
+      `INSERT INTO feed_post_views (post_id, user_id, viewer_key)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (post_id, viewer_key) DO NOTHING
+       RETURNING post_id`,
+      [post.id, viewer.id, viewerKey]
+    );
+
+    if (inserted.rowCount > 0) {
+      await pool.query(
+        `UPDATE feed_posts
+         SET view_count = COALESCE(view_count, 0) + 1
+         WHERE id = $1`,
+        [post.id]
+      );
+      post.view_count = Number(post.view_count || 0) + 1;
+    }
+  }
+}
+
+async function getPostSaveCount(postId) {
+  const result = await pool.query(
+    'SELECT COUNT(*)::int AS count FROM feed_saved_posts WHERE post_id = $1',
+    [postId]
+  );
+  return result.rows[0].count;
 }
 
 const postSchema = z.object({
@@ -127,13 +168,13 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
        creator.id AS created_by_id,
        creator.role AS created_by_role,
        COALESCE(creator_wp.full_name, creator_cp.company_name) AS created_by_name,
-       COALESCE(fp.view_count, 0)::int AS view_count,
+       (SELECT COUNT(*)::int FROM feed_post_views WHERE post_id = fp.id) AS views_total,
        (SELECT COUNT(*)::int FROM feed_likes WHERE post_id = fp.id) AS like_count,
        (SELECT COUNT(*)::int
         FROM feed_comments
         WHERE post_id = fp.id
           AND COALESCE(moderation_status, 'visible') = 'visible') AS comment_count,
-       (SELECT COUNT(*)::int FROM feed_saved_posts WHERE post_id = fp.id) AS save_count,
+       (SELECT COUNT(*)::int FROM feed_saved_posts WHERE post_id = fp.id) AS saves_total,
        CASE
          WHEN $2::int IS NOT NULL THEN EXISTS(
            SELECT 1 FROM feed_likes WHERE post_id = fp.id AND user_id = $2
@@ -159,7 +200,10 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
      LIMIT 50`,
     [type || null, viewerId]
   );
-  res.json({ posts: result.rows.map(mapFeedPostRow) });
+
+  const posts = result.rows.map(mapFeedPostRow);
+  await recordFeedViewsForViewer(posts, req.user);
+  res.json({ posts });
 }));
 
 router.get('/saved', requireAuth, asyncHandler(async (req, res) => {
@@ -399,6 +443,7 @@ router.post('/posts/:id/like', requireAuth, asyncHandler(async (req, res) => {
 }));
 
 router.post('/posts/:id/save', requireAuth, asyncHandler(async (req, res) => {
+  await ensureFeedStatsSchema();
   const existing = await pool.query(
     'SELECT 1 FROM feed_saved_posts WHERE post_id = $1 AND user_id = $2',
     [req.params.id, req.user.id]
@@ -409,14 +454,16 @@ router.post('/posts/:id/save', requireAuth, asyncHandler(async (req, res) => {
       'DELETE FROM feed_saved_posts WHERE post_id = $1 AND user_id = $2',
       [req.params.id, req.user.id]
     );
-    return res.json({ saved: false });
+    const saveCount = await getPostSaveCount(req.params.id);
+    return res.json({ saved: false, saveCount });
   }
 
   await pool.query(
     'INSERT INTO feed_saved_posts (post_id, user_id) VALUES ($1, $2)',
     [req.params.id, req.user.id]
   );
-  res.status(201).json({ saved: true });
+  const saveCount = await getPostSaveCount(req.params.id);
+  res.status(201).json({ saved: true, saveCount });
 }));
 
 router.post('/posts/:id/comment', requireAuth, validate(commentSchema), asyncHandler(async (req, res) => {
