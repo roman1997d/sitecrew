@@ -4,7 +4,11 @@
     <a href="#search-workers" class="company-panel-link" data-company-goto="search-workers">View all</a>
   </div>
   <% if (!workers.length) { %>
-    <p class="company-panel-empty">Post an open job to see matches.</p>
+    <div class="company-empty-inline company-empty-inline-cta">
+      <strong>No matches yet</strong>
+      <span>Open a job and we’ll recommend workers by trade and location.</span>
+      <button type="button" class="company-empty-link-cta" data-open-post-job>Post a job</button>
+    </div>
   <% } %>
   <div class="company-panel-list">
     <% workers.slice(0, 3).forEach(function(worker) { %>

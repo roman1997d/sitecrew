@@ -1704,6 +1704,12 @@
     });
   }
 
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-open-post-job]')) {
+      openPostJobModal();
+    }
+  });
+
   if (openPostJobModalBtn) {
     openPostJobModalBtn.addEventListener('click', openPostJobModal);
   }

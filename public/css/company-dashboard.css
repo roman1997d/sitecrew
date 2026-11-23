@@ -118,8 +118,12 @@
 
 /* Scrollable panels — compact like mockup */
 .company-grid-jobs .company-jobs-table-wrap {
-  max-height: 340px;
+  max-height: 280px;
   overflow-y: auto;
+}
+
+.company-grid-jobs .company-jobs-section {
+  min-height: 0;
 }
 
 .company-grid-applicants .company-applicant-list {
@@ -182,12 +186,12 @@
 
 .company-dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
   grid-template-areas:
+    "actions actions"
     "jobs messages"
-    "jobs actions"
     "applicants recommended";
-  gap: 18px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -199,11 +203,13 @@
 
 .company-grid-area {
   min-width: 0;
+  align-self: start;
 }
 
 .company-grid-area > .company-section,
-.company-grid-area > .company-panel {
-  height: 100%;
+.company-grid-area > .company-panel,
+.company-grid-area > .company-quick-actions {
+  height: auto;
 }
 
 /* ---- Panel cards (right column) ---- */
@@ -411,7 +417,7 @@
   background: #fff;
 }
 
-/* ---- Quick actions (right column, stacked tiles) ---- */
+/* ---- Quick actions (compact strip under stats) ---- */
 .company-quick-actions {
   padding: 0;
   border: 0;
@@ -421,20 +427,21 @@
 
 .company-action-grid-mock {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
 .company-action-tile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  min-height: 52px;
-  padding: 12px 16px;
+  min-height: 48px;
+  padding: 11px 14px;
   border: 0;
   border-radius: 14px;
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
@@ -666,7 +673,7 @@
 }
 
 .company-empty-inline {
-  padding: 20px;
+  padding: 18px 12px;
   text-align: center;
   color: var(--company-muted);
   font-size: 13px;
@@ -676,6 +683,78 @@
   display: block;
   color: var(--company-text);
   margin-bottom: 4px;
+}
+
+.company-empty-card-cta,
+.company-empty-inline-cta {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 22px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.company-empty-card-cta strong,
+.company-empty-inline-cta strong {
+  color: var(--company-text);
+  font-size: 15px;
+}
+
+.company-empty-card-cta p,
+.company-empty-inline-cta span {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--company-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.company-empty-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: var(--company-blue);
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.company-empty-cta {
+  margin-top: 6px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.company-empty-cta:hover {
+  filter: brightness(1.04);
+}
+
+.company-empty-link-cta {
+  margin-top: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--company-blue);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 /* ---- Secondary pages (below grid, sidebar targets) ---- */
@@ -694,11 +773,21 @@
   .company-dashboard-grid {
     grid-template-columns: 1fr;
     grid-template-areas:
+      "actions"
       "jobs"
       "messages"
       "applicants"
-      "actions"
       "recommended";
+  }
+
+  .company-action-grid-mock {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .company-action-grid-mock {
+    grid-template-columns: 1fr;
   }
 }
 

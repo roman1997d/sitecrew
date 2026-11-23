@@ -20,9 +20,10 @@
 
   <div class="company-applicant-list">
     <% if (!applicants.length) { %>
-      <div class="company-empty-inline">
+      <div class="company-empty-inline company-empty-inline-cta">
         <strong>No applicants yet</strong>
-        <span>Applicants will appear here after workers apply to your jobs.</span>
+        <span>Once workers apply to your jobs, you can review them here quickly.</span>
+        <button type="button" class="company-empty-link-cta" data-open-post-job>Post a job to get applicants</button>
       </div>
     <% } %>
 

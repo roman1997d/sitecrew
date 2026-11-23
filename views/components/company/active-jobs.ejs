@@ -5,9 +5,13 @@
   </div>
 
   <% if (!jobs.length) { %>
-    <article class="company-empty-card">
-      <strong>No jobs posted yet</strong>
-      <p>Use Post a Job to create your first hiring request.</p>
+    <article class="company-empty-card company-empty-card-cta">
+      <div class="company-empty-icon" aria-hidden="true"><i class="bi bi-briefcase"></i></div>
+      <strong>No active jobs yet</strong>
+      <p>Post your first vacancy to start receiving applications from UK tradespeople.</p>
+      <button type="button" class="company-empty-cta" data-open-post-job>
+        <i class="bi bi-plus-lg"></i> Post a Job
+      </button>
     </article>
   <% } else { %>
     <div class="company-jobs-table-wrap">
