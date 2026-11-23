@@ -21,6 +21,8 @@ const {
   parseJobIdFromSegment,
 } = require('./utils/publicJobs');
 const {
+  TRADE_LANDINGS,
+  CITY_LANDINGS,
   resolveJobLandingSlug,
   getLandingSeo,
   getLandingFaqSchema,
@@ -30,6 +32,7 @@ const {
   getCityBrowseLinks,
   getPopularLandingLinks,
 } = require('./utils/seoLandings');
+const { slugify } = require('./utils/publicJobs');
 const { renderLlmsTxt } = require('./utils/llmsTxt');
 const {
   buildCompanySlug,
@@ -1457,9 +1460,15 @@ async function renderJobDetailPage(req, res, segment) {
     return renderJobNotFound(res, segment);
   }
 
-  const job = await fetchPublicJobById(jobId);
+  const job = await fetchPublicJobById(jobId, { includeClosed: true });
   if (!job) {
     return renderJobNotFound(res, segment);
+  }
+
+  // Closed/expired jobs previously became hard 404s after being indexed.
+  // Redirect equity to the matching trade/city hub instead.
+  if (job.closed) {
+    return res.redirect(301, resolveClosedJobFallbackPath(job));
   }
 
   if (segment !== job.slug) {
@@ -1519,17 +1528,42 @@ async function fetchPlatformStats() {
   }
 }
 
-async function fetchPublicJobById(jobId) {
+async function fetchPublicJobById(jobId, { includeClosed = false } = {}) {
   try {
     const response = await fetch(`${API_INTERNAL_URL}/api/jobs/${jobId}`);
-    if (!response.ok) return null;
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     const job = data.job;
-    if (!job || !isWorkerApplyableJob(job)) return null;
+    if (!job) return null;
+
+    if (response.status === 410 || data.closed || !isWorkerApplyableJob(job)) {
+      if (!includeClosed) return null;
+      return { ...mapPublicJobDetail(job), closed: true };
+    }
+
+    if (!response.ok) return null;
     return mapPublicJobDetail(job);
   } catch (error) {
     return null;
   }
+}
+
+function resolveClosedJobFallbackPath(job) {
+  const trade = String(job.trade || job.trade_required || '').toLowerCase();
+  const city = String(job.city || job.location || '').toLowerCase();
+
+  const tradeKey = Object.keys(TRADE_LANDINGS).find((key) => {
+    const label = TRADE_LANDINGS[key].label.toLowerCase();
+    return trade === label || trade.includes(label) || slugify(trade).includes(key);
+  });
+  const cityKey = Object.keys(CITY_LANDINGS).find((key) => {
+    const label = CITY_LANDINGS[key].label.toLowerCase();
+    return city === label || city.includes(label) || slugify(city).includes(key);
+  });
+
+  if (tradeKey && cityKey) return `/jobs/${tradeKey}-jobs-in-${cityKey}`;
+  if (tradeKey) return `/jobs/${tradeKey}-jobs-uk`;
+  if (cityKey) return `/jobs/${cityKey}`;
+  return '/jobs';
 }
 
 function buildHeroStats(stats) {
@@ -1633,6 +1667,19 @@ app.get('/', async (req, res) => {
 app.get('/jobs', async (req, res) => renderPublicJobsPage(req, res));
 
 app.get('/sitejobs', async (req, res) => renderPublicJobsPage(req, res, { variant: 'sitejobs' }));
+
+// SEO-friendly aliases: /jobs/painter/manchester → /jobs/painter-jobs-in-manchester
+app.get('/jobs/:trade/:city', async (req, res) => {
+  const trade = String(req.params.trade || '').trim().toLowerCase();
+  const city = String(req.params.city || '').trim().toLowerCase();
+
+  if (TRADE_LANDINGS[trade] && CITY_LANDINGS[city]) {
+    return res.redirect(301, `/jobs/${trade}-jobs-in-${city}`);
+  }
+
+  // Avoid swallowing real job detail URLs that somehow hit this route.
+  return renderLandingNotFound(res, `${trade}/${city}`);
+});
 
 app.get('/jobs/:segment', async (req, res) => {
   const { segment } = req.params;

@@ -360,7 +360,23 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
   const isOwner = req.user?.role === 'company' && Number(req.user.id) === Number(job.company_id);
   const isAdmin = req.user?.role === 'admin' || req.user?.role === 'superadmin';
   if (!isWorkerApplyableJob(job) && !isOwner && !isAdmin) {
-    return res.status(404).json({ error: 'Job not found' });
+    // Gone, but return enough public metadata for SEO redirects to trade/city hubs.
+    return res.status(410).json({
+      error: 'Job closed',
+      closed: true,
+      job: {
+        id: job.id,
+        title: job.title,
+        trade_required: job.trade_required,
+        city: job.city,
+        status: job.status,
+        company_name: job.company_name,
+        logo: job.logo,
+        created_at: job.created_at,
+        rate: job.rate,
+        description: job.description,
+      },
+    });
   }
 
   res.json({ job });

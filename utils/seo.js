@@ -221,6 +221,8 @@ function renderRobotsTxt() {
 
   // Explicit allow for major AI / answer-engine crawlers on public pages.
   const aiAgents = [
+    // ChatGPT Search discovery crawler (critical for appearing in ChatGPT answers)
+    'OAI-SearchBot',
     'GPTBot',
     'ChatGPT-User',
     'Google-Extended',
