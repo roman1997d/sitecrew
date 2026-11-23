@@ -1,0 +1,32 @@
+<section class="company-section company-preview-section" id="applicants-preview">
+  <div class="company-panel-head">
+    <h2>Recent Applicants</h2>
+    <a href="#applicants" class="company-panel-link" data-company-nav="applicants">Manage applicants</a>
+  </div>
+
+  <% if (!applicants.length) { %>
+    <div class="company-empty-inline company-empty-inline-cta">
+      <strong>No applicants yet</strong>
+      <span>Applications will show here after workers apply to your jobs.</span>
+      <button type="button" class="company-empty-link-cta" data-open-post-job>Post a job to get applicants</button>
+    </div>
+  <% } else { %>
+    <div class="company-preview-list">
+      <% applicants.slice(0, 4).forEach(function(applicant) { %>
+        <article class="company-preview-row">
+          <div class="company-preview-person">
+            <div class="company-worker-avatar"><%= applicant.name.charAt(0) %></div>
+            <div>
+              <strong><%= applicant.name %></strong>
+              <span><%= applicant.trade %> · <%= applicant.jobTitle %></span>
+            </div>
+          </div>
+          <span class="company-application-status <%= applicant.status %>"><%= applicant.status %></span>
+        </article>
+      <% }); %>
+    </div>
+    <% if (applicants.length > 4) { %>
+      <a href="#applicants" class="company-panel-link company-preview-more" data-company-nav="applicants">View all <%= applicants.length %> applicants</a>
+    <% } %>
+  <% } %>
+</section>

@@ -691,7 +691,7 @@
   }
 
   function refreshApplicantsEmptyState() {
-    const applicantsList = document.querySelector('#applicants .company-list-card');
+    const applicantsList = document.querySelector('#applicants .company-applicant-list');
     if (!applicantsList || applicantsList.querySelector('[data-application-row]')) {
       updateApplicantJobFilter();
       return;
@@ -2768,17 +2768,23 @@
     }
   });
 
-  const COMPANY_VIEW_IDS = ['dashboard', 'my-team', 'search-workers', 'social-posts', 'settings'];
+  const COMPANY_VIEW_IDS = ['dashboard', 'jobs', 'applicants', 'my-team', 'search-workers', 'social-posts', 'settings'];
   const COMPANY_VIEW_TITLES = {
     dashboard: 'Dashboard',
+    jobs: 'Jobs',
+    applicants: 'Applicants',
     'my-team': 'My Team',
     'search-workers': 'Search Workers',
     'social-posts': 'Social Posts',
     settings: 'Settings',
   };
+  const COMPANY_DASHBOARD_FOCUS_REDIRECTS = {
+    'active-jobs': 'jobs',
+    applicants: 'applicants',
+  };
   const COMPANY_LEGACY_ROUTES = {
-    'active-jobs': { view: 'dashboard', focus: 'active-jobs' },
-    applicants: { view: 'dashboard', focus: 'applicants' },
+    'active-jobs': { view: 'jobs', focus: null },
+    applicants: { view: 'applicants', focus: null },
     messages: { view: 'dashboard', focus: 'messages' },
     'recommended-workers': { view: 'search-workers', focus: null },
     'company-feed': { view: 'social-posts', focus: null },
@@ -2795,6 +2801,10 @@
 
     if (!viewKey) {
       return { view: 'dashboard', focus: null };
+    }
+
+    if (viewKey === 'dashboard' && focusKey && COMPANY_DASHBOARD_FOCUS_REDIRECTS[focusKey]) {
+      return { view: COMPANY_DASHBOARD_FOCUS_REDIRECTS[focusKey], focus: null };
     }
 
     if (COMPANY_VIEW_IDS.includes(viewKey)) {

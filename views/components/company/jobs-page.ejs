@@ -1,0 +1,16 @@
+<div class="company-page-stack" id="jobs-page">
+  <div class="company-section-header">
+    <div>
+      <span>Jobs</span>
+      <h2>Manage your hiring requests</h2>
+    </div>
+    <div class="company-page-header-actions">
+      <p>Edit, close, reopen or delete vacancies. Post a new job anytime.</p>
+      <button type="button" class="company-page-cta" data-open-post-job>
+        <i class="bi bi-plus-lg"></i> Post a Job
+      </button>
+    </div>
+  </div>
+
+  <%- include('./active-jobs', { jobs: jobs, variant: 'page' }) %>
+</div>

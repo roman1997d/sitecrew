@@ -178,6 +178,124 @@
   margin: 0;
 }
 
+.company-page-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.company-page-header-actions {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+  max-width: 320px;
+}
+
+.company-page-header-actions p {
+  margin: 0;
+  text-align: right;
+}
+
+.company-page-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 16px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.company-page-cta:hover,
+.company-page-cta:focus {
+  filter: brightness(1.05);
+}
+
+.company-panel-link-btn {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.company-preview-list {
+  display: grid;
+  gap: 10px;
+}
+
+.company-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--company-border, #e2e8f0);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.company-preview-row strong {
+  display: block;
+  color: var(--company-text, #0f172a);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.company-preview-row span {
+  color: var(--company-muted, #64748b);
+  font-size: 12px;
+}
+
+.company-preview-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.company-preview-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.company-preview-count {
+  font-size: 12px;
+  color: var(--company-muted, #64748b);
+  white-space: nowrap;
+}
+
+.company-preview-more {
+  display: inline-flex;
+  margin-top: 12px;
+}
+
+@media (max-width: 720px) {
+  .company-page-header-actions {
+    justify-items: start;
+    max-width: none;
+  }
+
+  .company-page-header-actions p {
+    text-align: left;
+  }
+
+  .company-preview-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .company-preview-meta {
+    align-items: flex-start;
+  }
+}
+
 /* ---- Main workspace grid ---- */
 .company-workspace {
   padding: 0 28px 32px;

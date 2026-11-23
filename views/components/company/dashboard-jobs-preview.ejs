@@ -1,0 +1,35 @@
+<section class="company-section company-preview-section" id="active-jobs-preview">
+  <div class="company-panel-head">
+    <h2>Active Jobs</h2>
+    <a href="#jobs" class="company-panel-link" data-company-nav="jobs">Manage jobs</a>
+  </div>
+
+  <% if (!jobs.length) { %>
+    <article class="company-empty-card company-empty-card-cta">
+      <div class="company-empty-icon" aria-hidden="true"><i class="bi bi-briefcase"></i></div>
+      <strong>No active jobs yet</strong>
+      <p>Post a vacancy, then manage it from the Jobs page.</p>
+      <button type="button" class="company-empty-cta" data-open-post-job>
+        <i class="bi bi-plus-lg"></i> Post a Job
+      </button>
+    </article>
+  <% } else { %>
+    <div class="company-preview-list">
+      <% jobs.slice(0, 4).forEach(function(job) { %>
+        <article class="company-preview-row">
+          <div>
+            <strong><%= job.title %></strong>
+            <span><%= job.trade %> · <%= job.location %></span>
+          </div>
+          <div class="company-preview-meta">
+            <span class="company-status-pill <%= job.status === 'Open' ? 'open' : 'closed' %>"><%= job.status === 'Open' ? 'Open' : 'In Progress' %></span>
+            <span class="company-preview-count"><%= job.applicants %> applicants</span>
+          </div>
+        </article>
+      <% }); %>
+    </div>
+    <% if (jobs.length > 4) { %>
+      <a href="#jobs" class="company-panel-link company-preview-more" data-company-nav="jobs">View all <%= jobs.length %> jobs</a>
+    <% } %>
+  <% } %>
+</section>

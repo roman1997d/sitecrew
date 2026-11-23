@@ -1,9 +1,10 @@
 <%
+  const applicantsVariant = typeof variant !== 'undefined' ? variant : 'panel';
   const applicantJobTitles = Array.from(new Set(applicants.map((applicant) => applicant.jobTitle))).sort((a, b) => a.localeCompare(b));
 %>
-<section class="company-section company-applicants-section" id="applicants">
+<section class="company-section company-applicants-section<%= applicantsVariant === 'page' ? ' company-applicants-section-page' : '' %>" id="applicants">
   <div class="company-panel-head">
-    <h2>Recent Applicants</h2>
+    <h2><%= applicantsVariant === 'page' ? 'All applicants' : 'Recent Applicants' %></h2>
     <% if (applicantJobTitles.length) { %>
       <label class="company-applicant-filter">
         <select id="applicantJobFilter">
@@ -13,8 +14,8 @@
           <% }); %>
         </select>
       </label>
-    <% } else { %>
-      <a href="#dashboard/applicants" class="company-panel-link" data-company-goto="dashboard" data-company-focus="applicants">View all applicants</a>
+    <% } else if (applicantsVariant !== 'page') { %>
+      <a href="#applicants" class="company-panel-link" data-company-nav="applicants">Manage applicants</a>
     <% } %>
   </div>
 

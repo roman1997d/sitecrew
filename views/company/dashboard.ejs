@@ -40,7 +40,7 @@
               </div>
 
               <div class="company-grid-area company-grid-jobs">
-                <%- include('../components/company/active-jobs', { jobs: dashboard.jobs }) %>
+                <%- include('../components/company/dashboard-jobs-preview', { jobs: dashboard.jobs }) %>
               </div>
 
               <div class="company-grid-area company-grid-messages">
@@ -48,13 +48,25 @@
               </div>
 
               <div class="company-grid-area company-grid-applicants">
-                <%- include('../components/company/applicants', { applicants: dashboard.applicants }) %>
+                <%- include('../components/company/dashboard-applicants-preview', { applicants: dashboard.applicants }) %>
               </div>
 
               <div class="company-grid-area company-grid-recommended">
                 <%- include('../components/company/panel-recommended', { workers: dashboard.recommendedWorkers }) %>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section class="company-spa-view" data-company-view="jobs" id="companyViewJobs" hidden>
+          <div class="company-workspace company-workspace-page">
+            <%- include('../components/company/jobs-page', { jobs: dashboard.jobs }) %>
+          </div>
+        </section>
+
+        <section class="company-spa-view" data-company-view="applicants" id="companyViewApplicants" hidden>
+          <div class="company-workspace company-workspace-page">
+            <%- include('../components/company/applicants-page', { applicants: dashboard.applicants }) %>
           </div>
         </section>
 
