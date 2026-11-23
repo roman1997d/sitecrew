@@ -7,18 +7,19 @@
     <p>Search your team and set each worker’s occupation name in your company.</p>
   </div>
 
-  <% if (teamMembers.length) { %>
-    <label class="company-team-search" aria-label="Search team by name">
+  <div class="company-team-toolbar">
+    <label class="company-team-search" for="companyTeamSearch">
       <i class="bi bi-search" aria-hidden="true"></i>
       <input
         type="search"
         id="companyTeamSearch"
         placeholder="Search by worker name..."
         autocomplete="off"
+        <%= teamMembers.length ? '' : 'disabled' %>
       >
     </label>
     <p class="company-team-search-empty" data-team-search-empty hidden>No workers match this name.</p>
-  <% } %>
+  </div>
 
   <% const leaders = teamMembers.filter(function(worker) { return worker.isLeader; }); %>
   <% const operatives = teamMembers.filter(function(worker) { return !worker.isLeader; }); %>
