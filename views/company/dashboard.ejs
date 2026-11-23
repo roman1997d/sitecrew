@@ -86,7 +86,7 @@
   </div>
 
   <div class="company-modal-overlay" id="postJobModal" aria-hidden="true">
-    <div class="company-modal" role="dialog" aria-modal="true" aria-labelledby="postJobTitle">
+    <div class="company-modal company-post-job-modal" role="dialog" aria-modal="true" aria-labelledby="postJobTitle">
       <div class="company-modal-header">
         <div>
           <span>New job</span>
@@ -98,77 +98,79 @@
       <div class="company-form-alert" id="postJobAlert" hidden></div>
 
       <form id="postJobForm" class="company-job-form">
-        <div class="company-form-grid">
-          <label>
-            <span>Job title</span>
-            <input type="text" name="title" placeholder="Dryliners needed" minlength="3" required>
-          </label>
-
-          <label>
-            <span>Trade required</span>
-            <input type="text" name="tradeRequired" placeholder="Type 3 letters, e.g. Dry" minlength="2" list="constructionTradeOptions" autocomplete="off" required>
-            <datalist id="constructionTradeOptions"></datalist>
-          </label>
-
-          <label>
-            <span>City</span>
-            <input type="text" name="city" placeholder="Liverpool">
-          </label>
-
-          <label>
-            <span>Postcode</span>
-            <input type="text" name="postcode" placeholder="L1">
-          </label>
-
-          <label>
-            <span>Rate</span>
-            <input type="text" name="rate" placeholder="£220/day">
-          </label>
-
-          <label>
-            <span>Start date</span>
-            <input type="date" name="startDate">
-          </label>
-
-          <label>
-            <span>Duration</span>
-            <input type="text" name="duration" placeholder="3 weeks">
-          </label>
-
-          <label>
-            <span>Workers needed</span>
-            <input type="number" name="workersRequired" min="1" value="1" required>
-          </label>
-        </div>
-
-        <label class="company-form-full">
-          <span>Description</span>
-          <textarea name="description" rows="4" placeholder="Describe the site, tasks, schedule and requirements..." minlength="10" required></textarea>
-        </label>
-
-        <label class="company-form-full">
-          <span>Certificates required</span>
-          <input type="text" name="certificatesRequired" placeholder="CSCS Gold, First Aid">
-        </label>
-
-        <div class="company-form-full company-share-image-field">
-          <span>Social share image <small>(optional — shown when this job link is shared online)</small></span>
-          <input type="hidden" name="shareImage" id="postJobShareImage" value="">
-          <div class="company-og-presets" id="postJobOgPresets">
-            <p class="company-side-empty">Loading image options...</p>
-          </div>
+        <div class="company-job-form-body">
           <div class="company-form-grid">
             <label>
-              <span>Upload custom image</span>
-              <input type="file" id="postJobShareImageFile" accept="image/jpeg,image/png,image/webp,image/gif">
+              <span>Job title</span>
+              <input type="text" name="title" placeholder="Dryliners needed" minlength="3" required>
             </label>
+
             <label>
-              <span>Or image path</span>
-              <input type="text" id="postJobShareImagePath" placeholder="/images/og/presets/site-default.png">
+              <span>Trade required</span>
+              <input type="text" name="tradeRequired" placeholder="Type 3 letters, e.g. Dry" minlength="2" list="constructionTradeOptions" autocomplete="off" required>
+              <datalist id="constructionTradeOptions"></datalist>
+            </label>
+
+            <label>
+              <span>City</span>
+              <input type="text" name="city" placeholder="Liverpool">
+            </label>
+
+            <label>
+              <span>Postcode</span>
+              <input type="text" name="postcode" placeholder="L1">
+            </label>
+
+            <label>
+              <span>Rate</span>
+              <input type="text" name="rate" placeholder="£220/day">
+            </label>
+
+            <label>
+              <span>Start date</span>
+              <input type="date" name="startDate">
+            </label>
+
+            <label>
+              <span>Duration</span>
+              <input type="text" name="duration" placeholder="3 weeks">
+            </label>
+
+            <label>
+              <span>Workers needed</span>
+              <input type="number" name="workersRequired" min="1" value="1" required>
             </label>
           </div>
-          <div class="company-og-preview" id="postJobOgPreview" hidden>
-            <img id="postJobOgPreviewImg" alt="Social share preview">
+
+          <label class="company-form-full">
+            <span>Description</span>
+            <textarea name="description" rows="4" placeholder="Describe the site, tasks, schedule and requirements..." minlength="10" required></textarea>
+          </label>
+
+          <label class="company-form-full">
+            <span>Certificates required</span>
+            <input type="text" name="certificatesRequired" placeholder="CSCS Gold, First Aid">
+          </label>
+
+          <div class="company-form-full company-share-image-field">
+            <span>Social share image <small>(optional — shown when this job link is shared online)</small></span>
+            <input type="hidden" name="shareImage" id="postJobShareImage" value="">
+            <div class="company-og-presets" id="postJobOgPresets">
+              <p class="company-side-empty">Loading image options...</p>
+            </div>
+            <div class="company-form-grid">
+              <label>
+                <span>Upload custom image</span>
+                <input type="file" id="postJobShareImageFile" accept="image/jpeg,image/png,image/webp,image/gif">
+              </label>
+              <label>
+                <span>Or image path</span>
+                <input type="text" id="postJobShareImagePath" placeholder="/images/og/presets/site-default.png">
+              </label>
+            </div>
+            <div class="company-og-preview" id="postJobOgPreview" hidden>
+              <img id="postJobOgPreviewImg" alt="Social share preview">
+            </div>
           </div>
         </div>
 

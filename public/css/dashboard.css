@@ -6250,6 +6250,14 @@ body.marketplace-ad-preview-open {
   padding: 24px;
 }
 
+.company-post-job-modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px 24px 0;
+  max-height: min(92vh, 900px);
+}
+
 .company-modal-header {
   display: flex;
   justify-content: space-between;
@@ -6891,6 +6899,24 @@ body.marketplace-ad-preview-open {
   gap: 16px;
 }
 
+.company-post-job-modal .company-job-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  gap: 0;
+}
+
+.company-job-form-body {
+  display: grid;
+  gap: 16px;
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
 .company-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6983,6 +7009,15 @@ body.marketplace-ad-preview-open {
   justify-content: flex-end;
   gap: 10px;
   padding-top: 4px;
+}
+
+.company-post-job-modal .company-modal-actions {
+  flex-shrink: 0;
+  margin: 0 -24px;
+  padding: 14px 24px 20px;
+  border-top: 1px solid var(--company-border);
+  background: #fff;
+  box-shadow: 0 -10px 24px rgba(15, 23, 42, 0.06);
 }
 
 .company-invite-copy {
