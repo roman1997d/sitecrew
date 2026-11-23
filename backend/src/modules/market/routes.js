@@ -1,7 +1,12 @@
 const express = require('express');
 const pool = require('../../db/pool');
 const asyncHandler = require('../../utils/asyncHandler');
+const requireAuth = require('../../middleware/auth');
+const requireRole = require('../../middleware/requireRole');
+const optionalAuth = require('../../middleware/optionalAuth');
 const { mapAccessPlan, getLatestSalesPlanTerms } = require('../../utils/accessPlans');
+const { logJobSearchEvent, ensureSearchEventsSchema } = require('./searchEvents');
+const { getCompanyMarketInsights, runDailyMarketStatsRefresh } = require('./companyInsights');
 
 const router = express.Router();
 
@@ -44,6 +49,32 @@ router.get('/platform-stats', asyncHandler(async (req, res) => {
       openJobs: openJobs.rows[0]?.count || 0,
     },
   });
+}));
+
+router.post('/search-events', optionalAuth, asyncHandler(async (req, res) => {
+  await ensureSearchEventsSchema();
+  const body = req.body || {};
+  await logJobSearchEvent({
+    source: body.source || 'client',
+    userId: req.user?.id || null,
+    userRole: req.user?.role || null,
+    queryText: body.queryText || body.q || null,
+    trade: body.trade || null,
+    city: body.city || null,
+    location: body.location || null,
+    resultCount: body.resultCount || 0,
+  });
+  res.status(201).json({ logged: true });
+}));
+
+router.get('/company-insights', requireAuth, requireRole('company', 'admin'), asyncHandler(async (req, res) => {
+  const insights = await getCompanyMarketInsights();
+  res.json({ insights });
+}));
+
+router.post('/company-insights/refresh', requireAuth, requireRole('admin', 'superadmin'), asyncHandler(async (req, res) => {
+  const result = await runDailyMarketStatsRefresh();
+  res.json({ refreshed: true, ...result });
 }));
 
 module.exports = router;

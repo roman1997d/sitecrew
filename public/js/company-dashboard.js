@@ -3448,13 +3448,226 @@
     }
   });
 
-  const COMPANY_VIEW_IDS = ['dashboard', 'jobs', 'applicants', 'my-team', 'search-workers', 'social-posts', 'settings'];
+  let marketStatsLoaded = false;
+  let marketStatsLoading = false;
+
+  function formatMarketNumber(value) {
+    return new Intl.NumberFormat('en-GB').format(Number(value) || 0);
+  }
+
+  function renderMarketBars(container, items = [], tone = '') {
+    if (!container) return;
+    if (!items.length) {
+      container.innerHTML = '<p class="company-market-empty">Not enough SiteCrew activity in this window yet.</p>';
+      return;
+    }
+
+    container.innerHTML = items.map((item) => `
+      <div class="company-market-bar-row ${tone}">
+        <div class="company-market-bar-meta">
+          <strong>${escapeHtml(item.label)}</strong>
+          <span>${formatMarketNumber(item.count)} · ${item.share || 0}%</span>
+        </div>
+        <div class="company-market-bar-track">
+          <div class="company-market-bar-fill" style="width: ${Math.max(6, Number(item.intensity) || 0)}%"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderMarketChips(container, items = []) {
+    if (!container) return;
+    if (!items.length) {
+      container.innerHTML = '<p class="company-market-empty">No worker supply signal yet.</p>';
+      return;
+    }
+    container.innerHTML = items.slice(0, 10).map((item) => `
+      <span class="company-market-chip">
+        ${escapeHtml(item.label)}
+        <em>${formatMarketNumber(item.count)}</em>
+      </span>
+    `).join('');
+  }
+
+  function renderMarketCompare(container, rows = []) {
+    if (!container) return;
+    if (!rows.length) {
+      container.innerHTML = '<p class="company-market-empty">Demand vs supply will appear as searches and applications accumulate.</p>';
+      return;
+    }
+
+    const maxValue = rows.reduce((max, row) => Math.max(max, row.demand || 0, row.supply || 0), 0) || 1;
+    container.innerHTML = rows.map((row) => `
+      <div class="company-market-compare-row">
+        <div class="company-market-compare-label">
+          <strong>${escapeHtml(row.label)}</strong>
+          <span>Demand ${formatMarketNumber(row.demand)} · Open jobs ${formatMarketNumber(row.supply)}</span>
+        </div>
+        <div class="company-market-dual-track">
+          <div class="company-market-dual-bar demand">
+            <span>Demand</span>
+            <div class="company-market-bar-track">
+              <div class="company-market-bar-fill" style="width: ${Math.max(6, Math.round((row.demand / maxValue) * 100))}%"></div>
+            </div>
+          </div>
+          <div class="company-market-dual-bar supply">
+            <span>Supply</span>
+            <div class="company-market-bar-track">
+              <div class="company-market-bar-fill" style="width: ${Math.max(4, Math.round((row.supply / maxValue) * 100))}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderMarketTrend(container, trend = []) {
+    if (!container) return;
+    if (!trend.length) {
+      container.innerHTML = '<p class="company-market-empty">Daily snapshots will build this trend after refresh.</p>';
+      return;
+    }
+
+    const maxValue = trend.reduce(
+      (max, day) => Math.max(max, day.searches || 0, day.applications || 0, day.openJobs || 0),
+      0
+    ) || 1;
+
+    container.innerHTML = `
+      <div class="company-market-trend-chart">
+        ${trend.map((day) => {
+          const label = String(day.date || '').slice(5);
+          const searchesH = Math.max(4, Math.round(((day.searches || 0) / maxValue) * 100));
+          const appsH = Math.max(4, Math.round(((day.applications || 0) / maxValue) * 100));
+          const jobsH = Math.max(4, Math.round(((day.openJobs || 0) / maxValue) * 100));
+          return `
+            <div class="company-market-trend-col" title="${escapeHtml(day.date)}">
+              <div class="company-market-trend-stack">
+                <div class="company-market-trend-seg searches" style="height: ${searchesH}%"></div>
+                <div class="company-market-trend-seg applications" style="height: ${appsH}%"></div>
+                <div class="company-market-trend-seg jobs" style="height: ${jobsH}%"></div>
+              </div>
+              <small>${escapeHtml(label)}</small>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div class="company-market-legend">
+        <span><i class="searches"></i>Searches (30d window)</span>
+        <span><i class="applications"></i>Applications (30d)</span>
+        <span><i class="jobs"></i>Open jobs</span>
+      </div>
+    `;
+  }
+
+  function renderMarketInsights(insights) {
+    const summary = insights.summary || {};
+    const summaryEl = document.querySelector('[data-market-summary]');
+    const updatedEl = document.querySelector('[data-market-updated]');
+    const sourceLabel = summary.searchCoverage === 'search_engine'
+      ? 'From SiteCrew job-search engine + applications'
+      : 'From SiteCrew applications & worker activity (search log warming up)';
+
+    if (updatedEl) {
+      const generated = insights.generatedAt ? new Date(insights.generatedAt) : new Date();
+      updatedEl.textContent = `${sourceLabel}. Last refreshed ${generated.toLocaleString('en-GB')}. Updates daily.`;
+    }
+
+    if (summaryEl) {
+      summaryEl.innerHTML = `
+        <article class="company-market-kpi">
+          <span>Searches (30d)</span>
+          <strong>${formatMarketNumber(summary.searches30d)}</strong>
+          <small>${formatMarketNumber(summary.searchesToday)} today</small>
+        </article>
+        <article class="company-market-kpi">
+          <span>Applications (30d)</span>
+          <strong>${formatMarketNumber(summary.applications30d)}</strong>
+          <small>${formatMarketNumber(summary.applicationsToday)} today</small>
+        </article>
+        <article class="company-market-kpi">
+          <span>Open jobs</span>
+          <strong>${formatMarketNumber(summary.openJobs)}</strong>
+          <small>${formatMarketNumber(summary.activeWorkers)} active workers</small>
+        </article>
+        <article class="company-market-kpi">
+          <span>Active companies</span>
+          <strong>${formatMarketNumber(summary.activeCompanies)}</strong>
+          <small>${formatMarketNumber(summary.uniqueSearchers)} unique searchers</small>
+        </article>
+      `;
+    }
+
+    renderMarketBars(document.querySelector('[data-market-searched-jobs]'), insights.mostSearchedJobs || []);
+    renderMarketBars(document.querySelector('[data-market-trades]'), insights.mostSearchedTrades || [], 'is-accent');
+    renderMarketBars(document.querySelector('[data-market-cities]'), insights.searchCities || [], 'is-warm');
+    renderMarketBars(document.querySelector('[data-market-rates]'), insights.attractingRates || [], 'is-accent');
+    renderMarketCompare(document.querySelector('[data-market-compare]'), insights.demandVsSupply || []);
+    renderMarketTrend(document.querySelector('[data-market-trend]'), insights.trend || []);
+    renderMarketChips(document.querySelector('[data-market-worker-trades]'), insights.workerTrades || []);
+    renderMarketChips(document.querySelector('[data-market-worker-cities]'), insights.workerCities || []);
+  }
+
+  async function loadMarketStatistics({ force = false } = {}) {
+    if (marketStatsLoading) return;
+    if (marketStatsLoaded && !force) return;
+
+    const loadingEl = document.querySelector('[data-market-loading]');
+    const errorEl = document.querySelector('[data-market-error]');
+    const contentEl = document.querySelector('[data-market-content]');
+    if (!contentEl) return;
+
+    marketStatsLoading = true;
+    if (loadingEl) loadingEl.hidden = false;
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    contentEl.hidden = true;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/market/company-insights`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not load market statistics.');
+      }
+
+      renderMarketInsights(data.insights || {});
+      marketStatsLoaded = true;
+      contentEl.hidden = false;
+      if (loadingEl) loadingEl.hidden = true;
+
+      // Animate bars after paint.
+      requestAnimationFrame(() => {
+        contentEl.querySelectorAll('.company-market-bar-fill').forEach((fill) => {
+          const width = fill.style.width;
+          fill.style.width = '0%';
+          requestAnimationFrame(() => {
+            fill.style.width = width;
+          });
+        });
+      });
+    } catch (error) {
+      if (loadingEl) loadingEl.hidden = true;
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = error.message || 'Could not load market statistics.';
+      }
+    } finally {
+      marketStatsLoading = false;
+    }
+  }
+
+  const COMPANY_VIEW_IDS = ['dashboard', 'jobs', 'applicants', 'my-team', 'search-workers', 'market-statistic', 'social-posts', 'settings'];
   const COMPANY_VIEW_TITLES = {
     dashboard: 'Dashboard',
     jobs: 'Jobs',
     applicants: 'Applicants',
     'my-team': 'My Team',
     'search-workers': 'Search Workers',
+    'market-statistic': 'Market statistic',
     'social-posts': 'Portfolio',
     settings: 'Settings',
   };
@@ -3539,6 +3752,10 @@
       if (window.location.hash !== nextHash) {
         window.history[hashMethod](null, '', nextHash);
       }
+    }
+
+    if (targetView === 'market-statistic') {
+      loadMarketStatistics();
     }
 
     if (targetView === 'dashboard' && focus) {

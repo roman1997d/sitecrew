@@ -20,6 +20,7 @@ const {
   scoreCompanySearch,
   filterRelevantOpenJobs,
 } = require('../../utils/tradeMatching');
+const { logJobSearchEvent } = require('../market/searchEvents');
 
 const VISIBLE_REVIEW_FILTER = `COALESCE(moderation_status, 'visible') <> 'hidden'`;
 const VISIBLE_JOB_FILTER = OPEN_WORKER_APPLYABLE_JOB_FILTER_J;
@@ -635,6 +636,19 @@ router.get('/', requireAuth, requireRole('worker', 'company', 'admin'), asyncHan
   const companies = scoredCompanies
     .slice(pageOffset, pageOffset + pageLimit)
     .map(({ _matchesSearch, ...company }) => company);
+
+  if (req.user?.role === 'worker' && hasFilters) {
+    void logJobSearchEvent({
+      source: 'worker_find_job',
+      userId: req.user.id,
+      userRole: req.user.role,
+      queryText: filters.companyName,
+      trade: filters.trade || tradeQueries[0] || null,
+      city: filters.location,
+      location: filters.location,
+      resultCount: total,
+    });
+  }
 
   res.json({ companies, total, offset: pageOffset, limit: pageLimit });
 }));

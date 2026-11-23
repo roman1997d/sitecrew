@@ -22,6 +22,7 @@ const { queueAutoMode } = require('../admin/emailControl');
 const { normalizeOgImagePath } = require('../../../../utils/ogImages');
 const { savePublicOgImage } = require('../../utils/publicOgImage');
 const upload = require('../../middleware/upload');
+const { logJobSearchEvent } = require('../market/searchEvents');
 
 const router = express.Router();
 
@@ -197,6 +198,19 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
      ORDER BY j.created_at DESC`,
     [trade ? `%${trade}%` : null, city ? `%${city}%` : null, status || null, viewerCompanyId]
   );
+
+  if ((trade || city) && req.user?.role !== 'company') {
+    void logJobSearchEvent({
+      source: 'jobs_api',
+      userId: req.user?.id || null,
+      userRole: req.user?.role || null,
+      trade: trade || null,
+      city: city || null,
+      location: city || null,
+      resultCount: result.rows.length,
+    });
+  }
+
   res.json({ jobs: result.rows });
 }));
 

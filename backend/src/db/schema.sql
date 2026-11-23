@@ -898,3 +898,35 @@ CREATE TABLE IF NOT EXISTS daily_job_generator_state (
 INSERT INTO daily_job_generator_state (id, enabled)
 VALUES (1, TRUE)
 ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS job_search_events (
+  id BIGSERIAL PRIMARY KEY,
+  source VARCHAR(40) NOT NULL,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  user_role VARCHAR(20),
+  query_text VARCHAR(200),
+  trade VARCHAR(120),
+  city VARCHAR(120),
+  location VARCHAR(120),
+  result_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_search_events_created
+  ON job_search_events(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_job_search_events_trade
+  ON job_search_events(trade, created_at DESC)
+  WHERE trade IS NOT NULL AND trade <> '';
+
+CREATE INDEX IF NOT EXISTS idx_job_search_events_city
+  ON job_search_events(city, created_at DESC)
+  WHERE city IS NOT NULL AND city <> '';
+
+CREATE TABLE IF NOT EXISTS market_stats_snapshots (
+  id SERIAL PRIMARY KEY,
+  snapshot_date DATE NOT NULL UNIQUE,
+  payload JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

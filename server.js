@@ -1296,6 +1296,24 @@ async function renderPublicJobsPage(req, res, options = {}) {
     ? await fetchFilteredPublicJobs()
     : await fetchFilteredPublicJobs(filters);
 
+  if (variant !== 'sitejobs' && (filters.q || filters.trade || filters.city)) {
+    fetch(`${API_INTERNAL_URL}/api/market/search-events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(req.authToken ? { Authorization: `Bearer ${req.authToken}` } : {}),
+      },
+      body: JSON.stringify({
+        source: 'public_jobs_page',
+        queryText: filters.q,
+        trade: filters.trade,
+        city: filters.city,
+        location: filters.city,
+        resultCount: jobs.length,
+      }),
+    }).catch(() => {});
+  }
+
   let pageMeta;
   if (landing) {
     pageMeta = getLandingSeo(landing, jobs.length);

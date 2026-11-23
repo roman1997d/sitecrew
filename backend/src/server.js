@@ -4,6 +4,7 @@ const { purgeDeletedUsersOlderThan24Hours } = require('./utils/deletedUserCleanu
 const { runScheduledEmailControlJobs } = require('./modules/admin/emailControl');
 const { runDailyJobGenerator } = require('./modules/admin/dailyJobGenerator');
 const { purgeApiLogsByAutoCleanSettings } = require('./utils/apiLogMaintenance');
+const { runDailyMarketStatsRefresh } = require('./modules/market/companyInsights');
 
 async function runDeletedUserCleanup() {
   try {
@@ -74,4 +75,19 @@ app.listen(env.port, () => {
   // Fresh UK construction jobs: 14 on even calendar days, 7 on odd; expire after 7 days
   runDailyJobsSchedule();
   setInterval(runDailyJobsSchedule, 60 * 60 * 1000);
+
+  // Company Market Statistic snapshot (searches, demand, rates)
+  runMarketStatsSchedule();
+  setInterval(runMarketStatsSchedule, 60 * 60 * 1000);
 });
+
+async function runMarketStatsSchedule() {
+  try {
+    const result = await runDailyMarketStatsRefresh();
+    console.log(
+      `Market stats snapshot updated for ${result.snapshotDate} (searches30d=${result.searches30d}, applications30d=${result.applications30d}).`
+    );
+  } catch (error) {
+    console.error('Market stats refresh failed:', error.message);
+  }
+}

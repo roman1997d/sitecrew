@@ -82,6 +82,12 @@
           </div>
         </section>
 
+        <section class="company-spa-view" data-company-view="market-statistic" id="companyViewMarketStatistic" hidden>
+          <div class="company-workspace company-workspace-page">
+            <%- include('../components/company/market-statistic') %>
+          </div>
+        </section>
+
         <section class="company-spa-view" data-company-view="social-posts" id="companyViewSocialPosts" hidden>
           <div class="company-workspace company-workspace-page">
             <%- include('../components/company/company-feed', { posts: dashboard.companyPosts }) %>
