@@ -3159,6 +3159,8 @@
   });
 
   teamSearchResults?.addEventListener('click', async (event) => {
+    event.stopPropagation();
+
     const cancelBtn = event.target.closest('[data-team-add-cancel]');
     if (cancelBtn) {
       const query = (teamSearchInput?.value || '').trim();
@@ -3171,7 +3173,10 @@
     if (confirmBtn) {
       const occupationInput = teamSearchResults.querySelector('[data-team-add-occupation]');
       const occupation = String(occupationInput?.value || '').trim();
-      if (!pendingTeamAddWorker) return;
+      if (!pendingTeamAddWorker?.id) {
+        alert('Select a worker again, then add them to your team.');
+        return;
+      }
       if (occupation.length < 2) {
         alert('Enter an occupation name (at least 2 characters).');
         occupationInput?.focus();
@@ -3227,9 +3232,11 @@
     showTeamAddForm({ id: workerId, name, occupation });
   });
 
-  document.addEventListener('click', (event) => {
+  // Close only on true outside clicks. Ignore detached nodes from result re-renders.
+  document.addEventListener('pointerdown', (event) => {
     if (!teamSearchResults || teamSearchResults.hidden) return;
-    if (event.target.closest('.company-team-toolbar')) return;
+    const toolbar = document.querySelector('.company-team-toolbar');
+    if (toolbar?.contains(event.target)) return;
     hideTeamSearchResults();
   });
 

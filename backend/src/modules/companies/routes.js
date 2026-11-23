@@ -254,7 +254,7 @@ async function ensureCompanyTeamMembersTable() {
 
 const teamMemberSchema = z.object({
   body: z.object({
-    workerId: z.number().int().positive(),
+    workerId: z.coerce.number().int().positive(),
     occupation: z.string().trim().min(2).max(120),
   }),
 });
