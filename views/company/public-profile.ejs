@@ -51,6 +51,14 @@
               <i class="bi bi-chat-dots"></i>
               <span data-i18n="publicCompany.sendMessage">Send message</span>
             </button>
+            <a
+              href="#company-portfolio"
+              class="company-portfolio-btn"
+              id="viewCompanyPortfolioBtn"
+            >
+              <i class="bi bi-images"></i>
+              <span data-i18n="publicCompany.viewPortfolio">View portfolio</span>
+            </a>
           </div>
         </div>
       </div>
@@ -65,6 +73,75 @@
           <% if (profile.company.phone) { %><span><i class="bi bi-telephone"></i> <%= profile.company.phone %></span><% } %>
           <span><i class="bi bi-building-check"></i> <%= profile.company.verificationStatus %></span>
         </div>
+      </section>
+
+      <section class="company-public-card" id="company-portfolio">
+        <div class="company-public-rating-head">
+          <div>
+            <span class="company-public-section-kicker" data-i18n="publicCompany.portfolio">Portfolio</span>
+            <h2 data-i18n="publicCompany.portfolioTitle">Work, courses and qualifications</h2>
+            <p data-i18n="publicCompany.portfolioDescription">See completed projects and expertise shared by this company.</p>
+          </div>
+        </div>
+
+        <% if (!profile.portfolio || !profile.portfolio.length) { %>
+          <p data-i18n="publicCompany.noPortfolio">This company has not published portfolio items yet.</p>
+        <% } else { %>
+          <div class="company-public-portfolio-list">
+            <% profile.portfolio.forEach(function(post) { %>
+              <%
+                const portfolioTypeLabels = {
+                  work_completed: 'Past work',
+                  certification: 'Course / qualification',
+                  skills: 'Skills offered',
+                  progress: 'Current project',
+                  company_update: 'Company update',
+                };
+                const mediaItems = Array.isArray(post.mediaItems) && post.mediaItems.length
+                  ? post.mediaItems
+                  : (post.mediaUrl ? [{ url: post.mediaSrc || post.mediaUrl, type: post.mediaType || 'image' }] : []);
+              %>
+              <article class="company-public-portfolio-item">
+                <% if (mediaItems.length) { %>
+                  <div class="company-public-portfolio-media<%= mediaItems.length > 1 ? ' has-carousel' : '' %>" <%= mediaItems.length > 1 ? 'data-feed-media-carousel' : '' %>>
+                    <div class="feed-media-track">
+                      <% mediaItems.forEach(function(media, mediaIndex) { %>
+                        <div class="feed-media-slide<%= mediaIndex === 0 ? ' active' : '' %>" data-feed-media-slide="<%= mediaIndex %>">
+                          <% if (media.type === 'video') { %>
+                            <video src="<%= assetPath(media.url) %>" controls playsinline<%= mediaIndex === 0 ? '' : ' preload="none"' %>></video>
+                          <% } else { %>
+                            <img src="<%= assetPath(media.url) %>" alt="<%= post.title %> photo <%= mediaIndex + 1 %>">
+                          <% } %>
+                        </div>
+                      <% }); %>
+                    </div>
+                    <% if (mediaItems.length > 1) { %>
+                      <div class="feed-media-nav">
+                        <button type="button" class="feed-media-nav-btn" data-feed-media-prev aria-label="Previous photo"><i class="bi bi-chevron-left"></i></button>
+                        <button type="button" class="feed-media-nav-btn" data-feed-media-next aria-label="Next photo"><i class="bi bi-chevron-right"></i></button>
+                      </div>
+                      <div class="feed-media-dots">
+                        <% mediaItems.forEach(function(_media, mediaIndex) { %>
+                          <button type="button" class="feed-media-dot<%= mediaIndex === 0 ? ' active' : '' %>" data-feed-media-dot="<%= mediaIndex %>" aria-label="Show photo <%= mediaIndex + 1 %>"></button>
+                        <% }); %>
+                      </div>
+                      <span class="feed-media-counter"><span data-feed-media-counter>1</span>/<%= mediaItems.length %></span>
+                    <% } %>
+                  </div>
+                <% } %>
+                <div class="company-public-portfolio-copy">
+                  <span class="company-portfolio-type-badge type-<%= post.postType || 'work_completed' %>">
+                    <%= portfolioTypeLabels[post.postType] || portfolioTypeLabels.work_completed %>
+                  </span>
+                  <h3><%= post.title %></h3>
+                  <% if (post.projectSize) { %><small><%= post.projectSize %></small><% } %>
+                  <p><%= post.caption %></p>
+                  <span class="company-public-portfolio-meta"><%= post.location %> · <%= post.time %></span>
+                </div>
+              </article>
+            <% }); %>
+          </div>
+        <% } %>
       </section>
 
       <section class="company-public-card">

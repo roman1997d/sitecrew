@@ -1116,10 +1116,11 @@ async function buildPublicWorkerProfile(token, viewedWorkerId, sessionProfile) {
 }
 
 async function buildPublicCompanyProfile(token, companyId) {
-  const [companyData, follows, stories] = await Promise.all([
+  const [companyData, follows, stories, feed] = await Promise.all([
     apiGet(`/api/companies/${companyId}`, token),
     apiGet('/api/follows/me', token),
     apiGet('/api/stories/companies', token),
+    apiGet('/api/feed', token).catch(() => ({ posts: [] })),
   ]);
 
   const companyProfile = companyData.profile;
@@ -1128,6 +1129,10 @@ async function buildPublicCompanyProfile(token, companyId) {
   const companyStories = (stories.stories || []).filter((story) => Number(story.company_id) === Number(companyId));
   const ratingAverage = companyData.rating?.average;
   const ratingCount = Number(companyData.rating?.count || 0);
+  const portfolio = (feed.posts || [])
+    .filter((post) => Number(post.author_id) === Number(companyId))
+    .slice(0, 24)
+    .map(mapCompanyFeedPost);
 
   return {
     company: {
@@ -1144,6 +1149,7 @@ async function buildPublicCompanyProfile(token, companyId) {
     jobs: (companyData.jobs || []).filter(isWorkerApplyableJob).map(mapCompanyJob),
     reviews: (companyData.reviews || []).map(mapCompanyReview),
     stories: companyStories,
+    portfolio,
     isFollowing,
   };
 }

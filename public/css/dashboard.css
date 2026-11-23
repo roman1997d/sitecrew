@@ -7624,7 +7624,8 @@ body.marketplace-ad-preview-open {
   flex-shrink: 0;
 }
 
-.company-message-btn {
+.company-message-btn,
+.company-portfolio-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -7637,10 +7638,22 @@ body.marketplace-ad-preview-open {
   font-weight: 900;
   cursor: pointer;
   white-space: nowrap;
+  text-decoration: none;
 }
 
-.company-message-btn:hover {
+.company-message-btn:hover,
+.company-portfolio-btn:hover {
   background: #DBEAFE;
+}
+
+.company-portfolio-btn {
+  border-color: #A7F3D0;
+  background: #ECFDF5;
+  color: #047857;
+}
+
+.company-portfolio-btn:hover {
+  background: #D1FAE5;
 }
 
 .company-message-btn.sent {
@@ -7938,3 +7951,84 @@ body.marketplace-ad-preview-open {
     grid-template-columns: 1fr;
   }
 }
+
+.company-public-portfolio-list {
+  display: grid;
+  gap: 16px;
+}
+
+.company-public-portfolio-item {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.company-public-portfolio-media {
+  position: relative;
+  height: 260px;
+  background: #0F172A;
+  overflow: hidden;
+}
+
+.company-public-portfolio-media .feed-media-track,
+.company-public-portfolio-media .feed-media-slide,
+.company-public-portfolio-media img,
+.company-public-portfolio-media video {
+  width: 100%;
+  height: 100%;
+}
+
+.company-public-portfolio-media img,
+.company-public-portfolio-media video {
+  object-fit: cover;
+  display: block;
+}
+
+.company-public-portfolio-copy {
+  display: grid;
+  gap: 6px;
+  padding: 0 14px 14px;
+}
+
+.company-public-portfolio-copy h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #0F172A;
+}
+
+.company-public-portfolio-copy p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.company-public-portfolio-copy small,
+.company-public-portfolio-meta {
+  color: #64748B;
+  font-size: 12px;
+}
+
+.company-public-portfolio-copy .company-portfolio-type-badge {
+  justify-self: start;
+}
+
+.company-portfolio-type-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.company-portfolio-type-badge.type-work_completed { background: #eff6ff; color: #1d4ed8; }
+.company-portfolio-type-badge.type-certification { background: #ecfdf5; color: #047857; }
+.company-portfolio-type-badge.type-skills { background: #fff7ed; color: #c2410c; }
+.company-portfolio-type-badge.type-progress { background: #f5f3ff; color: #6d28d9; }
+.company-portfolio-type-badge.type-company_update { background: #f1f5f9; color: #475569; }
