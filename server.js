@@ -527,17 +527,34 @@ function formatRate(value, suffix) {
   return `£${numeric % 1 === 0 ? numeric.toFixed(0) : numeric.toFixed(2)} ${suffix}`;
 }
 
-function getFirstMediaUrl(mediaUrls) {
-  if (Array.isArray(mediaUrls)) return mediaUrls[0] || null;
+function getMediaUrlList(mediaUrls) {
+  if (Array.isArray(mediaUrls)) {
+    return mediaUrls.filter(Boolean);
+  }
   if (typeof mediaUrls === 'string') {
     try {
       const parsed = JSON.parse(mediaUrls);
-      return Array.isArray(parsed) ? parsed[0] || null : mediaUrls;
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
     } catch (error) {
-      return mediaUrls;
+      // Fall through to single-string handling.
     }
+    return mediaUrls ? [mediaUrls] : [];
   }
-  return null;
+  return [];
+}
+
+function getFirstMediaUrl(mediaUrls) {
+  return getMediaUrlList(mediaUrls)[0] || null;
+}
+
+function mapMediaItems(mediaUrls = []) {
+  return getMediaUrlList(mediaUrls)
+    .map((url) => getPublicAssetUrl(url))
+    .filter(Boolean)
+    .map((url) => ({
+      url,
+      type: /\.(mp4|webm|mov|m4v)$/i.test(url) ? 'video' : 'image',
+    }));
 }
 
 function getPublicAssetUrl(mediaUrl) {
@@ -610,8 +627,9 @@ function mapFeedPost(post, index = 0) {
   const postedByName = post.created_by_name || author;
   const postedByRole = post.created_by_role || post.author_role;
   const postedById = post.created_by_id || post.author_id;
-  const mediaUrl = getPublicAssetUrl(getFirstMediaUrl(post.media_urls));
-  const mediaType = mediaUrl && /\.(mp4|webm|mov|m4v)$/i.test(mediaUrl) ? 'video' : 'image';
+  const mediaItems = mapMediaItems(post.media_urls);
+  const mediaUrl = mediaItems[0]?.url || null;
+  const mediaType = mediaItems[0]?.type || 'image';
   return {
     id: post.id,
     companyId: isCompany ? post.author_id : null,
@@ -630,6 +648,7 @@ function mapFeedPost(post, index = 0) {
     mediaUrl,
     mediaSrc: mediaUrl,
     mediaType,
+    mediaItems,
     mediaClass: ['media-site-1', 'media-site-2', 'media-progress', 'media-cert'][index % 4],
     video: false,
     caption: post.caption,
@@ -810,8 +829,9 @@ function mapRecommendedWorker(item) {
 }
 
 function mapCompanyFeedPost(post, index = 0) {
-  const mediaUrl = getPublicAssetUrl(getFirstMediaUrl(post.media_urls));
-  const mediaType = mediaUrl && /\.(mp4|webm|mov|m4v)$/i.test(mediaUrl) ? 'video' : 'image';
+  const mediaItems = mapMediaItems(post.media_urls);
+  const mediaUrl = mediaItems[0]?.url || null;
+  const mediaType = mediaItems[0]?.type || 'image';
   return {
     id: post.id,
     title: post.title || (post.post_type ? post.post_type.replaceAll('_', ' ') : 'Portfolio item'),
@@ -822,6 +842,7 @@ function mapCompanyFeedPost(post, index = 0) {
     mediaUrl,
     mediaSrc: mediaUrl,
     mediaType,
+    mediaItems,
     tags: post.tags || [],
     postType: post.post_type || 'work_completed',
     projectSize: post.project_size || '',

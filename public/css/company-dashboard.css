@@ -1481,3 +1481,26 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.company-feed-media.has-multi {
+  height: auto;
+  min-height: 180px;
+  background: #0f172a;
+}
+
+.company-feed-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
+  padding: 6px;
+}
+
+.company-feed-media-grid img,
+.company-feed-media-grid video {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  background: #1e293b;
+}

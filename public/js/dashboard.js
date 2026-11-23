@@ -2577,7 +2577,56 @@
     carousel.dataset.marketplaceAdSlide = String(index);
   }
 
+  function setFeedMediaSlide(carousel, nextIndex) {
+    const slides = carousel.querySelectorAll('[data-feed-media-slide]');
+    const dots = carousel.querySelectorAll('[data-feed-media-dot]');
+    const counter = carousel.querySelector('[data-feed-media-counter]');
+    if (!slides.length) return;
+
+    const index = ((nextIndex % slides.length) + slides.length) % slides.length;
+    slides.forEach((slide, slideIndex) => {
+      const isActive = slideIndex === index;
+      slide.classList.toggle('active', isActive);
+      const video = slide.querySelector('video');
+      if (video && !isActive) {
+        video.pause();
+      }
+    });
+    dots.forEach((dot, dotIndex) => {
+      dot.classList.toggle('active', dotIndex === index);
+    });
+    if (counter) counter.textContent = String(index + 1);
+    carousel.dataset.feedMediaSlide = String(index);
+  }
+
   document.querySelector('.social-feed')?.addEventListener('click', (event) => {
+    const feedCarousel = event.target.closest('[data-feed-media-carousel]');
+    if (feedCarousel) {
+      const slides = feedCarousel.querySelectorAll('[data-feed-media-slide]');
+      const current = Number(feedCarousel.dataset.feedMediaSlide || 0);
+
+      if (event.target.closest('[data-feed-media-prev]')) {
+        event.preventDefault();
+        setFeedMediaSlide(feedCarousel, current - 1);
+        return;
+      }
+      if (event.target.closest('[data-feed-media-next]')) {
+        event.preventDefault();
+        setFeedMediaSlide(feedCarousel, current + 1);
+        return;
+      }
+      const dot = event.target.closest('[data-feed-media-dot]');
+      if (dot) {
+        event.preventDefault();
+        setFeedMediaSlide(feedCarousel, Number(dot.dataset.feedMediaDot || 0));
+        return;
+      }
+      if (slides.length > 1 && event.target.closest('.feed-media-slide')) {
+        setFeedMediaSlide(feedCarousel, current + 1);
+        return;
+      }
+    }
+
     const previewBtn = event.target.closest('[data-marketplace-ad-preview-image]');
     if (previewBtn) {
       openMarketplaceAdPreview(previewBtn);

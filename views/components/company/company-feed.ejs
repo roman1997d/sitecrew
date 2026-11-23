@@ -47,11 +47,26 @@
         data-post-type="<%= post.postType || 'work_completed' %>"
         data-project-size="<%= post.projectSize || '' %>"
       >
-        <div class="company-feed-media <%= post.mediaClass %> <%= post.mediaUrl ? 'has-real-media' : '' %>">
-          <% if (post.mediaUrl && post.mediaType === 'video') { %>
-            <video src="<%= assetPath(post.mediaSrc || post.mediaUrl) %>" controls playsinline></video>
-          <% } else if (post.mediaUrl) { %>
-            <img src="<%= assetPath(post.mediaSrc || post.mediaUrl) %>" alt="<%= post.title %>">
+        <% const companyMediaItems = Array.isArray(post.mediaItems) && post.mediaItems.length
+          ? post.mediaItems
+          : (post.mediaUrl ? [{ url: post.mediaSrc || post.mediaUrl, type: post.mediaType || 'image' }] : []); %>
+        <div class="company-feed-media <%= post.mediaClass %> <%= companyMediaItems.length ? 'has-real-media' : '' %><%= companyMediaItems.length > 1 ? ' has-multi' : '' %>">
+          <% if (companyMediaItems.length === 1) { %>
+            <% if (companyMediaItems[0].type === 'video') { %>
+              <video src="<%= assetPath(companyMediaItems[0].url) %>" controls playsinline></video>
+            <% } else { %>
+              <img src="<%= assetPath(companyMediaItems[0].url) %>" alt="<%= post.title %>">
+            <% } %>
+          <% } else if (companyMediaItems.length > 1) { %>
+            <div class="company-feed-media-grid">
+              <% companyMediaItems.forEach(function(media, mediaIndex) { %>
+                <% if (media.type === 'video') { %>
+                  <video src="<%= assetPath(media.url) %>" controls playsinline></video>
+                <% } else { %>
+                  <img src="<%= assetPath(media.url) %>" alt="<%= post.title %> photo <%= mediaIndex + 1 %>">
+                <% } %>
+              <% }); %>
+            </div>
           <% } %>
         </div>
         <div>

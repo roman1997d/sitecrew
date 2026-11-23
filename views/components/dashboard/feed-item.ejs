@@ -117,11 +117,39 @@
       </div>
       <button class="feed-more" type="button"><i class="bi bi-three-dots"></i></button>
     </div>
-    <div class="feed-media <%= item.mediaClass %> <%= item.mediaUrl ? 'has-real-media' : '' %>">
-      <% if (item.mediaUrl && item.mediaType === 'video') { %>
-        <video src="<%= assetPath(item.mediaSrc || item.mediaUrl) %>" controls playsinline></video>
-      <% } else if (item.mediaUrl) { %>
-        <img src="<%= assetPath(item.mediaSrc || item.mediaUrl) %>" alt="<%= item.title || item.author %>">
+    <% const feedMediaItems = Array.isArray(item.mediaItems) && item.mediaItems.length
+      ? item.mediaItems
+      : (item.mediaUrl ? [{ url: item.mediaSrc || item.mediaUrl, type: item.mediaType || 'image' }] : []); %>
+    <div class="feed-media <%= item.mediaClass %> <%= feedMediaItems.length ? 'has-real-media' : '' %><%= feedMediaItems.length > 1 ? ' has-carousel' : '' %>" <%= feedMediaItems.length > 1 ? 'data-feed-media-carousel' : '' %>>
+      <% if (feedMediaItems.length) { %>
+        <div class="feed-media-track">
+          <% feedMediaItems.forEach(function(media, mediaIndex) { %>
+            <div class="feed-media-slide<%= mediaIndex === 0 ? ' active' : '' %>" data-feed-media-slide="<%= mediaIndex %>">
+              <% if (media.type === 'video') { %>
+                <video src="<%= assetPath(media.url) %>" controls playsinline<%= mediaIndex === 0 ? '' : ' preload="none"' %>></video>
+              <% } else { %>
+                <img src="<%= assetPath(media.url) %>" alt="<%= item.title || item.author %> photo <%= mediaIndex + 1 %>">
+              <% } %>
+            </div>
+          <% }); %>
+        </div>
+        <% if (feedMediaItems.length > 1) { %>
+          <div class="feed-media-nav">
+            <button type="button" class="feed-media-nav-btn" data-feed-media-prev aria-label="Previous photo"><i class="bi bi-chevron-left"></i></button>
+            <button type="button" class="feed-media-nav-btn" data-feed-media-next aria-label="Next photo"><i class="bi bi-chevron-right"></i></button>
+          </div>
+          <div class="feed-media-dots" role="tablist" aria-label="Photo gallery">
+            <% feedMediaItems.forEach(function(_media, mediaIndex) { %>
+              <button
+                type="button"
+                class="feed-media-dot<%= mediaIndex === 0 ? ' active' : '' %>"
+                data-feed-media-dot="<%= mediaIndex %>"
+                aria-label="Show photo <%= mediaIndex + 1 %>"
+              ></button>
+            <% }); %>
+          </div>
+          <span class="feed-media-counter"><span data-feed-media-counter>1</span>/<%= feedMediaItems.length %></span>
+        <% } %>
       <% } else if (item.video) { %>
         <span class="video-chip"><i class="bi bi-play-fill"></i> <span data-i18n="feed.siteVideo">Site video</span></span>
       <% } %>
