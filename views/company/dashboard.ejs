@@ -241,43 +241,94 @@
   </div>
 
   <div class="company-modal-overlay" id="companyPostModal" aria-hidden="true">
-    <div class="company-modal" role="dialog" aria-modal="true" aria-labelledby="companyPostTitle">
+    <div class="company-modal company-portfolio-modal" role="dialog" aria-modal="true" aria-labelledby="companyPostTitle">
       <div class="company-modal-header">
         <div>
-          <span>Company activity</span>
-          <h2 id="companyPostTitle">Add post</h2>
+          <span>Company portfolio</span>
+          <h2 id="companyPostTitle">Add portfolio item</h2>
         </div>
         <button type="button" id="closeCompanyPostModal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
       </div>
+
+      <p class="company-portfolio-intro">
+        Showcase completed work, courses you offer, or new qualifications so workers and clients can see what your company delivers.
+      </p>
 
       <div class="company-form-alert" id="companyPostAlert" hidden></div>
 
       <form id="companyPostForm" class="company-job-form">
         <input type="hidden" name="postId">
-        <label>
-          <span>Post title</span>
-          <input type="text" name="title" placeholder="Starting 120-unit project in Liverpool" minlength="2" required>
-        </label>
+
+        <fieldset class="company-portfolio-type-field">
+          <legend>What are you adding?</legend>
+          <div class="company-portfolio-type-grid" role="radiogroup" aria-label="Portfolio item type">
+            <label class="company-portfolio-type-option">
+              <input type="radio" name="postType" value="work_completed" checked>
+              <span>
+                <strong><i class="bi bi-building"></i> Past work</strong>
+                <em>Completed projects and site jobs</em>
+              </span>
+            </label>
+            <label class="company-portfolio-type-option">
+              <input type="radio" name="postType" value="certification">
+              <span>
+                <strong><i class="bi bi-award"></i> Course / qualification</strong>
+                <em>Training, CSCS, NVQ, new tickets</em>
+              </span>
+            </label>
+            <label class="company-portfolio-type-option">
+              <input type="radio" name="postType" value="skills">
+              <span>
+                <strong><i class="bi bi-tools"></i> Skills offered</strong>
+                <em>Services or trades your company provides</em>
+              </span>
+            </label>
+            <label class="company-portfolio-type-option">
+              <input type="radio" name="postType" value="progress">
+              <span>
+                <strong><i class="bi bi-hammer"></i> Current project</strong>
+                <em>Work in progress on site</em>
+              </span>
+            </label>
+          </div>
+        </fieldset>
 
         <label>
-          <span>Media</span>
+          <span>Title</span>
+          <input type="text" name="title" placeholder="e.g. Full house refurbishment in Manchester" minlength="2" required>
+        </label>
+
+        <div class="company-form-grid">
+          <label>
+            <span>Location</span>
+            <input type="text" name="location" placeholder="City or site area">
+          </label>
+          <label>
+            <span>Project size / course length <small>(optional)</small></span>
+            <input type="text" name="projectSize" placeholder="e.g. 12 flats · 2-day course">
+          </label>
+        </div>
+
+        <label>
+          <span>Photos / video</span>
           <input type="file" name="media" accept="image/*,video/*" multiple>
-          <small class="company-form-help">Upload either one video or up to 5 pictures.</small>
+          <small class="company-form-help">Add site photos or a short video — one video or up to 5 pictures.</small>
         </label>
 
         <label>
           <span>Description</span>
-          <textarea name="description" rows="4" placeholder="Share project progress, site updates, or hiring news..." minlength="2" required></textarea>
+          <textarea name="description" rows="4" placeholder="Describe the work done, materials used, course content, or qualification gained..." minlength="2" required></textarea>
         </label>
 
         <label>
-          <span>Meta tags</span>
-          <input type="text" name="tags" placeholder="liverpool, fitout, hiring">
+          <span>Tags</span>
+          <input type="text" name="tags" placeholder="tiling, liverpool, cscs, scaffolding">
+          <small class="company-form-help">Comma-separated — helps workers find your portfolio.</small>
         </label>
 
         <div class="company-modal-actions">
           <button type="button" class="company-secondary-btn" id="cancelCompanyPost">Cancel</button>
-          <button type="submit" class="company-submit-btn">Add Post</button>
+          <button type="submit" class="company-submit-btn">Publish to portfolio</button>
         </div>
       </form>
     </div>

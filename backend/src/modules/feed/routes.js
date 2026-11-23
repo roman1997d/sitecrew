@@ -246,12 +246,14 @@ router.patch('/posts/:id', requireAuth, validate(z.object({ body: postSchema.sha
 
   const result = await pool.query(
     `UPDATE feed_posts SET
-       title = COALESCE($3, title),
-       caption = COALESCE($4, caption),
-       media_urls = COALESCE($5, media_urls),
-       tags = COALESCE($6, tags),
-       location = COALESCE($7, location),
-       moderation_status = $8,
+       post_type = COALESCE($3, post_type),
+       title = COALESCE($4, title),
+       caption = COALESCE($5, caption),
+       media_urls = COALESCE($6, media_urls),
+       tags = COALESCE($7, tags),
+       location = COALESCE($8, location),
+       project_size = COALESCE($9, project_size),
+       moderation_status = $10,
        updated_at = CURRENT_TIMESTAMP
      WHERE id = $1
        AND (author_id = $2 OR created_by_user_id = $2)
@@ -259,11 +261,13 @@ router.patch('/posts/:id', requireAuth, validate(z.object({ body: postSchema.sha
     [
       req.params.id,
       req.user.id,
+      payload.postType || null,
       payload.title || null,
       payload.caption || null,
       payload.mediaUrls ? normalizeMediaList(payload.mediaUrls) : null,
       payload.tags || null,
       payload.location || null,
+      payload.projectSize || null,
       moderationStatus,
     ]
   );

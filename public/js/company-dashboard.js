@@ -521,6 +521,31 @@
     return data;
   }
 
+  function setCompanyPostType(postType) {
+    if (!companyPostForm) return;
+    const value = postType || 'work_completed';
+    const radios = companyPostForm.querySelectorAll('input[name="postType"]');
+    let matched = false;
+    radios.forEach((radio) => {
+      radio.checked = radio.value === value;
+      if (radio.checked) matched = true;
+    });
+    if (!matched && radios[0]) radios[0].checked = true;
+  }
+
+  function openCreateCompanyPostModal() {
+    companyPostForm?.reset();
+    if (companyPostForm?.elements.postId) companyPostForm.elements.postId.value = '';
+    setCompanyPostType('work_completed');
+    const submitBtn = companyPostForm?.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = 'Publish to portfolio';
+    const title = document.getElementById('companyPostTitle');
+    if (title) title.textContent = 'Add portfolio item';
+    const eyebrow = companyPostModal?.querySelector('.company-modal-header span');
+    if (eyebrow) eyebrow.textContent = 'Company portfolio';
+    openModal(companyPostModal, companyPostAlert, 'input[name="title"]');
+  }
+
   function openEditCompanyPostModal(card) {
     if (!companyPostForm || !card) return;
     companyPostForm.reset();
@@ -528,10 +553,19 @@
     companyPostForm.elements.title.value = card.dataset.title || '';
     companyPostForm.elements.description.value = card.dataset.caption || '';
     companyPostForm.elements.tags.value = card.dataset.tags || '';
+    if (companyPostForm.elements.location) {
+      companyPostForm.elements.location.value = card.dataset.location || '';
+    }
+    if (companyPostForm.elements.projectSize) {
+      companyPostForm.elements.projectSize.value = card.dataset.projectSize || '';
+    }
+    setCompanyPostType(card.dataset.postType || 'work_completed');
     const submitBtn = companyPostForm.querySelector('button[type="submit"]');
     if (submitBtn) submitBtn.textContent = 'Save changes';
     const title = document.getElementById('companyPostTitle');
-    if (title) title.textContent = 'Edit post';
+    if (title) title.textContent = 'Edit portfolio item';
+    const eyebrow = companyPostModal?.querySelector('.company-modal-header span');
+    if (eyebrow) eyebrow.textContent = 'Company portfolio';
     openModal(companyPostModal, companyPostAlert, 'input[name="title"]');
   }
 
@@ -1841,15 +1875,8 @@
     });
   });
 
-  openCompanyPostModalBtn?.addEventListener('click', () => {
-    companyPostForm?.reset();
-    if (companyPostForm?.elements.postId) companyPostForm.elements.postId.value = '';
-    const submitBtn = companyPostForm?.querySelector('button[type="submit"]');
-    if (submitBtn) submitBtn.textContent = 'Add Post';
-    const title = document.getElementById('companyPostTitle');
-    if (title) title.textContent = 'Add post';
-    openModal(companyPostModal, companyPostAlert, 'input[name="title"]');
-  });
+  openCompanyPostModalBtn?.addEventListener('click', openCreateCompanyPostModal);
+  document.getElementById('openCompanyPostModalEmpty')?.addEventListener('click', openCreateCompanyPostModal);
 
   openCompanyStoryModalBtn?.addEventListener('click', () => {
     openModal(companyStoryModal, companyStoryAlert, 'input[name="media"]');
@@ -2274,11 +2301,17 @@
     submitBtn.textContent = postId ? 'Saving...' : 'Publishing...';
 
     try {
-      const title = formData.get('title').trim();
-      const description = formData.get('description').trim();
+      const title = String(formData.get('title') || '').trim();
+      const description = String(formData.get('description') || '').trim();
+      const location = String(formData.get('location') || '').trim();
+      const projectSize = String(formData.get('projectSize') || '').trim();
+      const allowedTypes = new Set(['work_completed', 'certification', 'skills', 'progress', 'company_update']);
+      const postType = allowedTypes.has(String(formData.get('postType') || ''))
+        ? String(formData.get('postType'))
+        : 'work_completed';
 
       if (title.length < 2) {
-        throw new Error('Post title must have at least 2 characters.');
+        throw new Error('Title must have at least 2 characters.');
       }
 
       if (description.length < 2) {
@@ -2289,11 +2322,14 @@
 
       const upload = files.length ? await uploadMedia('/api/feed/posts/upload', files) : { mediaUrls: [] };
       const payload = {
-        postType: 'company_update',
+        postType,
         title,
         caption: description,
         tags: parseCsv(formData.get('tags')),
       };
+
+      if (location) payload.location = location;
+      if (projectSize) payload.projectSize = projectSize;
 
       if (!postId || upload.mediaUrls.length) {
         payload.mediaUrls = upload.mediaUrls;
@@ -2301,12 +2337,12 @@
 
       await saveCompanyPost(postId || null, payload);
 
-      setAlert(companyPostAlert, `${postId ? 'Post updated' : 'Post added'} successfully. Refreshing dashboard...`, 'success');
+      setAlert(companyPostAlert, `${postId ? 'Portfolio item updated' : 'Portfolio item published'}. Refreshing...`, 'success');
       setTimeout(() => window.location.reload(), 800);
     } catch (error) {
       setAlert(companyPostAlert, error.message);
       submitBtn.disabled = false;
-      submitBtn.textContent = postId ? 'Save changes' : 'Add Post';
+      submitBtn.textContent = postId ? 'Save changes' : 'Publish to portfolio';
     }
   });
 
@@ -2783,7 +2819,7 @@
     applicants: 'Applicants',
     'my-team': 'My Team',
     'search-workers': 'Search Workers',
-    'social-posts': 'Social Posts',
+    'social-posts': 'Portfolio',
     settings: 'Settings',
   };
   const COMPANY_DASHBOARD_FOCUS_REDIRECTS = {

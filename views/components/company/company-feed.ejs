@@ -1,20 +1,37 @@
+<%
+  const portfolioTypeLabels = {
+    work_completed: 'Past work',
+    certification: 'Course / qualification',
+    skills: 'Skills offered',
+    progress: 'Current project',
+    company_update: 'Company update',
+  };
+%>
 <section class="company-section" id="social-posts">
   <div class="company-section-header">
     <div>
-      <span>Social Posts</span>
-      <h2>Company activity and project updates</h2>
+      <span>Portfolio</span>
+      <h2>Showcase your company’s work and expertise</h2>
     </div>
     <div class="company-feed-actions">
-      <button type="button" class="company-link-btn as-button" id="openCompanyPostModal">Add Post</button>
+      <button type="button" class="company-link-btn as-button" id="openCompanyPostModal">Add portfolio item</button>
       <button type="button" class="company-link-btn as-button" id="openCompanyStoryModal">Add Story</button>
     </div>
   </div>
 
+  <p class="company-portfolio-page-copy">
+    Post completed projects, courses you offer, and new qualifications. This builds trust with workers and shows clients what your company can deliver.
+  </p>
+
   <div class="company-feed-list">
     <% if (!posts.length) { %>
-      <article class="company-empty-card">
-        <strong>No company updates yet</strong>
-        <p>Share project progress to build trust with workers.</p>
+      <article class="company-empty-card company-empty-card-cta">
+        <div class="company-empty-icon" aria-hidden="true"><i class="bi bi-images"></i></div>
+        <strong>No portfolio items yet</strong>
+        <p>Add past work, a course, or a qualification to start your company portfolio.</p>
+        <button type="button" class="company-empty-cta" id="openCompanyPostModalEmpty">
+          <i class="bi bi-plus-lg"></i> Add portfolio item
+        </button>
       </article>
     <% } %>
 
@@ -27,6 +44,8 @@
         data-caption="<%= post.caption %>"
         data-location="<%= post.location %>"
         data-tags="<%= post.tags.join(', ') %>"
+        data-post-type="<%= post.postType || 'work_completed' %>"
+        data-project-size="<%= post.projectSize || '' %>"
       >
         <div class="company-feed-media <%= post.mediaClass %> <%= post.mediaUrl ? 'has-real-media' : '' %>">
           <% if (post.mediaUrl && post.mediaType === 'video') { %>
@@ -36,12 +55,27 @@
           <% } %>
         </div>
         <div>
-          <span><%= post.location %> · <%= post.time %></span>
+          <div class="company-feed-meta-row">
+            <span class="company-portfolio-type-badge type-<%= post.postType || 'work_completed' %>">
+              <%= portfolioTypeLabels[post.postType] || portfolioTypeLabels.work_completed %>
+            </span>
+            <span><%= post.location %> · <%= post.time %></span>
+          </div>
           <h3><%= post.title %></h3>
+          <% if (post.projectSize) { %>
+            <small class="company-feed-project-size"><%= post.projectSize %></small>
+          <% } %>
           <p><%= post.caption %></p>
+          <% if (post.tags && post.tags.length) { %>
+            <div class="company-feed-tags">
+              <% post.tags.forEach(function(tag) { %>
+                <span>#<%= tag %></span>
+              <% }); %>
+            </div>
+          <% } %>
           <div class="company-feed-post-actions">
-            <button type="button" data-edit-company-post>Edit this post</button>
-            <button type="button" class="danger" data-delete-company-post>Delete this post</button>
+            <button type="button" data-edit-company-post>Edit</button>
+            <button type="button" class="danger" data-delete-company-post>Delete</button>
           </div>
         </div>
       </article>

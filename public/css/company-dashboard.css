@@ -1102,3 +1102,160 @@
   border: 1px solid #dbe3f0;
   margin-top: 10px;
 }
+
+/* ---- Company portfolio ---- */
+.company-portfolio-intro,
+.company-portfolio-page-copy {
+  margin: 0 0 16px;
+  color: var(--company-muted, #64748b);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.company-portfolio-type-field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.company-portfolio-type-field legend {
+  padding: 0;
+  margin-bottom: 4px;
+  color: var(--company-text, #0f172a);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.company-portfolio-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.company-portfolio-type-option {
+  display: block;
+  cursor: pointer;
+}
+
+.company-portfolio-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.company-portfolio-type-option span {
+  display: grid;
+  gap: 4px;
+  min-height: 100%;
+  padding: 12px 14px;
+  border: 1px solid #dbe3f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.company-portfolio-type-option strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.company-portfolio-type-option em {
+  color: #64748b;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.company-portfolio-type-option input:checked + span {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.company-portfolio-type-option:hover span {
+  border-color: #93c5fd;
+}
+
+.company-feed-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.company-portfolio-type-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.company-portfolio-type-badge.type-work_completed {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.company-portfolio-type-badge.type-certification {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.company-portfolio-type-badge.type-skills {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.company-portfolio-type-badge.type-progress {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.company-portfolio-type-badge.type-company_update {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.company-feed-project-size {
+  display: block;
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.company-feed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.company-feed-tags span {
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.company-job-form label small {
+  font-weight: 500;
+  color: var(--company-muted, #64748b);
+}
+
+@media (max-width: 720px) {
+  .company-portfolio-type-grid {
+    grid-template-columns: 1fr;
+  }
+}

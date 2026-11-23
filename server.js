@@ -812,15 +812,17 @@ function mapCompanyFeedPost(post, index = 0) {
   const mediaType = mediaUrl && /\.(mp4|webm|mov|m4v)$/i.test(mediaUrl) ? 'video' : 'image';
   return {
     id: post.id,
-    title: post.title || (post.post_type ? post.post_type.replaceAll('_', ' ') : 'Company update'),
+    title: post.title || (post.post_type ? post.post_type.replaceAll('_', ' ') : 'Portfolio item'),
     caption: post.caption,
-    location: post.location || 'SiteCrew',
+    location: post.location || 'UK',
     time: timeAgo(post.created_at),
     mediaClass: ['company-feed-site', 'company-feed-progress', 'company-feed-crew'][index % 3],
     mediaUrl,
     mediaSrc: mediaUrl,
     mediaType,
     tags: post.tags || [],
+    postType: post.post_type || 'work_completed',
+    projectSize: post.project_size || '',
   };
 }
 
@@ -890,7 +892,7 @@ async function buildCompanyDashboard(token, companyId, profile) {
   const workersNeeded = openJobs.reduce((total, job) => total + (job.workers_required || 0), 0);
   const companyPosts = (feed.posts || [])
     .filter((post) => Number(post.author_id) === Number(companyId))
-    .slice(0, 3)
+    .slice(0, 24)
     .map(mapCompanyFeedPost);
   const companyRatingCount = Number(companyPublicData.rating?.count || 0);
   const companyRatingAverage = companyPublicData.rating?.average || null;
