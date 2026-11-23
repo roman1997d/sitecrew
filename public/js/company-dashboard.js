@@ -38,13 +38,11 @@
   const inviteWorkerCopy = document.getElementById('inviteWorkerCopy');
   const inviteWorkerJobList = document.getElementById('inviteWorkerJobList');
   const companyPostModal = document.getElementById('companyPostModal');
-  const openCompanyPostModalBtn = document.getElementById('openCompanyPostModal');
   const closeCompanyPostModalBtn = document.getElementById('closeCompanyPostModal');
   const cancelCompanyPostBtn = document.getElementById('cancelCompanyPost');
   const companyPostForm = document.getElementById('companyPostForm');
   const companyPostAlert = document.getElementById('companyPostAlert');
   const companyStoryModal = document.getElementById('companyStoryModal');
-  const openCompanyStoryModalBtn = document.getElementById('openCompanyStoryModal');
   const closeCompanyStoryModalBtn = document.getElementById('closeCompanyStoryModal');
   const cancelCompanyStoryBtn = document.getElementById('cancelCompanyStory');
   const companyStoryForm = document.getElementById('companyStoryForm');
@@ -1875,11 +1873,14 @@
     });
   });
 
-  openCompanyPostModalBtn?.addEventListener('click', openCreateCompanyPostModal);
-  document.getElementById('openCompanyPostModalEmpty')?.addEventListener('click', openCreateCompanyPostModal);
-
-  openCompanyStoryModalBtn?.addEventListener('click', () => {
-    openModal(companyStoryModal, companyStoryAlert, 'input[name="media"]');
+  document.querySelector('.company-dashboard')?.addEventListener('click', (event) => {
+    if (event.target.closest('[data-open-company-post]')) {
+      openCreateCompanyPostModal();
+      return;
+    }
+    if (event.target.closest('[data-open-company-story]')) {
+      openModal(companyStoryModal, companyStoryAlert, 'input[name="media"]');
+    }
   });
 
   document.querySelectorAll('[data-edit-company-post]').forEach((button) => {
